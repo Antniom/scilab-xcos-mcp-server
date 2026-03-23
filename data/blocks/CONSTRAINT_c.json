@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CONSTRAINT2_c",
+    "zc_func",
+    "INTEGRAL_m"
+  ],
+  "criticalRules": [
+    "IMPLICIT_C_OR_FORTRAN simulation type requires implicit DAE solver",
+    "integerParameters[0] controls constraint index type",
+    "Used for enforcing algebraic constraints in physical modeling",
+    "Requires compatible solver (IDA/DASPK)"
+  ],
+  "description": "Constraint block for continuous systems - enforces algebraic constraints",
+  "anomalies": [
+    "simulationFunctionType='IMPLICIT_C_OR_FORTRAN' - implicit integration required",
+    "Width=60 (non-standard)",
+    "state has 2 elements (unusual for simple block)",
+    "No realParameters - uses integerParameters and state only",
+    "dependsOnU=0 but dependsOnT=1 - evolves with time but not directly from input"
+  ],
+  "name": "CONSTRAINT_c",
+  "commonUses": [
+    "Mechanical constraint enforcement",
+    "DAE system modeling",
+    "Index reduction in physical models",
+    "Algebraic loop resolution"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/CONSTRAINT_c.sci"
+}

@@ -1,0 +1,205 @@
+{
+  "name": "WRITEC_f",
+  "description": "WRITEC_f block",
+  "category": "Uncategorized",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "WRITEC_f",
+  "simulationFunctionName": "writec",
+  "simulationFunctionType": "TYPE_2",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 80.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "5",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "1"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "foo"
+        },
+        {
+          "line": "2",
+          "column": "0",
+          "value": "c  "
+        },
+        {
+          "line": "3",
+          "column": "0",
+          "value": "2"
+        },
+        {
+          "line": "4",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "9",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "3"
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": "99"
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": "32"
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": "32"
+        },
+        {
+          "line": "0",
+          "column": "4",
+          "value": "2"
+        },
+        {
+          "line": "0",
+          "column": "5",
+          "value": "0"
+        },
+        {
+          "line": "0",
+          "column": "6",
+          "value": "102"
+        },
+        {
+          "line": "0",
+          "column": "7",
+          "value": "111"
+        },
+        {
+          "line": "0",
+          "column": "8",
+          "value": "111"
+        }
+      ]
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "1",
+      "width": "6",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "4",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "5",
+          "value": null
+        }
+      ]
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "controlPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7c9d\" parent=\"0:2:0\" interfaceFunctionName=\"WRITEC_f\" blockType=\"d\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"writec\" simulationFunctionType=\"TYPE_2\" style=\"WRITEC_f\">\n        <ScilabString as=\"exprs\" height=\"5\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"1\" />\n          <data line=\"1\" column=\"0\" value=\"foo\" />\n          <data line=\"2\" column=\"0\" value=\"c  \" />\n          <data line=\"3\" column=\"0\" value=\"2\" />\n          <data line=\"4\" column=\"0\" value=\"0\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"9\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"3\" />\n          <data line=\"0\" column=\"1\" value=\"99\" />\n          <data line=\"0\" column=\"2\" value=\"32\" />\n          <data line=\"0\" column=\"3\" value=\"32\" />\n          <data line=\"0\" column=\"4\" value=\"2\" />\n          <data line=\"0\" column=\"5\" value=\"0\" />\n          <data line=\"0\" column=\"6\" value=\"102\" />\n          <data line=\"0\" column=\"7\" value=\"111\" />\n          <data line=\"0\" column=\"8\" value=\"111\" />\n        </ScilabInteger>\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"1\" width=\"6\">\n          <data line=\"0\" column=\"0\" realPart=\"-1.0\" />\n          <data line=\"0\" column=\"1\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"2\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"3\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"4\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"5\" realPart=\"0.0\" />\n        </ScilabDouble>\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"80.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Non-standard width: 80.0",
+    "Contains ControlPort"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

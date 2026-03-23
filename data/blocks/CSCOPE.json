@@ -1,0 +1,25 @@
+{
+  "criticalRules": [
+    "ControlPort triggers display refresh",
+    "Supports multiple curves via color list in exprs[0]",
+    "No explicit outputs - visualization only",
+    "CRITICAL: Scope blocks MUST have a CLOCK_c block connected to their ControlPort (red top port) via a CommandControlLink, otherwise graph is empty.",
+    "CRITICAL: exprs[0] (curve_colors) MUST ALWAYS be the fixed string '1 3 5 7 9 11 13 15' — exactly 8 space-separated values. NEVER set this to match the number of input channels (e.g. '1 2' for 2 channels is WRONG). Scilab always expects exactly 8 color values regardless of channel count. Using any other value causes the error: Wrong size for block parameter 'Curve style: Color>0 | mark<0': 8 expected.",
+    "CRITICAL: integerParameters must ALWAYS have exactly width=15. Copy the 15 values verbatim from the xmlExample. Never change this array size."
+  ],
+  "description": "C-based Scope for visualizing signal waveforms",
+  "anomalies": [
+    "Has ControlPort (not ExplicitInput) - event-based display refresh",
+    "dataLines=-1 allows variable-size vector inputs",
+    "exprs[0] contains space-separated color indices",
+    "Most complex parameter structure: 10 parameters"
+  ],
+  "name": "CSCOPE",
+  "commonUses": [
+    "Signal waveform visualization",
+    "Multi-channel data plotting",
+    "Real-time signal monitoring"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CSCOPE.sci"
+}

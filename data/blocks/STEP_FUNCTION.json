@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "RAMP - ramp signal generator",
+    "SINBLK_f - sine wave",
+    "GENSIN_f - sinusoidal generator",
+    "GENSQR_f - square wave generator"
+  ],
+  "criticalRules": [
+    "SuperBlock containing STEP block",
+    "Configure step parameters: initial, time, final",
+    "Internal STEP block has ControlPort for activation",
+    "Output is the explicit signal from internal OUT_f"
+  ],
+  "description": "Step function signal generator - creates a step change at a specified time",
+  "anomalies": [
+    "SuperBlock - contains internal STEP and OUT_f blocks",
+    "No direct parameters - configure via internal STEP block",
+    "Has internal ControlPort and CommandPort for event triggering",
+    "Source block - no explicit inputs"
+  ],
+  "name": "STEP_FUNCTION",
+  "commonUses": [
+    "System testing with step inputs",
+    "Reference command signals",
+    "Control system validation",
+    "Bang-bang control signals"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/STEP_FUNCTION.sci"
+}

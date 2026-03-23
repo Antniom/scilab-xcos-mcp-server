@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CSCOPXY",
+    "CANIMXY3D",
+    "CSCOPE"
+  ],
+  "criticalRules": [
+    "Every event on ControlPort samples a new point",
+    "Builds trajectory incrementally over time",
+    "Auto color assignment when color=-4",
+    "blockType=\"d\" combined with dependsOnU=\"0\" (not feed-through)"
+  ],
+  "description": "Animated XY scope with incremental trajectory display",
+  "anomalies": [
+    "blockType='d' - discrete sampling",
+    "Has ControlPort for sampling trigger",
+    "color=-4 means auto-assigned",
+    "thickness=-1 means auto",
+    "11 parameters - complex configuration"
+  ],
+  "name": "CANIMXY",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CANIMXY.sci",
+  "commonUses": [
+    "Phase portraits",
+    "Trajectory animations",
+    "Lissajous figures",
+    "Parametric curve visualization"
+  ]
+}

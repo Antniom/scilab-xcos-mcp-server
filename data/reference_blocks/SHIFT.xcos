@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<XcosDiagram debugLevel="0" finalIntegrationTime="30.0" integratorAbsoluteTolerance="1.0E-6" integratorRelativeTolerance="1.0E-6" toleranceOnTime="1.0E-10" maxIntegrationTimeInterval="100001.0" maximumStepSize="0.0" realTimeScaling="0.0" solver="1.0" background="-1" gridEnabled="1" title="JKFLIPFLOP"><!--Xcos - 2.0 - scilab-2026.0.1 - 20260205 0935-->
+  <Array as="context" scilabClass="String[]"></Array>
+  <mxGraphModel as="model">
+    <root>
+      <mxCell id="0:1:0"/>
+      <mxCell id="0:2:0" parent="0:1:0"/>
+      <BasicBlock id="-4ca061a2:19ce98e0b72:-7b6d" parent="0:2:0" interfaceFunctionName="SHIFT" blockType="c" dependsOnU="1" dependsOnT="0" simulationFunctionName="shift_32_LA" simulationFunctionType="C_OR_FORTRAN" style="SHIFT">
+        <ScilabString as="exprs" height="3" width="1">
+          <data line="0" column="0" value="3"/>
+          <data line="1" column="0" value="0"/>
+          <data line="2" column="0" value="0"/>
+        </ScilabString>
+        <ScilabDouble as="realParameters" height="0" width="0"/>
+        <ScilabInteger as="integerParameters" height="1" width="2" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+          <data line="0" column="1" value="0"/>
+        </ScilabInteger>
+        <Array as="objectsParameters" scilabClass="ScilabList"/>
+        <ScilabInteger as="nbZerosCrossing" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabInteger as="nmode" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabDouble as="state" height="0" width="0"/>
+        <ScilabDouble as="dState" height="0" width="0"/>
+        <Array as="oDState" scilabClass="ScilabList"/>
+        <Array as="equations" scilabClass="ScilabList"/>
+        <mxGeometry as="geometry" x="0.0" y="-10.0" width="60.0" height="40.0"/>
+      </BasicBlock>
+      <ExplicitInputPort id="-4ca061a2:19ce98e0b72:-7b6c" parent="-4ca061a2:19ce98e0b72:-7b6d" ordering="1" dataType="INT32_MATRIX" dataColumns="-2" dataLines="-1" initialState="0.0" style="ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitOutputPort id="-4ca061a2:19ce98e0b72:-7b6b" parent="-4ca061a2:19ce98e0b72:-7b6d" ordering="1" dataType="INT32_MATRIX" dataColumns="-2" dataLines="-1" initialState="0.0" style="ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0" value=""/>
+    </root>
+  </mxGraphModel>
+  <mxCell as="defaultParent" id="0:2:0" parent="0:1:0"/>
+</XcosDiagram>

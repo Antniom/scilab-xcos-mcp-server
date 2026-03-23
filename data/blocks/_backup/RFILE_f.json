@@ -1,0 +1,270 @@
+{
+  "name": "RFILE_f",
+  "description": "RFILE_f block",
+  "category": "Uncategorized",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "RFILE_f",
+  "simulationFunctionName": "readf",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "6",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "1"
+        },
+        {
+          "line": "2",
+          "column": "0",
+          "value": "foo"
+        },
+        {
+          "line": "3",
+          "column": "0",
+          "value": "(7(e10.3,1x))"
+        },
+        {
+          "line": "4",
+          "column": "0",
+          "value": "2"
+        },
+        {
+          "line": "5",
+          "column": "0",
+          "value": "1"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "22",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "3"
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": "13"
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": "0"
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": "2"
+        },
+        {
+          "line": "0",
+          "column": "4",
+          "value": "102"
+        },
+        {
+          "line": "0",
+          "column": "5",
+          "value": "111"
+        },
+        {
+          "line": "0",
+          "column": "6",
+          "value": "111"
+        },
+        {
+          "line": "0",
+          "column": "7",
+          "value": "40"
+        },
+        {
+          "line": "0",
+          "column": "8",
+          "value": "55"
+        },
+        {
+          "line": "0",
+          "column": "9",
+          "value": "40"
+        },
+        {
+          "line": "0",
+          "column": "10",
+          "value": "101"
+        },
+        {
+          "line": "0",
+          "column": "11",
+          "value": "49"
+        },
+        {
+          "line": "0",
+          "column": "12",
+          "value": "48"
+        },
+        {
+          "line": "0",
+          "column": "13",
+          "value": "46"
+        },
+        {
+          "line": "0",
+          "column": "14",
+          "value": "51"
+        },
+        {
+          "line": "0",
+          "column": "15",
+          "value": "44"
+        },
+        {
+          "line": "0",
+          "column": "16",
+          "value": "49"
+        },
+        {
+          "line": "0",
+          "column": "17",
+          "value": "120"
+        },
+        {
+          "line": "0",
+          "column": "18",
+          "value": "41"
+        },
+        {
+          "line": "0",
+          "column": "19",
+          "value": "41"
+        },
+        {
+          "line": "0",
+          "column": "20",
+          "value": "0"
+        },
+        {
+          "line": "0",
+          "column": "21",
+          "value": "1"
+        }
+      ]
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "1",
+      "width": "5",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "4",
+          "value": null
+        }
+      ]
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "controlPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7af4\" parent=\"0:2:0\" interfaceFunctionName=\"RFILE_f\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"readf\" simulationFunctionType=\"DEFAULT\" style=\"RFILE_f\">\n        <ScilabString as=\"exprs\" height=\"6\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"[]\" />\n          <data line=\"1\" column=\"0\" value=\"1\" />\n          <data line=\"2\" column=\"0\" value=\"foo\" />\n          <data line=\"3\" column=\"0\" value=\"(7(e10.3,1x))\" />\n          <data line=\"4\" column=\"0\" value=\"2\" />\n          <data line=\"5\" column=\"0\" value=\"1\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"22\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"3\" />\n          <data line=\"0\" column=\"1\" value=\"13\" />\n          <data line=\"0\" column=\"2\" value=\"0\" />\n          <data line=\"0\" column=\"3\" value=\"2\" />\n          <data line=\"0\" column=\"4\" value=\"102\" />\n          <data line=\"0\" column=\"5\" value=\"111\" />\n          <data line=\"0\" column=\"6\" value=\"111\" />\n          <data line=\"0\" column=\"7\" value=\"40\" />\n          <data line=\"0\" column=\"8\" value=\"55\" />\n          <data line=\"0\" column=\"9\" value=\"40\" />\n          <data line=\"0\" column=\"10\" value=\"101\" />\n          <data line=\"0\" column=\"11\" value=\"49\" />\n          <data line=\"0\" column=\"12\" value=\"48\" />\n          <data line=\"0\" column=\"13\" value=\"46\" />\n          <data line=\"0\" column=\"14\" value=\"51\" />\n          <data line=\"0\" column=\"15\" value=\"44\" />\n          <data line=\"0\" column=\"16\" value=\"49\" />\n          <data line=\"0\" column=\"17\" value=\"120\" />\n          <data line=\"0\" column=\"18\" value=\"41\" />\n          <data line=\"0\" column=\"19\" value=\"41\" />\n          <data line=\"0\" column=\"20\" value=\"0\" />\n          <data line=\"0\" column=\"21\" value=\"1\" />\n        </ScilabInteger>\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"1\" width=\"5\">\n          <data line=\"0\" column=\"0\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"1\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"2\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"3\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"4\" realPart=\"0.0\" />\n        </ScilabDouble>\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Contains ControlPort",
+    "Non-standard width: 60.0"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

@@ -1,0 +1,125 @@
+{
+  "name": "CSCOPE",
+  "description": "C-based Scope for visualizing signal waveforms",
+  "category": "Sinks/Visualization",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CSCOPE",
+  "simulationFunctionName": "cscope",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "CSCOPE",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 10,
+      "width": 1,
+      "values": [
+        "1 3 5 7 9 11 13 15",
+        "-1",
+        "[]",
+        "[600;400]",
+        "-15",
+        "15",
+        "30",
+        "20",
+        "0",
+        ""
+      ],
+      "labels": [
+        "curve_colors",
+        "line_style",
+        "y_min_max",
+        "window_size",
+        "refresh_period",
+        "buffer_size",
+        "x_min",
+        "x_max",
+        "resolution",
+        "variable_name"
+      ],
+      "descriptions": [
+        "FIXED 8-value color string — ALWAYS use \"1 3 5 7 9 11 13 15\" regardless of how many channels. NEVER change this to match channel count — it is always 8 values.",
+        "Line style (-1=auto, 0=solid, etc.)",
+        "Fixed Y axis limits [min;max] or []=auto",
+        "Window size [width;height] in pixels",
+        "Display refresh period",
+        "Buffer size for history",
+        "X axis minimum",
+        "X axis maximum",
+        "Resolution mode",
+        "Variable name for data export"
+      ]
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 4,
+      "values": [0.0, -15.0, 15.0, 30.0]
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 15,
+      "values": [-1, 1, 20, 1, 3, 5, 7, 9, 11, 13, 15, -1, -1, 600, 400],
+      "description": "Packed display configuration — ALWAYS exactly 15 integers, always copy verbatim from xmlExample. Never reduce or change this array."
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Signal to visualize (supports multiple curves via colors)"
+      }
+    ],
+    "explicitOutputs": [],
+    "controls": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "description": "Event trigger for display update"
+      }
+    ],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CSCOPE\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"cscope\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CSCOPE\">\n    <ScilabString as=\"exprs\" height=\"10\" width=\"1\">\n        <data line=\"0\" column=\"0\" value=\"1 3 5 7 9 11 13 15\" />\n        <data line=\"1\" column=\"0\" value=\"-1\" />\n        <data line=\"2\" column=\"0\" value=\"[]\" />\n        <data line=\"3\" column=\"0\" value=\"[600;400]\" />\n        <data line=\"4\" column=\"0\" value=\"-15\" />\n        <data line=\"5\" column=\"0\" value=\"15\" />\n        <data line=\"6\" column=\"0\" value=\"30\" />\n        <data line=\"7\" column=\"0\" value=\"20\" />\n        <data line=\"8\" column=\"0\" value=\"0\" />\n        <data line=\"9\" column=\"0\" value=\"\" />\n    </ScilabString>\n    <ScilabDouble as=\"realParameters\" height=\"1\" width=\"4\">\n        <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n        <data line=\"0\" column=\"1\" realPart=\"-15.0\" />\n        <data line=\"0\" column=\"2\" realPart=\"15.0\" />\n        <data line=\"0\" column=\"3\" realPart=\"30.0\" />\n    </ScilabDouble>\n    <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"15\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"-1\" />\n        <data line=\"0\" column=\"1\" value=\"1\" />\n        <data line=\"0\" column=\"2\" value=\"20\" />\n        <data line=\"0\" column=\"3\" value=\"1\" />\n        <data line=\"0\" column=\"4\" value=\"3\" />\n        <data line=\"0\" column=\"5\" value=\"5\" />\n        <data line=\"0\" column=\"6\" value=\"7\" />\n        <data line=\"0\" column=\"7\" value=\"9\" />\n        <data line=\"0\" column=\"8\" value=\"11\" />\n        <data line=\"0\" column=\"9\" value=\"13\" />\n        <data line=\"0\" column=\"10\" value=\"15\" />\n        <data line=\"0\" column=\"11\" value=\"-1\" />\n        <data line=\"0\" column=\"12\" value=\"-1\" />\n        <data line=\"0\" column=\"13\" value=\"600\" />\n        <data line=\"0\" column=\"14\" value=\"400\" />\n    </ScilabInteger>\n    <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n    <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n    <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n    <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n    <Array as=\"equations\" scilabClass=\"ScilabList\" />\n    <mxGeometry as=\"geometry\" x=\"300.0\" y=\"200.0\" width=\"40.0\" height=\"40.0\" />\n</BasicBlock>",
+  "anomalies": [
+    "Has ControlPort (not ExplicitInput) - event-based display refresh",
+    "dataLines=-1 allows variable-size vector inputs",
+    "exprs[0] contains space-separated color indices",
+    "Most complex parameter structure: 10 parameters"
+  ],
+  "criticalRules": [
+    "ControlPort triggers display refresh",
+    "Supports multiple curves via color list in exprs[0]",
+    "No explicit outputs - visualization only",
+    "CRITICAL: Scope blocks MUST have a CLOCK_c block connected to their ControlPort (red top port) via a CommandControlLink, otherwise graph is empty.",
+    "CRITICAL: exprs[0] (curve_colors) MUST ALWAYS be the fixed string '1 3 5 7 9 11 13 15' — exactly 8 space-separated values. NEVER set this to match the number of input channels (e.g. '1 2' for 2 channels is WRONG). Scilab always expects exactly 8 color values regardless of channel count. Using any other value causes the error: Wrong size for block parameter 'Curve style: Color>0 | mark<0': 8 expected.",
+    "CRITICAL: integerParameters must ALWAYS have exactly width=15. Copy the 15 values verbatim from the xmlExample. Never change this array size."
+  ],
+  "commonUses": [
+    "Signal waveform visualization",
+    "Multi-channel data plotting",
+    "Real-time signal monitoring"
+  ]
+}

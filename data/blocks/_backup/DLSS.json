@@ -1,0 +1,69 @@
+{
+  "name": "DLSS",
+  "description": "Discrete Linear State-Space - represents a discrete-time linear system in state-space form",
+  "category": "Discrete",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DLSS",
+  "simulationFunctionName": "dsslti4",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 80,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [
+      "-1",
+      "1",
+      "1",
+      "0",
+      "0"
+    ],
+    "realParameters": [-1.0, 1.0, 1.0, 0.0],
+    "integerParameters": [],
+    "state": [],
+    "dState": [0.0],
+    "nbZerosCrossing": 0,
+    "nmode": 0
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "id": "1",
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "id": "1",
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "controlPorts": [
+      {
+        "id": "1",
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0"
+      }
+    ],
+    "commandPorts": []
+  },
+  "xmlExample": "<BasicBlock interfaceFunctionName=\"DLSS\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"dsslti4\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"DLSS\">\n  <ScilabString as=\"exprs\" height=\"5\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"-1\"/>\n    <data line=\"1\" column=\"0\" value=\"1\"/>\n    <data line=\"2\" column=\"0\" value=\"1\"/>\n    <data line=\"3\" column=\"0\" value=\"0\"/>\n    <data line=\"4\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" width=\"80.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Width=80 (extended width block)"
+  ],
+  "criticalRules": [
+    "Requires an event clock to update states"
+  ],
+  "commonUses": [
+    "Discrete-time linear controller",
+    "Digital filter implementation"
+  ],
+  "relatedBlocks": [
+    "CLSS",
+    "DLR"
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "name": "INTRP2BLK_f",
+  "description": "INTRP2BLK_f block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "INTRP2BLK_f",
+  "simulationFunctionName": "intrp2",
+  "simulationFunctionType": "TYPE_1",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "3",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "[0;1]"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "[0;1]"
+        },
+        {
+          "line": "2",
+          "column": "0",
+          "value": "[0,1;1,2]"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "1",
+      "width": "8",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "4",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "5",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "6",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "7",
+          "value": null
+        }
+      ]
+    },
+    "integerParameters": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "2",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "2"
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": "2"
+        }
+      ]
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7f69\" parent=\"0:2:0\" interfaceFunctionName=\"INTRP2BLK_f\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"intrp2\" simulationFunctionType=\"TYPE_1\" style=\"INTRP2BLK_f\">\n        <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"[0;1]\" />\n          <data line=\"1\" column=\"0\" value=\"[0;1]\" />\n          <data line=\"2\" column=\"0\" value=\"[0,1;1,2]\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"1\" width=\"8\">\n          <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"1\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"2\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"3\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"4\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"5\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"6\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"7\" realPart=\"2.0\" />\n        </ScilabDouble>\n        <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"2\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"2\" />\n          <data line=\"0\" column=\"1\" value=\"2\" />\n        </ScilabInteger>\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Non-standard width: 60.0"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

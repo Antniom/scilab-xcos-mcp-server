@@ -1,0 +1,90 @@
+{
+  "name": "DLR",
+  "description": "Discrete Linear State-Space - represents linear time-invariant systems in discrete state-space form",
+  "category": "Discrete",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DLR",
+  "simulationFunctionName": "dsslti4",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60,
+    "height": 60
+  },
+  "parameters": {
+    "exprs": {
+      "data": [
+        ["1"],
+        ["1+z"]
+      ]
+    },
+    "realParameters": {
+      "data": [
+        ["-1.0", "1.0", "1.0", "0.0"]
+      ]
+    },
+    "integerParameters": {},
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": [],
+    "dState": {
+      "data": [
+        ["0.0"]
+      ]
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "control": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0"
+      }
+    ],
+    "command": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"DLR\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"dsslti4\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"DLR\"><ScilabString as=\"exprs\" height=\"2\" width=\"1\"><data line=\"0\" column=\"0\" value=\"1\"/><data line=\"1\" column=\"0\" value=\"1+z\"/></ScilabString><ScilabDouble as=\"realParameters\" height=\"1\" width=\"4\"><data line=\"0\" column=\"0\" realPart=\"-1.0\"/><data line=\"0\" column=\"1\" realPart=\"1.0\"/><data line=\"0\" column=\"2\" realPart=\"1.0\"/><data line=\"0\" column=\"3\" realPart=\"0.0\"/></ScilabDouble><ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabDouble as=\"dState\" height=\"1\" width=\"1\"><data line=\"0\" column=\"0\" realPart=\"0.0\"/></ScilabDouble><mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"60.0\"/></BasicBlock>",
+  "anomalies": [
+    "Standard square size (60x60)",
+    "Discrete LTI system",
+    "Requires event input for time stepping"
+  ],
+  "criticalRules": [
+    "State space matrices (A,B,C,D) are linearized in realParameters",
+    "Depends on a clock signal"
+  ],
+  "commonUses": [
+    "Digital filters",
+    "Discrete-time control systems"
+  ],
+  "relatedBlocks": [
+    "DLSS",
+    "CLR",
+    "CLSS"
+  ]
+}

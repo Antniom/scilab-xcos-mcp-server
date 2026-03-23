@@ -1,0 +1,23 @@
+{
+  "relatedBlocks": [
+    "JKFLIPFLOP",
+    "SRFLIPFLOP"
+  ],
+  "criticalRules": [
+    "Input 1 is D (Data), Input 2 is Clock",
+    "Output 1 is Q, Output 2 is !Q"
+  ],
+  "description": "D Flip-Flop - stores one bit of information on the rising edge of the clock signal",
+  "anomalies": [
+    "Height=60 (Tall block)",
+    "blockType='h' (SuperBlock)",
+    "Uses INT8 data types for logic",
+    "Nested SuperBlock implementation"
+  ],
+  "name": "DFLIPFLOP",
+  "commonUses": [
+    "Digital synchronous systems",
+    "State machines"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/DFLIPFLOP.sci"
+}

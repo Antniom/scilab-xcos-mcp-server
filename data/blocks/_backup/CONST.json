@@ -1,0 +1,78 @@
+{
+  "name": "CONST",
+  "description": "Constant value source block - outputs a fixed constant value",
+  "category": "Sources",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CONST",
+  "simulationFunctionName": "cstblk4",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 1,
+      "width": 1,
+      "values": ["1"],
+      "description": "Constant value to output"
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [1.0]
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CONST\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"cstblk4\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CONST\">\n  <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" realPart=\"1.0\"/>\n  </ScilabDouble>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "blockType='d' (discrete) but outputs continuous constant",
+    "No state storage needed (state height=0)",
+    "Simple source block with no inputs"
+  ],
+  "criticalRules": [
+    "exprs[0] is the constant value to output",
+    "Value is stored in realParameters",
+    "No dependencies (dependsOnU=0, dependsOnT=0)",
+    "Outputs scalar by default"
+  ],
+  "commonUses": [
+    "Providing reference values",
+    "Setting initial conditions",
+    "Gain factors in feedback loops",
+    "Test signal generation"
+  ],
+  "relatedBlocks": ["CONST_m", "CONST_f", "STEP_FUNCTION", "CLOCK_c"]
+}

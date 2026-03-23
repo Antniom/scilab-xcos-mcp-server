@@ -1,0 +1,16 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "Modulo_Count block",
+  "anomalies": [
+    "Contains ControlPort",
+    "Non-standard width: 60.0"
+  ],
+  "name": "Modulo_Count",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/Modulo_Count.sci"
+}

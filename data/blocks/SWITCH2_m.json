@@ -1,0 +1,16 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "SWITCH2_m block",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size",
+    "nbZerosCrossing=1"
+  ],
+  "name": "SWITCH2_m",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/SWITCH2_m.sci"
+}

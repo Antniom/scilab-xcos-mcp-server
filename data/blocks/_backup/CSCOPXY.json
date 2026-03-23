@@ -1,0 +1,147 @@
+{
+  "name": "CSCOPXY",
+  "description": "XY scope for plotting Y vs X with event-triggered refresh",
+  "category": "Sinks/Visualization",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CSCOPXY",
+  "simulationFunctionName": "cscopxy",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "CSCOPXY",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 11,
+      "width": 1,
+      "values": [
+        "1",
+        "4",
+        "1",
+        "-1",
+        "[]",
+        "[600;400]",
+        "-15",
+        "15",
+        "-15",
+        "15",
+        "2"
+      ],
+      "labels": [
+        "number_of_curves",
+        "color",
+        "line_style",
+        "thickness",
+        " Legends",
+        "window_size",
+        "xmin",
+        "xmax",
+        "ymin",
+        "ymax",
+        "buffer_size"
+      ],
+      "descriptions": [
+        "Number of XY curves to display",
+        "Line color (-1=auto, or specific index)",
+        "Line style (0=solid, 1=dashed, etc.)",
+        "Line thickness (-1=auto)",
+        "Legend text []=none",
+        "Window size [width;height] in pixels",
+        "X-axis minimum",
+        "X-axis maximum",
+        "Y-axis minimum",
+        "Y-axis maximum",
+        "Circular buffer size"
+      ]
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 4,
+      "values": [-15.0, 15.0, -15.0, 15.0],
+      "description": "Axis limits: xmin, xmax, ymin, ymax"
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 11,
+      "values": [-1, 1, 2, 4, 1, 1, -1, -1, 600, 400, 1],
+      "intPrecision": "sci_int32",
+      "description": "Display config: ID, auto-flag, buffer, color, style, thickness flags, grid, axis flags, window size"
+    },
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "X coordinate (horizontal axis)"
+      },
+      {
+        "ordering": 2,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Y coordinate (vertical axis)"
+      }
+    ],
+    "explicitOutputs": [],
+    "controls": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "description": "Event trigger for sampling and display refresh"
+      }
+    ],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CSCOPXY\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"cscopxy\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CSCOPXY\">\n  <ScilabString as=\"exprs\" height=\"11\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n    <data line=\"1\" column=\"0\" value=\"4\"/>\n    <data line=\"2\" column=\"0\" value=\"1\"/>\n    <data line=\"3\" column=\"0\" value=\"-1\"/>\n    <data line=\"4\" column=\"0\" value=\"[]\"/>\n    <data line=\"5\" column=\"0\" value=\"[600;400]\"/>\n    <data line=\"6\" column=\"0\" value=\"-15\"/>\n    <data line=\"7\" column=\"0\" value=\"15\"/>\n    <data line=\"8\" column=\"0\" value=\"-15\"/>\n    <data line=\"9\" column=\"0\" value=\"15\"/>\n    <data line=\"10\" column=\"0\" value=\"2\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" x=\"300.0\" y=\"200.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Two explicit inputs (X and Y) vs CSCOPE's one",
+    "blockType='d' - discrete sampling on events",
+    "Similar to CANIMXY but with different parameter ordering",
+    "11 parameters - complex configuration"
+  ],
+  "criticalRules": [
+    "Input 1 is X coordinate, Input 2 is Y coordinate",
+    "Event on ControlPort samples new (X,Y) point",
+    "Plots Y vs X (not Y vs time like CSCOPE)",
+    "Uses circular buffer for trajectory storage"
+  ],
+  "commonUses": [
+    "Phase portraits",
+    "Lissajous figures",
+    "XY trajectory plotting",
+    "Parametric curve visualization"
+  ],
+  "relatedBlocks": ["CANIMXY", "CSCOPXY3D", "BARXY", "CSCOPE"]
+}

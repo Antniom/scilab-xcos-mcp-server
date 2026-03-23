@@ -1,0 +1,133 @@
+{
+  "name": "TOWS_c",
+  "description": "TOWS_c block",
+  "category": "Uncategorized",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "TOWS_c",
+  "simulationFunctionName": "tows_c",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 80.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "3",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "128"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "A"
+        },
+        {
+          "line": "2",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "3",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "128"
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": "1"
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": "65"
+        }
+      ]
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "controlPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7ca6\" parent=\"0:2:0\" interfaceFunctionName=\"TOWS_c\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"tows_c\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"TOWS_c\">\n        <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"128\" />\n          <data line=\"1\" column=\"0\" value=\"A\" />\n          <data line=\"2\" column=\"0\" value=\"0\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"3\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"128\" />\n          <data line=\"0\" column=\"1\" value=\"1\" />\n          <data line=\"0\" column=\"2\" value=\"65\" />\n        </ScilabInteger>\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"80.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Non-standard width: 80.0",
+    "Contains ControlPort"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

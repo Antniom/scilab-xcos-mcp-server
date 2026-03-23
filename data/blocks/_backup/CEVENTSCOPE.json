@@ -1,0 +1,29 @@
+{
+  "description": "Event scope for visualizing event timing and sequences",
+  "name": "CEVENTSCOPE",
+  "anomalies": [
+    "Only has ControlPort (no explicit inputs/outputs)",
+    "Visualizes events, not continuous signals",
+    "Circular buffer for timing history",
+    "blockType='d' - discrete event recording"
+  ],
+  "criticalRules": [
+    "Records event arrival times",
+    "Displays event timing patterns",
+    "Uses circular buffer for storage",
+    "No explicit data - pure event visualization"
+  ],
+  "commonUses": [
+    "Event sequence debugging",
+    "Timing analysis",
+    "Clock visualization",
+    "Digital signal timing"
+  ],
+  "relatedBlocks": [
+    "CSCOPE",
+    "CFSCOPE",
+    "CLOCK_c",
+    "ANDBLK"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CEVENTSCOPE.sci"
+}

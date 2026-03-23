@@ -1,0 +1,22 @@
+{
+  "relatedBlocks": [
+    "DELAY_f",
+    "VARIABLE_DELAY"
+  ],
+  "criticalRules": [
+    "Input 1 is the signal, Input 2 is the delay time",
+    "Requires event input for internal buffer updates"
+  ],
+  "description": "Variable delay block - delayed output based on a variable delay time input",
+  "anomalies": [
+    "Non-standard width (60)",
+    "Uses TYPE_1 simulation function",
+    "Requires a clock/event input to operate",
+    "dState size depends on the buffer length"
+  ],
+  "name": "DELAYV_f",
+  "commonUses": [
+    "Modeling transport delays with variable velocity"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DELAYV_f.sci"
+}

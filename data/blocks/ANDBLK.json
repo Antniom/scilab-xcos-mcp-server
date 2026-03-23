@@ -1,0 +1,22 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "SuperBlock (blockType='h') - contains internal diagram",
+    "Ports are defined by CLKIN_f and CLKOUT_f internal blocks",
+    "Cannot be used directly for code generation"
+  ],
+  "description": "SuperBlock containing an AND gate with 2 clock inputs and 1 clock output",
+  "anomalies": [
+    "SuperBlock (blockType='h') - contains internal diagram",
+    "Ports are defined by CLKIN_f and CLKOUT_f internal blocks",
+    "Cannot be used directly for code generation",
+    "No explicit ports at top level - all connectivity is internal"
+  ],
+  "name": "ANDBLK",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/ANDBLK.sci",
+  "commonUses": [
+    "Event-based logic combining multiple triggers",
+    "Conditional execution of subsystems",
+    "Synchronizing multiple event sources"
+  ]
+}

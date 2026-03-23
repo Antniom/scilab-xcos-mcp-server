@@ -1,0 +1,30 @@
+{
+  "relatedBlocks": [
+    "CBLOCK",
+    "c_block",
+    "scifunc_block_m"
+  ],
+  "criticalRules": [
+    "Special list() syntax for empty Scilab lists",
+    "Matrix expressions like [1,1] stored as strings",
+    "19 configuration parameters for advanced C blocks",
+    "Same DYNAMIC_EXPLICIT_4 type as CBLOCK"
+  ],
+  "description": "C-code block for custom continuous dynamics (4 continuous states)",
+  "anomalies": [
+    "Width=80 (non-standard)",
+    "19 parameters - most complex exprs structure",
+    "exprs contains ScilabList with nested ScilabString + ScilabDouble",
+    "Uses list() syntax in exprs[10] and exprs[13]",
+    "simulationFunctionName=' ' (space) dynamic lookup",
+    "Empty realParameters/integerParameters but accepts matrix expressions like [1,1]"
+  ],
+  "name": "CBLOCK4",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/CBLOCK4.sci",
+  "commonUses": [
+    "Complex custom C functions",
+    "MIMO system implementations",
+    "State-space systems in C",
+    "Advanced user-defined blocks"
+  ]
+}

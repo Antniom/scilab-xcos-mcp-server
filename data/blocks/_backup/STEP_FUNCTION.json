@@ -1,0 +1,130 @@
+{
+  "name": "STEP_FUNCTION",
+  "description": "Step function signal generator - creates a step change at a specified time",
+  "category": "Sources",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "STEP_FUNCTION",
+  "simulationFunctionName": "csuper",
+  "simulationFunctionType": "DEFAULT",
+  "isSuperBlock": true,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "STEP_FUNCTION",
+  "parameters": {
+    "exprs": {
+      "height": 0,
+      "width": 0
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "internalStructure": {
+    "contains": ["STEP", "OUT_f"],
+    "description": "SuperBlock containing STEP block for generating step signals"
+  },
+  "internalBlock": {
+    "name": "STEP",
+    "interfaceFunctionName": "STEP",
+    "blockType": "c",
+    "simulationFunctionName": "step_func",
+    "simulationFunctionType": "C_OR_FORTRAN",
+    "exprs": {
+      "height": 3,
+      "width": 1,
+      "values": ["1", "0", "1"],
+      "labels": ["initial_value", "step_time", "final_value"],
+      "descriptions": [
+        "Output value before step",
+        "Time at which step occurs",
+        "Output value after step"
+      ]
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 2,
+      "values": [0.0, 1.0]
+    },
+    "ports": {
+      "explicitOutputs": 1,
+      "controls": 1,
+      "commands": 1
+    }
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "description": "Step signal output"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"STEP_FUNCTION\" blockType=\"c\" simulationFunctionName=\"csuper\" simulationFunctionType=\"DEFAULT\" style=\"STEP_FUNCTION\">\n  <SuperBlockDiagram as=\"child\">\n    <mxGraphModel as=\"model\">\n      <root>\n        <BasicBlock id=\"step\" interfaceFunctionName=\"STEP\" blockType=\"c\">\n          <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"1\"/>\n            <data line=\"1\" column=\"0\" value=\"0\"/>\n            <data line=\"2\" column=\"0\" value=\"1\"/>\n          </ScilabString>\n        </BasicBlock>\n        <ExplicitOutBlock id=\"out\" interfaceFunctionName=\"OUT_f\"/>\n      </root>\n    </mxGraphModel>\n  </SuperBlockDiagram>\n  <mxGeometry as=\"geometry\" x=\"50.0\" y=\"50.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "SuperBlock - contains internal STEP and OUT_f blocks",
+    "No direct parameters - configure via internal STEP block",
+    "Has internal ControlPort and CommandPort for event triggering",
+    "Source block - no explicit inputs"
+  ],
+  "criticalRules": [
+    "SuperBlock containing STEP block",
+    "Configure step parameters: initial, time, final",
+    "Internal STEP block has ControlPort for activation",
+    "Output is the explicit signal from internal OUT_f"
+  ],
+  "commonUses": [
+    "System testing with step inputs",
+    "Reference command signals",
+    "Control system validation",
+    "Bang-bang control signals"
+  ],
+  "paramSets": {
+    "unit_step": {
+      "initial": 0,
+      "time": 0,
+      "final": 1,
+      "description": "Standard unit step at t=0"
+    },
+    "delayed_step": {
+      "initial": 0,
+      "time": 1.0,
+      "final": 1,
+      "description": "Unit step starting at t=1"
+    },
+    "step_change": {
+      "initial": 5,
+      "time": 2.0,
+      "final": 10,
+      "description": "Step from 5 to 10 at t=2"
+    }
+  },
+  "relatedBlocks": [
+    "RAMP - ramp signal generator",
+    "SINBLK_f - sine wave",
+    "GENSIN_f - sinusoidal generator",
+    "GENSQR_f - square wave generator"
+  ]
+}

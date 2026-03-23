@@ -1,0 +1,16 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "TIME_DELAY block",
+  "anomalies": [
+    "Non-standard width: 70.0",
+    "blockType='x' special block type"
+  ],
+  "name": "TIME_DELAY",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/TIME_DELAY.sci"
+}

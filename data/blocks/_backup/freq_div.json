@@ -1,0 +1,100 @@
+{
+  "name": "freq_div",
+  "description": "freq_div block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "freq_div",
+  "simulationFunctionName": "csuper",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "0",
+      "width": "0"
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "controlPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "commandPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7e87\" parent=\"0:2:0\" interfaceFunctionName=\"freq_div\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"csuper\" simulationFunctionType=\"DEFAULT\" style=\"freq_div\">\n        <ScilabDouble as=\"exprs\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\" />\n        <SuperBlockDiagram as=\"child\" background=\"-1\" gridEnabled=\"1\" title=\"\">\n          <Array as=\"context\" scilabClass=\"String[]\" />\n          <mxGraphModel as=\"model\">\n            <root>\n              <mxCell id=\"-4ca061a2:19ce98e0b73:-7e87\" />\n              <mxCell id=\"-4ca061a2:19ce98e0b74:-7e87\" parent=\"-4ca061a2:19ce98e0b73:-7e87\" />\n              <BasicBlock id=\"-4ca061a2:19ce98e0b72:-7e84\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" interfaceFunctionName=\"Modulo_Count\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"modulo_count\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"\">\n                <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                  <data line=\"1\" column=\"0\" value=\"3\" />\n                </ScilabString>\n                <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n                <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"3\" />\n                </ScilabInteger>\n                <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n                <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"dState\" height=\"1\" width=\"1\">\n                  <data line=\"0\" column=\"0\" realPart=\"3.0\" />\n                </ScilabDouble>\n                <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n                <Array as=\"equations\" scilabClass=\"ScilabList\" />\n                <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-100.0\" width=\"60.0\" height=\"40.0\" />\n              </BasicBlock>\n              <ControlPort id=\"-4ca061a2:19ce98e0b72:-7e83\" parent=\"-4ca061a2:19ce98e0b72:-7e84\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n              <ExplicitOutputPort id=\"-4ca061a2:19ce98e0b72:-7e82\" parent=\"-4ca061a2:19ce98e0b72:-7e84\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n              <EventInBlock id=\"-4ca061a2:19ce98e0b72:-7e81\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" interfaceFunctionName=\"CLKINV_f\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"input\" simulationFunctionType=\"DEFAULT\" style=\"\">\n                <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabString>\n                <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n                <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabInteger>\n                <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n                <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n                <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n                <Array as=\"equations\" scilabClass=\"ScilabList\" />\n                <mxGeometry as=\"geometry\" x=\"120.0\" y=\"0.0\" width=\"20.0\" height=\"20.0\" />\n              </EventInBlock>\n              <CommandPort id=\"-4ca061a2:19ce98e0b72:-7e80\" parent=\"-4ca061a2:19ce98e0b72:-7e81\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"-1.0\" style=\"\" value=\"\" />\n              <EventOutBlock id=\"-4ca061a2:19ce98e0b72:-7e7f\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" interfaceFunctionName=\"CLKOUTV_f\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"output\" simulationFunctionType=\"DEFAULT\" style=\"\">\n                <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabString>\n                <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n                <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabInteger>\n                <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n                <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n                <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n                <Array as=\"equations\" scilabClass=\"ScilabList\" />\n                <mxGeometry as=\"geometry\" x=\"130.0\" y=\"-160.0\" width=\"20.0\" height=\"20.0\" />\n              </EventOutBlock>\n              <ControlPort id=\"-4ca061a2:19ce98e0b72:-7e7e\" parent=\"-4ca061a2:19ce98e0b72:-7e7f\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n              <BasicBlock id=\"-4ca061a2:19ce98e0b72:-7e7d\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" interfaceFunctionName=\"IFTHEL_f\" blockType=\"l\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"ifthel\" simulationFunctionType=\"IFTHENELSE\" style=\"\">\n                <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                  <data line=\"1\" column=\"0\" value=\"0\" />\n                </ScilabString>\n                <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n                <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabInteger>\n                <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n                <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabInteger>\n                <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabInteger>\n                <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n                <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n                <Array as=\"equations\" scilabClass=\"ScilabList\" />\n                <mxGeometry as=\"geometry\" x=\"100.0\" y=\"-100.0\" width=\"60.0\" height=\"40.0\" />\n              </BasicBlock>\n              <ControlPort id=\"-4ca061a2:19ce98e0b72:-7e7c\" parent=\"-4ca061a2:19ce98e0b72:-7e7d\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n              <CommandPort id=\"-4ca061a2:19ce98e0b72:-7e7b\" parent=\"-4ca061a2:19ce98e0b72:-7e7d\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"-1.0\" style=\"\" value=\"\" />\n              <CommandPort id=\"-4ca061a2:19ce98e0b72:-7e7a\" parent=\"-4ca061a2:19ce98e0b72:-7e7d\" ordering=\"2\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"-1.0\" style=\"\" value=\"\" />\n              <ExplicitInputPort id=\"-4ca061a2:19ce98e0b72:-7e79\" parent=\"-4ca061a2:19ce98e0b72:-7e7d\" ordering=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n              <SplitBlock id=\"-4ca061a2:19ce98e0b72:-7e78\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" interfaceFunctionName=\"CLKSPLIT_f\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"split\" simulationFunctionType=\"DEFAULT\" style=\"\">\n                <ScilabDouble as=\"exprs\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n                <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n                <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n                <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n                <Array as=\"equations\" scilabClass=\"ScilabList\" />\n                <mxGeometry as=\"geometry\" x=\"127.0\" y=\"-33.0\" width=\"7.0\" height=\"7.0\" />\n              </SplitBlock>\n              <ControlPort id=\"-4ca061a2:19ce98e0b72:-7e77\" parent=\"-4ca061a2:19ce98e0b72:-7e78\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n              <CommandPort id=\"-4ca061a2:19ce98e0b72:-7e76\" parent=\"-4ca061a2:19ce98e0b72:-7e78\" ordering=\"1\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"-1.0\" style=\"\" value=\"\" />\n              <CommandPort id=\"-4ca061a2:19ce98e0b72:-7e75\" parent=\"-4ca061a2:19ce98e0b72:-7e78\" ordering=\"2\" dataType=\"REAL_MATRIX\" dataColumns=\"1\" dataLines=\"1\" initialState=\"-1.0\" style=\"\" value=\"\" />\n              <CommandControlLink id=\"-4ca061a2:19ce98e0b72:-7e74\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" source=\"-4ca061a2:19ce98e0b72:-7e80\" target=\"-4ca061a2:19ce98e0b72:-7e77\" style=\"\" value=\"\">\n                <mxGeometry as=\"geometry\">\n                  <Array as=\"points\" />\n                </mxGeometry>\n              </CommandControlLink>\n              <ExplicitLink id=\"-4ca061a2:19ce98e0b72:-7e73\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" source=\"-4ca061a2:19ce98e0b72:-7e82\" target=\"-4ca061a2:19ce98e0b72:-7e79\" style=\"\" value=\"\">\n                <mxGeometry as=\"geometry\">\n                  <Array as=\"points\" />\n                </mxGeometry>\n              </ExplicitLink>\n              <CommandControlLink id=\"-4ca061a2:19ce98e0b72:-7e72\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" source=\"-4ca061a2:19ce98e0b72:-7e7a\" target=\"-4ca061a2:19ce98e0b72:-7e7e\" style=\"\" value=\"\">\n                <mxGeometry as=\"geometry\">\n                  <Array as=\"points\" />\n                </mxGeometry>\n              </CommandControlLink>\n              <CommandControlLink id=\"-4ca061a2:19ce98e0b72:-7e71\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" source=\"-4ca061a2:19ce98e0b72:-7e76\" target=\"-4ca061a2:19ce98e0b72:-7e7c\" style=\"\" value=\"\">\n                <mxGeometry as=\"geometry\">\n                  <Array as=\"points\" />\n                </mxGeometry>\n              </CommandControlLink>\n              <CommandControlLink id=\"-4ca061a2:19ce98e0b72:-7e70\" parent=\"-4ca061a2:19ce98e0b74:-7e87\" source=\"-4ca061a2:19ce98e0b72:-7e75\" target=\"-4ca061a2:19ce98e0b72:-7e83\" style=\"\" value=\"\">\n                <mxGeometry as=\"geometry\">\n                  <mxPoint as=\"sourcePoint\" x=\"0.0\" y=\"0.0\" />\n                  <Array as=\"points\">\n                    <mxPoint x=\"30.0\" y=\"-30.0\" />\n                  </Array>\n                  <mxPoint as=\"targetPoint\" x=\"1.0\" y=\"1.0\" />\n                </mxGeometry>\n              </CommandControlLink>\n            </root>\n          </mxGraphModel>\n          <mxCell as=\"defaultParent\" id=\"-4ca061a2:19ce98e0b74:-7e87\" parent=\"-4ca061a2:19ce98e0b73:-7e87\" />\n        </SuperBlockDiagram>\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Empty exprs",
+    "Contains ControlPort",
+    "Non-standard width: 60.0",
+    "Contains CommandPort"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

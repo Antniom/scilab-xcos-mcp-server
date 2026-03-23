@@ -1,0 +1,18 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "freq_div block",
+  "anomalies": [
+    "Empty exprs",
+    "Contains ControlPort",
+    "Non-standard width: 60.0",
+    "Contains CommandPort"
+  ],
+  "name": "freq_div",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/freq_div.sci"
+}

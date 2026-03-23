@@ -1,0 +1,122 @@
+{
+  "name": "PRODUCT",
+  "description": "Product block - multiplies or divides multiple inputs",
+  "category": "Math Operations",
+  "blockType": "c",
+  "tag": "Product",
+  "interfaceFunctionName": "PRODUCT",
+  "simulationFunctionName": "product",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 60.0
+  },
+  "style": "PRODUCT",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 2,
+      "width": 1,
+      "values": ["[1;-1]", "1"],
+      "labels": ["input_signs", "overflow_check"],
+      "descriptions": [
+        "Signs for each input: 1=multiply, -1=divide",
+        "Overflow checking: 0=no, 1=yes"
+      ]
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [0.0]
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 2,
+      "values": [1, -1]
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "First operand"
+      },
+      {
+        "ordering": 2,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Second operand"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "description": "Product/quotient result"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<Product id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"PRODUCT\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"product\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"PRODUCT\">\n  <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"[1;-1]\"/>\n    <data line=\"1\" column=\"0\" value=\"1\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" realPart=\"0.0\"/>\n  </ScilabDouble>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"2\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n    <data line=\"0\" column=\"1\" value=\"-1\"/>\n  </ScilabInteger>\n  <mxGeometry as=\"geometry\" x=\"100.0\" y=\"100.0\" width=\"40.0\" height=\"60.0\"/>\n</Product>",
+  "anomalies": [
+    "Uses 'Product' tag instead of 'BasicBlock'",
+    "exprs[0] encodes [multiply;divide] pattern",
+    "Height is 60 (taller than standard 40)",
+    "integerParameters encodes the sign pattern",
+    "Supports both multiplication and division"
+  ],
+  "criticalRules": [
+    "exprs[0] signs: 1=multiply, -1=divide (e.g., [1;-1] = first/second)",
+    "Number of sign values must match number of inputs",
+    "Standard PRODUCT symbol shown inside block",
+    "Height 60 to accommodate multiple ports"
+  ],
+  "commonUses": [
+    "Multiplication of two signals",
+    "Division (output = input1/input2)",
+    "Squaring signals ([1;1] with same input)",
+    "Inverse computation ([-1] with single input)"
+  ],
+  "paramSets": {
+    "multiply": {
+      "exprs": ["[1;1]", "1"],
+      "description": "Multiply two inputs"
+    },
+    "divide": {
+      "exprs": ["[1;-1]", "1"],
+      "description": "Divide first by second"
+    },
+    "inverse": {
+      "exprs": ["[-1]", "1"],
+      "description": "Single input, compute 1/x"
+    }
+  },
+  "relatedBlocks": [
+    "PROD_f - product with fixed inputs",
+    "GAINBLK_f - constant gain multiplication",
+    "POWBLK_f - power/exponentiation"
+  ]
+}

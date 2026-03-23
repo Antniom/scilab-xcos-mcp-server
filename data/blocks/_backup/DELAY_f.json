@@ -1,0 +1,65 @@
+{
+  "name": "DELAY_f",
+  "description": "Fixed delay SuperBlock - provides a fixed time delay using internal register and event delay",
+  "category": "Continuous",
+  "blockType": "h",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DELAY_f",
+  "simulationFunctionName": "csuper",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [],
+    "realParameters": {},
+    "integerParameters": {},
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": [],
+    "dState": []
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "control": [],
+    "command": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"DELAY_f\" blockType=\"h\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"csuper\" simulationFunctionType=\"DEFAULT\" style=\"DELAY_f\"><ScilabDouble as=\"exprs\" height=\"0\" width=\"0\"/><ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\"/><ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\"/><ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabDouble as=\"state\" height=\"0\" width=\"0\"/><ScilabDouble as=\"dState\" height=\"0\" width=\"0\"/><mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/><SuperBlockDiagram as=\"child\" ...>...</SuperBlockDiagram></BasicBlock>",
+  "anomalies": [
+    "blockType='h' (SuperBlock)",
+    "Encapsulates REGISTER_f and EVTDLY_f",
+    "No external event ports, used for continuous-like fixed delay"
+  ],
+  "criticalRules": [
+    "Internal structure must be preserved if modified"
+  ],
+  "commonUses": [
+    "Fixed time delay for continuous signals"
+  ],
+  "relatedBlocks": [
+    "DELAYV_f",
+    "TIME_DELAY"
+  ]
+}

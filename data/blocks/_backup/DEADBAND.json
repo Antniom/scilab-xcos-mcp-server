@@ -1,0 +1,90 @@
+{
+  "name": "DEADBAND",
+  "description": "Deadband block - creates a deadzone where output is zero for inputs within a range",
+  "category": "Discontinuities",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DEADBAND",
+  "simulationFunctionName": "deadband",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 3,
+      "width": 1,
+      "values": ["0.5", "-0.5", "1"],
+      "description": "exprs[0]=end of deadband, exprs[1]=start of deadband, exprs[2]=method"
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 2,
+      "values": [0.5, -0.5],
+      "description": "Deadzone boundaries [end, start]"
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": 2,
+    "nmode": 1,
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"DEADBAND\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"deadband\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"DEADBAND\">\n  <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"0.5\"/>\n    <data line=\"1\" column=\"0\" value=\"-0.5\"/>\n    <data line=\"2\" column=\"0\" value=\"1\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"2\">\n    <data line=\"0\" column=\"0\" realPart=\"0.5\"/>\n    <data line=\"0\" column=\"1\" realPart=\"-0.5\"/>\n  </ScilabDouble>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "nbZerosCrossing=2 (detects both edges of deadband)",
+    "nmode=1 (has continuous modes for zero crossing detection)",
+    "realParameters contains 2 values but exprs has 3",
+    "exprs[2] method not stored in parameters but used for calculation"
+  ],
+  "criticalRules": [
+    "If input is between start and end: output = 0",
+    "If input > end: output = input - end",
+    "If input < start: output = input - start",
+    "nbZerosCrossing=2 indicates zero-crossing detection at both edges",
+    "exprs[2]=1: use model with zero-crossing (accurate at discontinuities)"
+  ],
+  "commonUses": [
+    "Eliminating noise around zero in signals",
+    "Motor deadzone compensation",
+    "Valve deadband modeling",
+    "Friction modeling"
+  ],
+  "relatedBlocks": ["BACKLASH", "HYSTHERESIS", "SATURATION", "QUANT_f"]
+}

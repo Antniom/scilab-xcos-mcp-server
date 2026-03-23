@@ -1,0 +1,117 @@
+{
+  "name": "COSBLK_f",
+  "description": "Cosine function block - computes the cosine of the input signal",
+  "category": "Math Operations/Trigonometry",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "COSBLK_f",
+  "simulationFunctionName": "cosblk",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "objectsParameters": {
+      "type": "ScilabList"
+    },
+    "nbZerosCrossing": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "nmode": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "state": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "dState": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "oDState": {
+      "type": "ScilabList"
+    },
+    "equations": {
+      "type": "ScilabList"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0;rotation=0",
+        "value": ""
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0;rotation=0",
+        "value": ""
+      }
+    ],
+    "implicitInputs": [],
+    "implicitOutputs": [],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"COSBLK_f\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"cosblk\" simulationFunctionType=\"DEFAULT\" style=\"COSBLK_f\">\n  <ScilabDouble as=\"exprs\" height=\"0\" width=\"0\"/>\n  <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\"/>\n  <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\"/>\n  <Array as=\"objectsParameters\" scilabClass=\"ScilabList\"/>\n  <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n  </ScilabInteger>\n  <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n  </ScilabInteger>\n  <ScilabDouble as=\"state\" height=\"0\" width=\"0\"/>\n  <ScilabDouble as=\"dState\" height=\"0\" width=\"0\"/>\n  <Array as=\"oDState\" scilabClass=\"ScilabList\"/>\n  <Array as=\"equations\" scilabClass=\"ScilabList\"/>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Empty exprs (height=0,width=0) - no parameters",
+    "dataLines=-1 for variable-size input/output",
+    "DEFAULT simulation function type (not C_OR_FORTRAN)",
+    "Simple trigonometric block with no state"
+  ],
+  "criticalRules": [
+    "Use DEFAULT simulationFunctionType",
+    "Preserve empty parameter structure",
+    "Output port style must include rotation=0"
+  ],
+  "commonUses": [
+    "Signal processing - convert phase to amplitude",
+    "Oscillator circuits - combine with sine for quadrature",
+    "Trigonometric calculations",
+    "Phase-locked loops"
+  ],
+  "relatedBlocks": [
+    "SINBLK_f",
+    "TANBLK_f",
+    "TrigFun"
+  ]
+}

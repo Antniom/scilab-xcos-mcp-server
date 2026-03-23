@@ -1,0 +1,132 @@
+{
+  "name": "Counter",
+  "description": "Event counter block - counts events and outputs the accumulated count",
+  "category": "Discrete/Events",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "Counter",
+  "simulationFunctionName": "counter",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 3,
+      "width": 1,
+      "values": [
+        "0",
+        "2",
+        "1"
+      ]
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "integerParameters": {
+      "type": "ScilabInteger",
+      "height": 1,
+      "width": 3,
+      "intPrecision": "sci_int32",
+      "values": [
+        { "line": 0, "column": 0, "value": 1 },
+        { "line": 0, "column": 1, "value": 2 },
+        { "line": 0, "column": 2, "value": 0 }
+      ]
+    },
+    "objectsParameters": {
+      "type": "ScilabList"
+    },
+    "nbZerosCrossing": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "nmode": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "state": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "dState": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabDouble",
+      "values": [{ "line": 0, "column": 0, "realPart": 0.0 }]
+    },
+    "oDState": {
+      "type": "ScilabList"
+    },
+    "equations": {
+      "type": "ScilabList"
+    }
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "value": ""
+      }
+    ],
+    "implicitInputs": [],
+    "implicitOutputs": [],
+    "controls": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "value": ""
+      }
+    ],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"Counter\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"counter\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"Counter\">\n  <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n    <data line=\"1\" column=\"0\" value=\"2\"/>\n    <data line=\"2\" column=\"0\" value=\"1\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\"/>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"3\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n    <data line=\"0\" column=\"1\" value=\"2\"/>\n    <data line=\"0\" column=\"2\" value=\"0\"/>\n  </ScilabInteger>\n  <Array as=\"objectsParameters\" scilabClass=\"ScilabList\"/>\n  <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n  </ScilabInteger>\n  <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n  </ScilabInteger>\n  <ScilabDouble as=\"state\" height=\"0\" width=\"0\"/>\n  <ScilabDouble as=\"dState\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" realPart=\"0.0\"/>\n  </ScilabDouble>\n  <Array as=\"oDState\" scilabClass=\"ScilabList\"/>\n  <Array as=\"equations\" scilabClass=\"ScilabList\"/>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Width=60 (non-standard, standard is 40)",
+    "dState exists but state is empty - uses discrete state",
+    "Control port for event counting (signals incremental)",
+    "3-parameter exprs: initial value, max count, increment direction",
+    "Multiple integer parameters [1, 2, 0] for internal counter configuration"
+  ],
+  "criticalRules": [
+    "Control port is input event (not clock)",
+    "dState must be kept for counter persistence",
+    "Width=60 must be preserved",
+    "C_OR_FORTRAN simulation function type"
+  ],
+  "commonUses": [
+    "Counting events in simulations",
+    "Sequencing operations",
+    "State machine implementation",
+    "Loop iteration counting",
+    "Event frequency counting"
+  ],
+  "relatedBlocks": [
+    "Modulo_Count",
+    "CLOCK_c",
+    "SampleCLK"
+  ]
+}

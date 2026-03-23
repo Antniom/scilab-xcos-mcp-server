@@ -1,0 +1,23 @@
+{
+  "relatedBlocks": [
+    "DLSS",
+    "CLR",
+    "CLSS"
+  ],
+  "criticalRules": [
+    "State space matrices (A,B,C,D) are linearized in realParameters",
+    "Depends on a clock signal"
+  ],
+  "description": "Discrete Linear State-Space - represents linear time-invariant systems in discrete state-space form",
+  "anomalies": [
+    "Standard square size (60x60)",
+    "Discrete LTI system",
+    "Requires event input for time stepping"
+  ],
+  "name": "DLR",
+  "commonUses": [
+    "Digital filters",
+    "Discrete-time control systems"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DLR.sci"
+}

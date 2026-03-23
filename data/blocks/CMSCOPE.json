@@ -1,0 +1,37 @@
+{
+  "relatedBlocks": [
+    "CSCOPE",
+    "CEVENTSCOPE",
+    "CFSCOPE",
+    "CMSCOPE",
+    "SCALE_CMSCOPE"
+  ],
+  "criticalRules": [
+    "Control port is refresh trigger, NOT clock",
+    "exprs line 0: color indices for each input (e.g., \"1 1\" for 2 inputs)",
+    "exprs line 5-6: Y-axis min/max values (e.g., \"-1 -5\", \"1 5\")",
+    "exprs line 7-8 hold the refresh period and buffer size in the verified examples",
+    "C_OR_FORTRAN simulation function type",
+    "CRITICAL: Scope blocks MUST have a CLOCK_c block connected to their ControlPort (red top port) via a CommandControlLink, otherwise graph is empty.",
+    "Verified 1-input example is available in reference_blocks/CMSCOPE__1_input.xcos and uses realParameters width 5 with values [0, period, bufferSize, ymin, ymax]",
+    "Verified 2-input example keeps integerParameters width 11; reuse the exact parameter layout from the matching example instead of recalculating it from memory",
+    "Treat CMSCOPE parameter sizing as example-driven: copy either the verified 1-input or 2-input structure and then edit only the intended values"
+  ],
+  "description": "Multi-channel scope - displays multiple signals on same axis with color differentiation",
+  "anomalies": [
+    "Multiple explicit inputs (2+ supported)",
+    "Complex exprs with 11 parameters including color codes",
+    "Verified 1-input and 2-input forms differ enough that hand-derived width formulas are easy to get wrong",
+    "realParameters width is 5 in the verified 1-input form and 7 in the bundled 2-input reference",
+    "ControlPort for event refresh (not clock)",
+    "Color mapping: 1 3 5 7... are color indices for each input"
+  ],
+  "name": "CMSCOPE",
+  "commonUses": [
+    "Multi-signal visualization",
+    "Comparing multiple traces",
+    "Oscilloscope-style display",
+    "Signal monitoring with color differentiation"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CMSCOPE.sci"
+}

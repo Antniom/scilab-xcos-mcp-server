@@ -1,0 +1,19 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "PROD_f block",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size",
+    "Non-standard width: 20.0",
+    "Non-standard height: 20.0",
+    "Special tag: RoundBlock",
+    "Empty exprs"
+  ],
+  "name": "PROD_f",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/PROD_f.sci"
+}

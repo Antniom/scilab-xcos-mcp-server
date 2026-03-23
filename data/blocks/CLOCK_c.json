@@ -1,0 +1,28 @@
+{
+  "name": "CLOCK_c",
+  "description": "Periodic clock generator — generates periodic events with configurable period",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CLOCK_c.sci",
+  "criticalRules": [
+    "SUPERBLOCK — blockType='h', simulationFunctionName='csuper', simulationFunctionType='DEFAULT'.",
+    "A reference .xcos file EXISTS: call get_xcos_block_example('CLOCK_c') — use it as your template.",
+    "ALL top-level exprs/realParameters/integerParameters MUST be ScilabDouble height='0' width='0'. NEVER fill them with values.",
+    "MUST contain a <SuperBlockDiagram> child element AFTER <mxGeometry> — NEVER flatten to a plain block.",
+    "SuperBlockDiagram internal blocks: EventOutBlock(CLKOUT_f) + BasicBlock(EVTDLY_c) + SplitBlock(CLKSPLIT_f).",
+    "Internal block tags: CLKOUT_f uses <EventOutBlock>, CLKSPLIT_f uses <SplitBlock>, EVTDLY_c uses <BasicBlock>.",
+    "3 CommandControlLinks in SuperBlockDiagram: EVTDLY_c.cmd->CLKSPLIT_f.ctrl, CLKSPLIT_f.cmd1->CLKOUT_f.ctrl, CLKSPLIT_f.cmd2->EVTDLY_c.ctrl.",
+    "Top-level CommandPort: ONE CommandPort sibling of the block (parent=block id), ordering='1', initialState='-1.0'.",
+    "SuperBlockDiagram MUST start with <Array as='context' scilabClass='String[]'></Array> and end with <mxCell as='defaultParent' .../>."
+  ],
+  "anomalies": [
+    "SuperBlock — NEVER generate as a flat BasicBlock with scalar parameters.",
+    "Has exactly ONE CommandPort output at the top level (the clock output).",
+    "Period is configured via internal EVTDLY_c exprs — not via top-level params.",
+    "Internal feedback loop: CLKSPLIT_f splits event to both CLKOUT_f and back to EVTDLY_c."
+  ],
+  "commonUses": [
+    "Periodic sampling triggers",
+    "Timed event generation",
+    "Simulation clock synchronization"
+  ],
+  "relatedBlocks": ["CLOCK_f", "EVTDLY_c", "CLKSPLIT_f", "CLKOUT_f", "CLKOUTV_f"]
+}

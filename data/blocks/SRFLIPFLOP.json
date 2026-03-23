@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "SRFLIPFLOP block",
+  "anomalies": [
+    "Empty exprs",
+    "Non-standard height: 60.0",
+    "blockType='h' indicates SuperBlock with internal diagram"
+  ],
+  "name": "SRFLIPFLOP",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/SRFLIPFLOP.sci"
+}

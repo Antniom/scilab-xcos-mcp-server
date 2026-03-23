@@ -1,0 +1,124 @@
+{
+  "name": "QUANT_f",
+  "description": "QUANT_f block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "QUANT_f",
+  "simulationFunctionName": "qzrnd",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "2",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0.1"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "1"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        }
+      ]
+    },
+    "integerParameters": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "1"
+        }
+      ]
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0;rotation=0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0;rotation=0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-3be62bc8:19ce985ed1e:-7f3b\" parent=\"0:2:0\" interfaceFunctionName=\"QUANT_f\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"qzrnd\" simulationFunctionType=\"DEFAULT\" style=\"QUANT_f\">\n        <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"0.1\" />\n          <data line=\"1\" column=\"0\" value=\"1\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"1\" width=\"1\">\n          <data line=\"0\" column=\"0\" realPart=\"0.1\" />\n        </ScilabDouble>\n        <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"1\" />\n        </ScilabInteger>\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

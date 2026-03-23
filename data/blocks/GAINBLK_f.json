@@ -1,0 +1,28 @@
+{
+  "relatedBlocks": [
+    "GAIN_f - floating point gain",
+    "GAINBLK - matrix gain",
+    "PRODUCT - multiplication of two signals"
+  ],
+  "criticalRules": [
+    "Output = Input * Gain value from exprs/realParameters",
+    "Supports scalar, vector, and matrix gain",
+    "Standard algebraic block"
+  ],
+  "description": "Gain block - multiplies input by a constant gain factor",
+  "anomalies": [
+    "Port style includes rotation=0 (standard, same as other blocks)",
+    "simulationFunctionType is DEFAULT, not C_OR_FORTRAN",
+    "One of the most commonly used blocks",
+    "Supports matrix gain (when exprs is a matrix)"
+  ],
+  "name": "GAINBLK_f",
+  "commonUses": [
+    "Amplifying signals",
+    "Unit conversion",
+    "Feedback loops",
+    "Attenuation",
+    "Inversion (gain=-1)"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/GAINBLK_f.sci"
+}

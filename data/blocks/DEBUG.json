@@ -1,0 +1,32 @@
+{
+  "relatedBlocks": [
+    "scifunc_block_m",
+    "CBLOCK",
+    "CBLOCK4",
+    "generic_block3"
+  ],
+  "criticalRules": [
+    "DEBUG simulationFunctionType enables interactive debugging",
+    "No input/output - used for inspection and debugging only",
+    "exprs[1] contains callback code (xcos_debug_gui)",
+    "Opens GUI windows for interactive variable inspection",
+    "Use for development/debugging - remove for production"
+  ],
+  "description": "Debug block - provides interactive debugging capabilities with GUI",
+  "anomalies": [
+    "ANOMALY: simulationFunctionType='DEBUG' (unique special type)",
+    "Width=160 (4x normal width)",
+    "No ports - standalone diagnostic block",
+    "exprs is ScilabList with debug code callbacks",
+    "simulationFunctionName='%debug_scicos' (special internal function)",
+    "Block title in file is 'CBLOCK4' - likely from copy/paste"
+  ],
+  "name": "DEBUG",
+  "commonUses": [
+    "Interactive debugging during simulation",
+    "Real-time variable inspection",
+    "GUI-based debugging workflows",
+    "Development and testing"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/DEBUG.sci"
+}

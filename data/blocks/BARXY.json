@@ -1,0 +1,27 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "Has 1 ControlPort (event trigger) - unique for scope/visualization",
+    "Has 2 ExplicitInputPorts for X and Y data",
+    "exprs: [xmin, xmax, ymin, ymax, bar thickness]",
+    "simulationFunctionName MUST BE 'BARXY_sim'",
+    "simulationFunctionType MUST BE 'SCILAB'",
+    "dependsOnU=\"1\" (feed-through block)"
+  ],
+  "validXml": "      <BasicBlock id='...' parent='...' interfaceFunctionName='BARXY' blockType='d' simulationFunctionName='BARXY_sim' simulationFunctionType='SCILAB' style='BARXY'>\n        <ScilabString as='exprs' height='5' width='1'>\n          <data line='0' column='0' value='-15'/>\n          <data line='1' column='0' value='15'/>\n          <data line='2' column='0' value='-15'/>\n          <data line='3' column='0' value='15'/>\n          <data line='4' column='0' value='1'/>\n        </ScilabString>\n        <ScilabDouble as='realParameters' height='1' width='4'>\n          <data line='0' column='0' realPart='-15.0'/>\n          <data line='0' column='1' realPart='15.0'/>\n          <data line='0' column='2' realPart='-15.0'/>\n          <data line='0' column='3' realPart='15.0'/>\n        </ScilabDouble>\n        <ScilabInteger as='integerParameters' height='1' width='1' intPrecision='sci_int32'>\n          <data line='0' column='0' value='1'/>\n        </ScilabInteger>\n        <mxGeometry as='geometry' x='0.0' y='0.0' width='40.0' height='40.0'/>\n      </BasicBlock>",
+  "description": "XY Bar chart visualization - displays 2D data as bar graph",
+  "anomalies": [
+    "Has 1 ControlPort (event trigger) - unique for scope/visualization",
+    "Has 2 ExplicitInputPorts for X and Y data",
+    "Uses SCILAB simulationFunctionType (interpreted, not compiled)",
+    "No explicit outputs - visualization only",
+    "dataLines=-1 allows variable-size inputs"
+  ],
+  "name": "BARXY",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/BARXY.sci",
+  "commonUses": [
+    "XY bar chart visualization",
+    "2D histogram display",
+    "Data distribution plots"
+  ]
+}

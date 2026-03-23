@@ -1,0 +1,19 @@
+{
+  "relatedBlocks": [
+    "EVTGEN_f",
+    "SampleCLK"
+  ],
+  "criticalRules": [
+    "Cannot delay multiple events simultaneously (single buffer)"
+  ],
+  "description": "Event Delay - delays an input event by a specified time period",
+  "anomalies": [
+    "Width=60 (Legacy event delay size)"
+  ],
+  "name": "EVTDLY_c",
+  "commonUses": [
+    "Sampling time control",
+    "Logic loop prevention"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/EVTDLY_c.sci"
+}

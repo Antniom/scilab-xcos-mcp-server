@@ -1,0 +1,76 @@
+{
+  "name": "DIFF_f",
+  "description": "Differentiator - legacy derivative block using numerical differentiation",
+  "category": "Continuous",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DIFF_f",
+  "simulationFunctionName": "diffblk",
+  "simulationFunctionType": "OLDBLOCKS",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "data": [
+        ["0"],
+        ["0"]
+      ]
+    },
+    "realParameters": {},
+    "integerParameters": {},
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "data": [
+        ["0.0", "0.0"]
+      ]
+    },
+    "dState": []
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "control": [],
+    "command": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"DIFF_f\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"diffblk\" simulationFunctionType=\"OLDBLOCKS\" style=\"DIFF_f\"><ScilabString as=\"exprs\" height=\"2\" width=\"1\"><data line=\"0\" column=\"0\" value=\"0\"/><data line=\"1\" column=\"0\" value=\"0\"/></ScilabString><ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabDouble as=\"state\" height=\"1\" width=\"2\"><data line=\"0\" column=\"0\" realPart=\"0.0\"/><data line=\"0\" column=\"1\" realPart=\"0.0\"/></ScilabDouble><mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/></BasicBlock>",
+  "anomalies": [
+    "simulationFunctionType='OLDBLOCKS'",
+    "dependsOnT=1 (Depends on time)",
+    "Uses 'state' instead of 'dState' for buffer in reference"
+  ],
+  "criticalRules": [
+    "Numerically unstable for high-frequency noise",
+    "OLDBLOCKS type must be handled correctly in simulation"
+  ],
+  "commonUses": [
+    "Approximating derivatives of continuous signals"
+  ],
+  "relatedBlocks": [
+    "DERIV",
+    "CLR",
+    "CLSS"
+  ]
+}

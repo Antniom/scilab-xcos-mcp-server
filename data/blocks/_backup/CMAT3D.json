@@ -1,0 +1,140 @@
+{
+  "name": "CMAT3D",
+  "description": "3D matrix block - displays matrix data as 3D colored surface visualization",
+  "category": "Sinks/Visualization",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CMAT3D",
+  "simulationFunctionName": "cmat3d",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 5,
+      "width": 1,
+      "values": [
+        "-1",
+        "-1",
+        "jet(25)",
+        "0",
+        "100"
+      ]
+    },
+    "realParameters": {
+      "type": "ScilabDouble",
+      "height": 1,
+      "width": 77,
+      "description": "Colormap RGB values for 3D surface coloring",
+      "note": "Contains colormap gradient plus rotation/view angle data"
+    },
+    "integerParameters": {
+      "type": "ScilabInteger",
+      "height": 1,
+      "width": 5,
+      "intPrecision": "sci_int32",
+      "values": [
+        { "line": 0, "column": 0, "value": 0 },
+        { "line": 0, "column": 1, "value": 100 },
+        { "line": 0, "column": 2, "value": 25 },
+        { "line": 0, "column": 3, "value": 1 },
+        { "line": 0, "column": 4, "value": 1 }
+      ]
+    },
+    "objectsParameters": {
+      "type": "ScilabList"
+    },
+    "nbZerosCrossing": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "nmode": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "state": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "dState": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "oDState": {
+      "type": "ScilabList"
+    },
+    "equations": {
+      "type": "ScilabList"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": -2,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "value": ""
+      }
+    ],
+    "explicitOutputs": [],
+    "implicitInputs": [],
+    "implicitOutputs": [],
+    "controls": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "value": ""
+      }
+    ],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"CMAT3D\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"cmat3d\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CMAT3D\">\n  <ScilabString as=\"exprs\" height=\"5\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"-1\"/>\n    <data line=\"1\" column=\"0\" value=\"-1\"/>\n    <data line=\"2\" column=\"0\" value=\"jet(25)\"/>\n    <data line=\"3\" column=\"0\" value=\"0\"/>\n    <data line=\"4\" column=\"0\" value=\"100\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"77\">\n    <!-- Colormap data plus view angle data -->\n  </ScilabDouble>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"5\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n    <data line=\"0\" column=\"1\" value=\"100\"/>\n    <data line=\"0\" column=\"2\" value=\"25\"/>\n    <data line=\"0\" column=\"3\" value=\"1\"/>\n    <data line=\"0\" column=\"4\" value=\"1\"/>\n  </ScilabInteger>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "5-parameter exprs (vs 3 for CMATVIEW) - adds view angle parameters",
+    "dataColumns=-2, dataLines=-1 (auto-dimension for matrix)",
+    "realParameters width=77 (colormap + view bounds)",
+    "exprs line 0-1: alpha/theta view angles (-1 = auto)",
+    "Integer parameters: [min, max, colors, alpha_enable, theta_enable]",
+    "More complex than CMATVIEW with 3D view capabilities"
+  ],
+  "criticalRules": [
+    "Control port is refresh trigger, NOT clock",
+    "exprs line 0: alpha rotation angle (-1 = auto)",
+    "exprs line 1: theta view angle (-1 = auto)",
+    "exprs lines 2-4: colormap, min, max (same as CMATVIEW)",
+    "Integer parameters last 2 values control angle auto/manual",
+    "C_OR_FORTRAN simulation function type"
+  ],
+  "commonUses": [
+    "3D surface visualization",
+    "Topographic map display",
+    "Elevation data visualization",
+    "Scientific data 3D plotting",
+    "Real-time 3D data monitoring"
+  ],
+  "relatedBlocks": [
+    "CMATVIEW",
+    "CSCOPXY3D",
+    "CANIMXY3D"
+  ]
+}

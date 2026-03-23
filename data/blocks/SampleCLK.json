@@ -1,0 +1,16 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "SampleCLK block",
+  "anomalies": [
+    "initialState=-1.0 for event port",
+    "Contains CommandPort"
+  ],
+  "name": "SampleCLK",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/SampleCLK.sci"
+}

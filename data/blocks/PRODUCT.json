@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "PROD_f - product with fixed inputs",
+    "GAINBLK_f - constant gain multiplication",
+    "POWBLK_f - power/exponentiation"
+  ],
+  "criticalRules": [
+    "exprs[0] signs: 1=multiply, -1=divide (e.g., [1;-1] = first/second)",
+    "Number of sign values must match number of inputs",
+    "Standard PRODUCT symbol shown inside block",
+    "Height 60 to accommodate multiple ports"
+  ],
+  "description": "Product block - multiplies or divides multiple inputs",
+  "anomalies": [
+    "Uses 'Product' tag instead of 'BasicBlock'",
+    "exprs[0] encodes [multiply;divide] pattern",
+    "Height is 60 (taller than standard 40)",
+    "integerParameters encodes the sign pattern",
+    "Supports both multiplication and division"
+  ],
+  "name": "PRODUCT",
+  "commonUses": [
+    "Multiplication of two signals",
+    "Division (output = input1/input2)",
+    "Squaring signals ([1;1] with same input)",
+    "Inverse computation ([-1] with single input)"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/PRODUCT.sci"
+}

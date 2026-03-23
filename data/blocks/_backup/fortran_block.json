@@ -1,0 +1,106 @@
+{
+  "name": "fortran_block",
+  "description": "fortran_block block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "fortran_block",
+  "simulationFunctionName": " ",
+  "simulationFunctionType": "DYNAMIC_FORTRAN_1",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 80.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "0",
+      "width": "0"
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7a95\" parent=\"0:2:0\" interfaceFunctionName=\"fortran_block\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\" \" simulationFunctionType=\"DYNAMIC_FORTRAN_1\" style=\"fortran_block\">\n        <Array as=\"exprs\" scilabClass=\"ScilabList\">\n          <ScilabString height=\"4\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"1\" />\n            <data line=\"1\" column=\"0\" value=\"1\" />\n            <data line=\"2\" column=\"0\" value=\"[]\" />\n            <data line=\"3\" column=\"0\" value=\"forty\" />\n          </ScilabString>\n          <Array scilabClass=\"ScilabList\">\n            <ScilabDouble height=\"0\" width=\"0\" />\n          </Array>\n        </Array>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"80.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Empty exprs",
+    "Non-standard width: 80.0"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

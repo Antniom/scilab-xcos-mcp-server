@@ -1,0 +1,20 @@
+{
+  "description": "Computes the absolute value of the input signal",
+  "name": "ABS_VALUE",
+  "anomalies": [
+    "nbZerosCrossing=-1 indicates default behavior (use solver default)",
+    "dataLines=-1 indicates variable/auto-sized matrix support",
+    "Simple block with exactly 1 input and 1 output"
+  ],
+  "criticalRules": [
+    "exprs[0] controls output datatype: 1=floating point, 2=integer, 3=uint",
+    "Simple block with exactly 1 input and 1 output"
+  ],
+  "commonUses": [
+    "Converting bipolar signals to unipolar",
+    "Computing signal magnitude",
+    "Ensuring positive values for downstream blocks"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/ABS_VALUE.sci"
+}

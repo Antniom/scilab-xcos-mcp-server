@@ -1,0 +1,116 @@
+{
+  "name": "MAX_f",
+  "description": "MAX_f block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "MAX_f",
+  "simulationFunctionName": "maxblk",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": " "
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "1",
+      "width": "2",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        }
+      ]
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7dd9\" parent=\"0:2:0\" interfaceFunctionName=\"MAX_f\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"maxblk\" simulationFunctionType=\"DEFAULT\" style=\"MAX_f\">\n        <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\" \" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"1\" width=\"2\">\n          <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"1\" realPart=\"0.0\" />\n        </ScilabDouble>\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

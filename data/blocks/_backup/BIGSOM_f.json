@@ -1,0 +1,23 @@
+{
+  "description": "Big Summer block - sums multiple inputs with configurable signs",
+  "name": "BIGSOM_f",
+  "anomalies": [
+    "Uses BigSom tag (not BasicBlock)",
+    "exprs encodes input signs: [1;1]=sum, [-1;1]=difference",
+    "Height 60 (1.5x standard) to accommodate multiple inputs",
+    "dataLines=-1 supports variable-size vectors/matrices"
+  ],
+  "criticalRules": [
+    "Uses BigSom tag (not BasicBlock)",
+    "exprs encodes input signs: [1;1]=sum, [-1;1]=difference",
+    "Height 60 (1.5x standard) to accommodate multiple inputs",
+    "dataLines=-1 supports variable-size vectors/matrices"
+  ],
+  "commonUses": [
+    "Summing multiple signals",
+    "Differential signal computation",
+    "Combining signed control signals"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/BIGSOM_f.sci"
+}

@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "MUX_f block",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size",
+    "dataLines=-2 indicates auto-dimension",
+    "Non-standard width: 10.0"
+  ],
+  "name": "MUX_f",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/MUX_f.sci"
+}

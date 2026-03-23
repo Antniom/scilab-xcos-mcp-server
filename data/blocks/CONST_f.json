@@ -1,0 +1,26 @@
+{
+  "relatedBlocks": [
+    "CONST",
+    "CONST_m",
+    "STEP_FUNCTION"
+  ],
+  "criticalRules": [
+    "TYPE_1 simulation function is legacy Scicos type",
+    "Use CONST (cstblk4) for newer designs",
+    "Functionally equivalent to CONST but with older implementation",
+    "Minimal source block with no inputs"
+  ],
+  "description": "Fortran-type constant source block - older constant block implementation",
+  "anomalies": [
+    "simulationFunctionType='TYPE_1' (older type system)",
+    "Different simulationFunctionName from CONST (cstblk vs cstblk4)",
+    "Legacy block - prefers CONST for new designs"
+  ],
+  "name": "CONST_f",
+  "commonUses": [
+    "Legacy model compatibility",
+    "Backward compatibility with old Scicos models",
+    "Simple constant generation"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CONST_f.sci"
+}

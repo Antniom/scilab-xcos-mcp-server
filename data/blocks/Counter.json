@@ -1,0 +1,30 @@
+{
+  "relatedBlocks": [
+    "Modulo_Count",
+    "CLOCK_c",
+    "SampleCLK"
+  ],
+  "criticalRules": [
+    "Control port is input event (not clock)",
+    "dState must be kept for counter persistence",
+    "Width=60 must be preserved",
+    "C_OR_FORTRAN simulation function type"
+  ],
+  "description": "Event counter block - counts events and outputs the accumulated count",
+  "anomalies": [
+    "Width=60 (non-standard, standard is 40)",
+    "dState exists but state is empty - uses discrete state",
+    "Control port for event counting (signals incremental)",
+    "3-parameter exprs: initial value, max count, increment direction",
+    "Multiple integer parameters [1, 2, 0] for internal counter configuration"
+  ],
+  "name": "Counter",
+  "commonUses": [
+    "Counting events in simulations",
+    "Sequencing operations",
+    "State machine implementation",
+    "Loop iteration counting",
+    "Event frequency counting"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/Counter.sci"
+}

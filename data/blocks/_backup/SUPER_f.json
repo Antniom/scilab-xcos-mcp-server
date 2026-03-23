@@ -1,0 +1,99 @@
+{
+  "name": "SUPER_f",
+  "description": "SUPER_f block",
+  "category": "Uncategorized",
+  "blockType": "h",
+  "tag": "SuperBlock",
+  "interfaceFunctionName": "SUPER_f",
+  "simulationFunctionName": "super",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "0",
+      "width": "0"
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<SuperBlock id=\"-4ca061a2:19ce98e0b72:-7b34\" parent=\"0:2:0\" interfaceFunctionName=\"SUPER_f\" blockType=\"h\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"super\" simulationFunctionType=\"DEFAULT\" style=\"SUPER_f\">\n        <ScilabDouble as=\"exprs\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\" />\n        <SuperBlockDiagram as=\"child\" background=\"-1\" gridEnabled=\"1\" title=\"\">\n          <Array as=\"context\" scilabClass=\"String[]\" />\n          <mxGraphModel as=\"model\">\n            <root>\n              <mxCell id=\"-4ca061a2:19ce98e0b73:-7b34\" />\n              <mxCell id=\"-4ca061a2:19ce98e0b74:-7b34\" parent=\"-4ca061a2:19ce98e0b73:-7b34\" />\n              <ExplicitInBlock id=\"-4ca061a2:19ce98e0b72:-7b31\" parent=\"-4ca061a2:19ce98e0b74:-7b34\" interfaceFunctionName=\"IN_f\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"input\" simulationFunctionType=\"DEFAULT\" style=\"\">\n                <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabString>\n                <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n                <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabInteger>\n                <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n                <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n                <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n                <Array as=\"equations\" scilabClass=\"ScilabList\" />\n                <mxGeometry as=\"geometry\" x=\"40.0\" y=\"40.0\" width=\"20.0\" height=\"20.0\" />\n              </ExplicitInBlock>\n              <ExplicitOutputPort id=\"-4ca061a2:19ce98e0b72:-7b30\" parent=\"-4ca061a2:19ce98e0b72:-7b31\" ordering=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n              <ExplicitOutBlock id=\"-4ca061a2:19ce98e0b72:-7b2f\" parent=\"-4ca061a2:19ce98e0b74:-7b34\" interfaceFunctionName=\"OUT_f\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"output\" simulationFunctionType=\"DEFAULT\" style=\"\">\n                <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabString>\n                <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n                <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"1\" />\n                </ScilabInteger>\n                <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n                <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n                  <data line=\"0\" column=\"0\" value=\"0\" />\n                </ScilabInteger>\n                <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n                <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n                <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n                <Array as=\"equations\" scilabClass=\"ScilabList\" />\n                <mxGeometry as=\"geometry\" x=\"240.0\" y=\"40.0\" width=\"20.0\" height=\"20.0\" />\n              </ExplicitOutBlock>\n              <ExplicitInputPort id=\"-4ca061a2:19ce98e0b72:-7b2e\" parent=\"-4ca061a2:19ce98e0b72:-7b2f\" ordering=\"1\" initialState=\"0.0\" style=\"\" value=\"\" />\n            </root>\n          </mxGraphModel>\n          <mxCell as=\"defaultParent\" id=\"-4ca061a2:19ce98e0b74:-7b34\" parent=\"-4ca061a2:19ce98e0b73:-7b34\" />\n        </SuperBlockDiagram>\n      </SuperBlock>\n      ",
+  "anomalies": [
+    "Empty exprs",
+    "blockType='h' indicates SuperBlock with internal diagram",
+    "Special tag: SuperBlock"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

@@ -1,0 +1,18 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "OUTIMPL_f block",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size",
+    "Special tag: ImplicitOutBlock",
+    "Non-standard height: 20.0",
+    "Non-standard width: 20.0"
+  ],
+  "name": "OUTIMPL_f",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/OUTIMPL_f.sci"
+}

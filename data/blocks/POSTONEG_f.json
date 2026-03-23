@@ -1,0 +1,18 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "POSTONEG_f block",
+  "anomalies": [
+    "Empty exprs",
+    "initialState=-1.0 for event port",
+    "nbZerosCrossing=1",
+    "Contains CommandPort"
+  ],
+  "name": "POSTONEG_f",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Threshold/POSTONEG_f.sci"
+}

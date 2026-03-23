@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CLSS",
+    "DLR",
+    "DLSS",
+    "INTEGRAL_m",
+    "DERIV"
+  ],
+  "criticalRules": [
+    "Uses polynomial representation in exprs (numerator/denominator)",
+    "Converts to state-space internally (4 realParameters)",
+    "Time-dependent but not directly input-dependent (internal dynamics)",
+    "Standard SISO transfer function block"
+  ],
+  "description": "Continuous Linear System Representation - Transfer function block with polynomial coefficients",
+  "anomalies": [
+    "Geometry is 60x60 (non-standard, usually 40x40)",
+    "rotation attribute included in port style",
+    "dependsOnT=1 (time-dependent) but dependsOnU=0 (not input-dependent) - uses internal state"
+  ],
+  "name": "CLR",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/CLR.sci",
+  "commonUses": [
+    "Implementing linear filters and transfer functions",
+    "Modeling first and second order systems",
+    "Creating PID controllers",
+    "Signal conditioning with known frequency response"
+  ]
+}

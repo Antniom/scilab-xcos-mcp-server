@@ -1,0 +1,66 @@
+{
+  "name": "DOLLAR_f",
+  "description": "Legacy Unit Delay - legacy implementation of the unit delay block",
+  "category": "Discrete",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DOLLAR_f",
+  "simulationFunctionName": "dollar",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [
+      "0",
+      "0"
+    ],
+    "realParameters": [],
+    "integerParameters": [],
+    "state": [],
+    "dState": [0.0],
+    "nbZerosCrossing": 0,
+    "nmode": 0
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "id": "1",
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "id": "1",
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "controlPorts": [
+      {
+        "id": "1",
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0"
+      }
+    ],
+    "commandPorts": []
+  },
+  "xmlExample": "<BasicBlock interfaceFunctionName=\"DOLLAR_f\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"dollar\" simulationFunctionType=\"DEFAULT\" style=\"DOLLAR_f\">\n  <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n    <data line=\"1\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Simulation function dollar is DEFAULT (Legacy)"
+  ],
+  "criticalRules": [
+    "Updates only on event clock edge"
+  ],
+  "commonUses": [
+    "Feedback loops in discrete systems",
+    "Legacy diagram compatibility"
+  ],
+  "relatedBlocks": [
+    "DOLLAR",
+    "DOLLAR_m"
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "name": "CONSTRAINT2_c",
+  "description": "Dual output constraint block for continuous systems - enforces constraints with two outputs",
+  "category": "Continuous/Constraints",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CONSTRAINT2_c",
+  "simulationFunctionName": "constraint_c",
+  "simulationFunctionType": "IMPLICIT_C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 60,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabList",
+      "description": "Complex exprs structure with nested ScilabString arrays",
+      "structure": [
+        {"type": "ScilabString", "height": 1, "width": 1, "value": "0"},
+        {"type": "ScilabString", "height": 1, "width": 1, "value": "0"},
+        {"type": "ScilabString", "height": 1, "width": 1, "value": "0"}
+      ]
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [0],
+      "description": "Constraint type parameter"
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 1,
+      "width": 2,
+      "values": [0.0, 0.0],
+      "description": "Internal state for constraint enforcement"
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      },
+      {
+        "ordering": 2,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CONSTRAINT2_c\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"constraint_c\" simulationFunctionType=\"IMPLICIT_C_OR_FORTRAN\" style=\"CONSTRAINT2_c\">\n  <Array as=\"exprs\" scilabClass=\"ScilabList\">\n    <ScilabString height=\"1\" width=\"1\">\n      <data line=\"0\" column=\"0\" value=\"0\"/>\n    </ScilabString>\n    <ScilabString height=\"1\" width=\"1\">\n      <data line=\"0\" column=\"0\" value=\"0\"/>\n    </ScilabString>\n    <ScilabString height=\"1\" width=\"1\">\n      <data line=\"0\" column=\"0\" value=\"0\"/>\n    </ScilabString>\n  </Array>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n  </ScilabInteger>\n  <ScilabDouble as=\"state\" height=\"1\" width=\"2\">\n    <data line=\"0\" column=\"0\" realPart=\"0.0\"/>\n    <data line=\"0\" column=\"1\" realPart=\"0.0\"/>\n  </ScilabDouble>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "ANOMALY: exprs is ScilabList containing 3 nested ScilabString elements (unusual structure)",
+    "Has TWO explicit outputs (ordering 1 and 2)",
+    "simulationFunctionType='IMPLICIT_C_OR_FORTRAN' requires implicit solver",
+    "Width=60 (non-standard)",
+    "No realParameters - uses integerParameters and state only",
+    "Same simulationFunctionName as CONSTRAINT_c but with different output configuration"
+  ],
+  "criticalRules": [
+    "exprs is an Array typed as ScilabList with 3 ScilabString children",
+    "2 outputs for dual constraint output",
+    "IMPLICIT_C_OR_FORTRAN requires DAE-capable solver",
+    "Used when constraint error and correction signals are needed separately"
+  ],
+  "commonUses": [
+    "DAE systems requiring dual constraint outputs",
+    "Constraint error monitoring",
+    "Advanced physical modeling",
+    "Index-1 DAE formulations"
+  ],
+  "relatedBlocks": ["CONSTRAINT_c", "zc_func", "INTEGRAL_m"]
+}

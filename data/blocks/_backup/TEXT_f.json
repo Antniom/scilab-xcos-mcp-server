@@ -1,0 +1,30 @@
+{
+  "name": "TEXT_f",
+  "description": "TEXT_f block",
+  "category": "Uncategorized",
+  "blockType": "",
+  "tag": "TextBlock",
+  "interfaceFunctionName": "TEXT_f",
+  "simulationFunctionName": "",
+  "simulationFunctionType": "",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40.0,
+    "height": 20.0
+  },
+  "parameters": {},
+  "ports": {},
+  "xmlExample": "<TextBlock id=\"-4ca061a2:19ce98e0b72:-7cf2\" parent=\"0:2:0\" interfaceFunctionName=\"TEXT_f\" style=\"TEXT_f\" value=\"Text\">\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"20.0\" />\n      </TextBlock>\n    ",
+  "anomalies": [
+    "Special tag: TextBlock",
+    "Non-standard height: 20.0"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

@@ -1,0 +1,84 @@
+{
+  "name": "CURV_f",
+  "description": "Curve lookup table - outputs values from a pre-defined curve using interpolation",
+  "category": "Lookup Tables",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CURV_f",
+  "simulationFunctionName": "intplt",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabDouble",
+      "height": 0,
+      "width": 0,
+      "description": "No exprs - values configured via realParameters"
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 10,
+      "values": [0.0, 1.0, 2.0, -5.0, 5.0, 0.0, 0.0, -5.0, 2.0, 5.0],
+      "description": "Curve data points - x1,y1,x2,y2,... format with bounds"
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 5,
+      "values": [3, 2, 10, 2, 10],
+      "description": "[method, extrapolation, total_points, out_dim1, out_dim2]"
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CURV_f\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"intplt\" simulationFunctionType=\"DEFAULT\" style=\"CURV_f\">\n  <ScilabDouble as=\"exprs\" height=\"0\" width=\"0\"/>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"10\">\n    <data line=\"0\" column=\"0\" realPart=\"0.0\"/>\n    <data line=\"0\" column=\"1\" realPart=\"1.0\"/>\n    <data line=\"0\" column=\"2\" realPart=\"2.0\"/>\n    <data line=\"0\" column=\"3\" realPart=\"-5.0\"/>\n    <data line=\"0\" column=\"4\" realPart=\"5.0\"/>\n    <data line=\"0\" column=\"5\" realPart=\"0.0\"/>\n    <data line=\"0\" column=\"6\" realPart=\"0.0\"/>\n    <data line=\"0\" column=\"7\" realPart=\"-5.0\"/>\n    <data line=\"0\" column=\"8\" realPart=\"2.0\"/>\n    <data line=\"0\" column=\"9\" realPart=\"5.0\"/>\n  </ScilabDouble>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"5\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"3\"/>\n    <data line=\"0\" column=\"1\" value=\"2\"/>\n    <data line=\"0\" column=\"2\" value=\"10\"/>\n    <data line=\"0\" column=\"3\" value=\"2\"/>\n    <data line=\"0\" column=\"4\" value=\"10\"/>\n  </ScilabInteger>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Empty exprs (height=0, width=0) - configured via real/integerParameters",
+    "simulationFunctionName='intplt' (interpolation)",
+    "10 realParameters suggests 5 XY points (5 pairs)",
+    "5 integerParameters for configuration",
+    "Depends on time not input (no input ports)"
+  ],
+  "criticalRules": [
+    "No input ports - operates as timed signal source",
+    "realParameters contain curve points in x1,y1,x2,y2,... order",
+    "integerParameters[0]=interpolation method (3=linear)",
+    "integerParameters[1]=extrapolation method (2=hold last value)",
+    "Outputs curve value based on current simulation time",
+    "Used for predefined reference signals/arbitrary waveforms"
+  ],
+  "commonUses": [
+    "Generating arbitrary time-based waveforms",
+    "Reference trajectories",
+    "Predefined motion profiles",
+    "Test signal generation"
+  ],
+  "relatedBlocks": ["Sigbuilder", "LOOKUP_f", "TIME_f", "GENSIN_f"]
+}

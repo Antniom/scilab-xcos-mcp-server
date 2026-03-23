@@ -1,0 +1,18 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "M_freq block",
+  "anomalies": [
+    "initialState=-1.0 for event port",
+    "Contains ControlPort",
+    "Non-standard width: 60.0",
+    "Contains CommandPort"
+  ],
+  "name": "M_freq",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/M_freq.sci"
+}

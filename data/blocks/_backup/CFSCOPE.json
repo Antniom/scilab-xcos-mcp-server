@@ -1,0 +1,29 @@
+{
+  "description": "Floating scope with independent window for signal visualization",
+  "name": "CFSCOPE",
+  "anomalies": [
+    "No explicit input port - receives data via control event",
+    "17 integerParameters (more than CSCOPE's 15)",
+    "Floating/independent scope window",
+    "ControlPort serves dual purpose: refresh AND data input",
+    "9 parameters vs CSCOPE's 10"
+  ],
+  "criticalRules": [
+    "Event carries implicit data value (not just trigger)",
+    "Floating window independent of main diagram",
+    "Used for debugging/event monitoring",
+    " differs from CSCOPE in port structure"
+  ],
+  "commonUses": [
+    "Event data logging",
+    "Floating signal monitor",
+    "Independent debug display",
+    "Cross-model signal viewing"
+  ],
+  "relatedBlocks": [
+    "CSCOPE",
+    "CMSCOPE",
+    "CEVENTSCOPE"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CFSCOPE.sci"
+}

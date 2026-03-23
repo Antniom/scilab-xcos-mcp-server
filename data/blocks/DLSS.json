@@ -1,0 +1,19 @@
+{
+  "relatedBlocks": [
+    "CLSS",
+    "DLR"
+  ],
+  "criticalRules": [
+    "Requires an event clock to update states"
+  ],
+  "description": "Discrete Linear State-Space - represents a discrete-time linear system in state-space form",
+  "anomalies": [
+    "Width=80 (extended width block)"
+  ],
+  "name": "DLSS",
+  "commonUses": [
+    "Discrete-time linear controller",
+    "Digital filter implementation"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DLSS.sci"
+}

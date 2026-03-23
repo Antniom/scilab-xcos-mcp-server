@@ -1,0 +1,24 @@
+{
+  "description": "Clear a specific bit in an integer value",
+  "name": "BITCLEAR",
+  "anomalies": [
+    "exprs[0]=bit index to clear, [1]=data type (0=int32)",
+    "Uses INT32_MATRIX data type (not REAL_MATRIX)",
+    "objectsParameters stores internal state (sci_int32)",
+    "Block is 80x40 - wider than standard to fit label",
+    "Most bit operations have width 80 instead of 40"
+  ],
+  "criticalRules": [
+    "exprs[0]=bit index to clear, [1]=data type (0=int32)",
+    "Uses INT32_MATRIX data type (not REAL_MATRIX)",
+    "objectsParameters stores internal state (sci_int32)",
+    "Block is 80x40 - wider than standard to fit label"
+  ],
+  "commonUses": [
+    "Clearing flag bits in control systems",
+    "Integer manipulation",
+    "Bit-masking operations"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/BITCLEAR.sci"
+}

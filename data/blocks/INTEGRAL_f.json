@@ -1,0 +1,26 @@
+{
+  "relatedBlocks": [
+    "DERIV",
+    "INTEGRAL_m",
+    "BIGSOM_f"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "exprs stores the initial condition as a string, and state must also be set to the same numeric value as a realPart",
+    "When you change the initial condition, update BOTH exprs[0] and the matching ScilabDouble state entry to the same value",
+    "Copy the empty realParameters/integerParameters layout exactly; INTEGRAL_f keeps its IC in exprs/state rather than realParameters"
+  ],
+  "description": "INTEGRAL_f block",
+  "anomalies": [
+    "Initial condition is duplicated across exprs and state",
+    "realParameters and integerParameters remain empty in the standard block form"
+  ],
+  "name": "INTEGRAL_f",
+  "commonUses": [
+    "ODE state integration",
+    "Continuous-time accumulators",
+    "Cascaded state-space realizations"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/INTEGRAL_f.sci"
+}

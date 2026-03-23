@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "SSPInputConnector block",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size",
+    "Non-standard height: 100.0",
+    "Non-standard width: 180.0"
+  ],
+  "name": "SSPInputConnector",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/SSPInputConnector.sci"
+}

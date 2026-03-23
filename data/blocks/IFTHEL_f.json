@@ -1,0 +1,20 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "IFTHEL_f block",
+  "anomalies": [
+    "Contains CommandPort",
+    "nbZerosCrossing=1",
+    "Non-standard width: 60.0",
+    "Contains ControlPort",
+    "Non-standard height: 60.0",
+    "initialState=-1.0 for event port"
+  ],
+  "name": "IFTHEL_f",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/IFTHEL_f.sci"
+}

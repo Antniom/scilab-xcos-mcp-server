@@ -1,0 +1,73 @@
+{
+  "name": "DEBUG",
+  "description": "Debug block - provides interactive debugging capabilities with GUI",
+  "category": "User-Defined Functions",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DEBUG",
+  "simulationFunctionName": "%debug_scicos",
+  "simulationFunctionType": "DEBUG",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 160,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabList",
+      "description": "Debug configuration with code callbacks",
+      "structure": [
+        {"type": "ScilabString", "height": 1, "width": 1, "value": ""},
+        {"type": "ScilabString", "height": 1, "width": 1, "value": "xcos_debug_gui(flag,block);"}
+      ]
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"DEBUG\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"%debug_scicos\" simulationFunctionType=\"DEBUG\" style=\"DEBUG\">\n  <Array as=\"exprs\" scilabClass=\"ScilabList\">\n    <ScilabString height=\"1\" width=\"1\">\n      <data line=\"0\" column=\"0\" value=\"\"/>\n    </ScilabString>\n    <ScilabString height=\"1\" width=\"1\">\n      <data line=\"0\" column=\"0\" value=\"xcos_debug_gui(flag,block);\"/>\n    </ScilabString>\n  </Array>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"160.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "ANOMALY: simulationFunctionType='DEBUG' (unique special type)",
+    "Width=160 (4x normal width)",
+    "No ports - standalone diagnostic block",
+    "exprs is ScilabList with debug code callbacks",
+    "simulationFunctionName='%debug_scicos' (special internal function)",
+    "Block title in file is 'CBLOCK4' - likely from copy/paste"
+  ],
+  "criticalRules": [
+    "DEBUG simulationFunctionType enables interactive debugging",
+    "No input/output - used for inspection and debugging only",
+    "exprs[1] contains callback code (xcos_debug_gui)",
+    "Opens GUI windows for interactive variable inspection",
+    "Use for development/debugging - remove for production"
+  ],
+  "commonUses": [
+    "Interactive debugging during simulation",
+    "Real-time variable inspection",
+    "GUI-based debugging workflows",
+    "Development and testing"
+  ],
+  "relatedBlocks": ["scifunc_block_m", "CBLOCK", "CBLOCK4", "generic_block3"]
+}

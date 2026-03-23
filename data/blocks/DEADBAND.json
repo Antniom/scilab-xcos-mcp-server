@@ -1,0 +1,30 @@
+{
+  "relatedBlocks": [
+    "BACKLASH",
+    "HYSTHERESIS",
+    "SATURATION",
+    "QUANT_f"
+  ],
+  "criticalRules": [
+    "If input is between start and end: output = 0",
+    "If input > end: output = input - end",
+    "If input < start: output = input - start",
+    "nbZerosCrossing=2 indicates zero-crossing detection at both edges",
+    "exprs[2]=1: use model with zero-crossing (accurate at discontinuities)"
+  ],
+  "description": "Deadband block - creates a deadzone where output is zero for inputs within a range",
+  "anomalies": [
+    "nbZerosCrossing=2 (detects both edges of deadband)",
+    "nmode=1 (has continuous modes for zero crossing detection)",
+    "realParameters contains 2 values but exprs has 3",
+    "exprs[2] method not stored in parameters but used for calculation"
+  ],
+  "name": "DEADBAND",
+  "commonUses": [
+    "Eliminating noise around zero in signals",
+    "Motor deadzone compensation",
+    "Valve deadband modeling",
+    "Friction modeling"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/DEADBAND.sci"
+}

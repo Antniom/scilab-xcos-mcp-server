@@ -1,0 +1,19 @@
+{
+  "relatedBlocks": [
+    "DOLLAR",
+    "DOLLAR_m"
+  ],
+  "criticalRules": [
+    "Updates only on event clock edge"
+  ],
+  "description": "Legacy Unit Delay - legacy implementation of the unit delay block",
+  "anomalies": [
+    "Simulation function dollar is DEFAULT (Legacy)"
+  ],
+  "name": "DOLLAR_f",
+  "commonUses": [
+    "Feedback loops in discrete systems",
+    "Legacy diagram compatibility"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DOLLAR_f.sci"
+}

@@ -1,0 +1,28 @@
+{
+  "relatedBlocks": [
+    "COSBLK_f - cosine function",
+    "TANBLK_f - tangent function",
+    "GENSIN_f - sine wave generator (time-based)",
+    "TrigFun - generic trigonometric function selector"
+  ],
+  "criticalRules": [
+    "Output = sin(input)",
+    "Input in radians (not degrees)",
+    "Supports vector/matrix operations (dataLines=-1)"
+  ],
+  "description": "Sine function block - computes the sine of the input",
+  "anomalies": [
+    "exprs[0] is a space character (blank/placeholder)",
+    "Unitless input - expects radians not degrees",
+    "Standard 40x40 block",
+    "simulationFunctionType is DEFAULT (not C_OR_FORTRAN)"
+  ],
+  "name": "SINBLK_f",
+  "commonUses": [
+    "Oscillator generation",
+    "Harmonic signal creation",
+    "Waveform synthesis",
+    "Mathematical modeling"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/SINBLK_f.sci"
+}

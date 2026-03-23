@@ -1,0 +1,71 @@
+{
+  "name": "ESELECT_f",
+  "description": "Event Selector - selects one from multiple event output paths based on input value",
+  "category": "Signal Routing/Events",
+  "blockType": "l",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "ESELECT_f",
+  "simulationFunctionName": "eselect",
+  "simulationFunctionType": "ESELECT",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 80,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [
+      "2",
+      "1",
+      "0"
+    ],
+    "realParameters": [],
+    "integerParameters": [],
+    "state": [],
+    "dState": [],
+    "nbZerosCrossing": 0,
+    "nmode": 0
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "id": "1",
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "explicitOutputs": [],
+    "controlPorts": [
+      {
+        "id": "1",
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0"
+      }
+    ],
+    "commandPorts": [
+      {
+        "id": "1",
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0"
+      },
+      {
+        "id": "2",
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock interfaceFunctionName=\"ESELECT_f\" blockType=\"l\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"eselect\" simulationFunctionType=\"ESELECT\" style=\"ESELECT_f\">\n  <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"2\"/>\n    <data line=\"1\" column=\"0\" value=\"1\"/>\n    <data line=\"2\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" width=\"80.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "initialState=-1.0 for command ports (Ready state)",
+    "simulationFunctionType=\"ESELECT\""
+  ],
+  "criticalRules": [
+    "Depends on input signal to route event"
+  ],
+  "commonUses": [
+    "Conditional event routing",
+    "Finite State Machine control"
+  ],
+  "relatedBlocks": [
+    "SELECT_m",
+    "IFTHEL_f"
+  ]
+}

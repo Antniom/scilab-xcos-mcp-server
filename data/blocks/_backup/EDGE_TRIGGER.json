@@ -1,0 +1,58 @@
+{
+  "name": "EDGE_TRIGGER",
+  "description": "Edge Trigger - generates an output event based on edge detection from an input signal",
+  "category": "Continuous",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "EDGE_TRIGGER",
+  "simulationFunctionName": "csuper",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [],
+    "realParameters": [],
+    "integerParameters": [],
+    "state": [],
+    "dState": [],
+    "nbZerosCrossing": 0,
+    "nmode": 0
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "id": "1",
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "explicitOutputs": [],
+    "controlPorts": [],
+    "commandPorts": [
+      {
+        "id": "1",
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock interfaceFunctionName=\"EDGE_TRIGGER\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"csuper\" simulationFunctionType=\"DEFAULT\" style=\"EDGE_TRIGGER\">\n  <mxGeometry as=\"geometry\" width=\"60.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "SuperBlock with internal logic (EDGETRIGGER + IFTHEL_f)",
+    "Width=60"
+  ],
+  "criticalRules": [
+    "Generates command event on detected edges"
+  ],
+  "commonUses": [
+    "Hybrid systems synchronization",
+    "Event generation from continuous signals"
+  ],
+  "relatedBlocks": [
+    "CLKSOMV_f",
+    "EVTDLY_c"
+  ]
+}

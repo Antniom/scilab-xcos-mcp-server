@@ -1,0 +1,90 @@
+{
+  "name": "CLSS",
+  "description": "Continuous Linear State Space - State-space representation of continuous-time linear systems",
+  "category": "Continuous/Linear Systems",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CLSS",
+  "simulationFunctionName": "csslti4",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 80,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 5,
+      "width": 1,
+      "values": ["-1", "1", "1", "0", "0"],
+      "description": "exprs[0]=A matrix, exprs[1]=B, exprs[2]=C, exprs[3]=D, exprs[4]=initial state"
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 4,
+      "values": [-1.0, 1.0, 1.0, 0.0],
+      "description": "Flattened ABCD matrices"
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 1,
+      "width": 1,
+      "initialValue": 0.0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CLSS\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"csslti4\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CLSS\">\n  <ScilabString as=\"exprs\" height=\"5\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"-1\"/>\n    <data line=\"1\" column=\"0\" value=\"1\"/>\n    <data line=\"2\" column=\"0\" value=\"1\"/>\n    <data line=\"3\" column=\"0\" value=\"0\"/>\n    <data line=\"4\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"4\">\n    <data line=\"0\" column=\"0\" realPart=\"-1.0\"/>\n    <data line=\"0\" column=\"1\" realPart=\"1.0\"/>\n    <data line=\"0\" column=\"2\" realPart=\"1.0\"/>\n    <data line=\"0\" column=\"3\" realPart=\"0.0\"/>\n  </ScilabDouble>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"80.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Width=80 (non-standard - wider block for state-space)",
+    "Height=40 (standard)",
+    "exprs contains 5 values but only 4 realParameters (flattened matrices)",
+    "Initial state is in exprs[4] but realParameters only contains ABCD"
+  ],
+  "criticalRules": [
+    "Matrices must be entered as Scilab expressions in exprs",
+    "A, B, C, D matrices define the state-space system",
+    "Default is [-1, 1, 1, 0, 0] - a simple first-order system",
+    "Time-dependent (dependsOnT=1) - evolves continuously"
+  ],
+  "commonUses": [
+    "Multi-input multi-output (MIMO) systems",
+    "State-feedback control design",
+    "Observer implementations",
+    "Modeling physical systems from differential equations"
+  ],
+  "relatedBlocks": ["CLR", "DLSS", "TCLSS", "INTEGRAL_m"]
+}

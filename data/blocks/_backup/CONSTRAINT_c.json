@@ -1,0 +1,91 @@
+{
+  "name": "CONSTRAINT_c",
+  "description": "Constraint block for continuous systems - enforces algebraic constraints",
+  "category": "Continuous/Constraints",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CONSTRAINT_c",
+  "simulationFunctionName": "constraint_c",
+  "simulationFunctionType": "IMPLICIT_C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 60,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 1,
+      "width": 1,
+      "values": ["0"],
+      "description": "exprs[0]=constraint type: 0=index 0, 1=index 1"
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [0]
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 1,
+      "width": 2,
+      "values": [0.0, 0.0],
+      "description": "Internal state for constraint enforcement"
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CONSTRAINT_c\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"constraint_c\" simulationFunctionType=\"IMPLICIT_C_OR_FORTRAN\" style=\"CONSTRAINT_c\">\n  <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n  </ScilabInteger>\n  <ScilabDouble as=\"state\" height=\"1\" width=\"2\">\n    <data line=\"0\" column=\"0\" realPart=\"0.0\"/>\n    <data line=\"0\" column=\"1\" realPart=\"0.0\"/>\n  </ScilabDouble>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "simulationFunctionType='IMPLICIT_C_OR_FORTRAN' - implicit integration required",
+    "Width=60 (non-standard)",
+    "state has 2 elements (unusual for simple block)",
+    "No realParameters - uses integerParameters and state only",
+    "dependsOnU=0 but dependsOnT=1 - evolves with time but not directly from input"
+  ],
+  "criticalRules": [
+    "IMPLICIT_C_OR_FORTRAN simulation type requires implicit DAE solver",
+    "integerParameters[0] controls constraint index type",
+    "Used for enforcing algebraic constraints in physical modeling",
+    "Requires compatible solver (IDA/DASPK)"
+  ],
+  "commonUses": [
+    "Mechanical constraint enforcement",
+    "DAE system modeling",
+    "Index reduction in physical models",
+    "Algebraic loop resolution"
+  ],
+  "relatedBlocks": ["CONSTRAINT2_c", "zc_func", "INTEGRAL_m"]
+}

@@ -1,0 +1,29 @@
+{
+  "description": "Finite state machine (hybrid automaton) block for modeling state transitions",
+  "name": "AUTOMAT",
+  "anomalies": [
+    "Largest block so far: 100x50 geometry",
+    "Uses IMPLICIT_C_OR_FORTRAN (not standard C_OR_FORTRAN)",
+    "Has 2 explicit inputs with dataLines=3 (3 elements each)",
+    "Has 2 explicit outputs with dataLines=2 (2 elements each)",
+    "Has 1 command port with initialState=-1.0",
+    "exprs parameter encodes complex state machine configuration",
+    "dependsOnU=0 but dependsOnT=1 (time-dependent, not input-dependent)"
+  ],
+  "criticalRules": [
+    "AUTOMAT is a finite state machine (hybrid automaton) block",
+    "Has 2 explicit inputs with dataLines=3 (3 elements each)",
+    "Has 2 explicit outputs with dataLines=2 (2 elements each)",
+    "Has 1 command port (event output) with initialState=-1.0",
+    "Uses implicit simulation function (IMPLICIT_C_OR_FORTRAN)",
+    "exprs parameter encodes state machine configuration"
+  ],
+  "commonUses": [
+    "Modeling hybrid systems with discrete and continuous dynamics",
+    "State transition logic",
+    "Mode-dependent system behavior",
+    "Switching controller design"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/AUTOMAT.sci"
+}

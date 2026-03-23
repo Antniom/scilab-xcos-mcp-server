@@ -1,0 +1,19 @@
+{
+  "relatedBlocks": [
+    "END_c",
+    "HALT_f"
+  ],
+  "criticalRules": [
+    "Ends simulation execution"
+  ],
+  "description": "Simulation End Block - stops the simulation after a specific time or event",
+  "anomalies": [
+    "SuperBlock with internal END_c block",
+    "blockType=\"h\""
+  ],
+  "name": "ENDBLK",
+  "commonUses": [
+    "Automatic simulation termination"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/ENDBLK.sci"
+}

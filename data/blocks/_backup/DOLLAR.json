@@ -1,0 +1,64 @@
+{
+  "name": "DOLLAR",
+  "description": "Unit Delay - delays the input signal by one sample period (z^-1)",
+  "category": "Discrete",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DOLLAR",
+  "simulationFunctionName": "dollar4",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [
+      "0",
+      "0"
+    ],
+    "realParameters": [],
+    "integerParameters": [],
+    "state": [],
+    "dState": [0.0],
+    "nbZerosCrossing": 0,
+    "nmode": 0
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "id": "1",
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "id": "1",
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "dataType": "REAL_MATRIX"
+      }
+    ],
+    "controlPorts": [
+      {
+        "id": "1",
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0"
+      }
+    ],
+    "commandPorts": []
+  },
+  "xmlExample": "<BasicBlock interfaceFunctionName=\"DOLLAR\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"dollar4\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"DOLLAR\">\n  <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n    <data line=\"1\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [],
+  "criticalRules": [
+    "Updates only on event clock edge"
+  ],
+  "commonUses": [
+    "Feedback loops in discrete systems",
+    "Simple delay"
+  ],
+  "relatedBlocks": [
+    "DOLLAR_f",
+    "DOLLAR_m"
+  ]
+}

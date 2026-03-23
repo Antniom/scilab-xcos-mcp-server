@@ -1,0 +1,136 @@
+{
+  "name": "CMATVIEW",
+  "description": "Matrix viewer block - displays matrix data as 2D color map visualization",
+  "category": "Sinks/Visualization",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CMATVIEW",
+  "simulationFunctionName": "cmatview",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 3,
+      "width": 1,
+      "values": [
+        "jet(25)",
+        "0",
+        "100"
+      ]
+    },
+    "realParameters": {
+      "type": "ScilabDouble",
+      "height": 1,
+      "width": 77,
+      "description": "Colormap RGB values (jet(25) expanded to 77 values: 25 colors * 3 RGB channels + 2 bounds)",
+      "note": "Contains colormap gradient values from blue(jet) through green to red"
+    },
+    "integerParameters": {
+      "type": "ScilabInteger",
+      "height": 1,
+      "width": 3,
+      "intPrecision": "sci_int32",
+      "values": [
+        { "line": 0, "column": 0, "value": 0 },
+        { "line": 0, "column": 1, "value": 100 },
+        { "line": 0, "column": 2, "value": 25 }
+      ]
+    },
+    "objectsParameters": {
+      "type": "ScilabList"
+    },
+    "nbZerosCrossing": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "nmode": {
+      "height": 1,
+      "width": 1,
+      "type": "ScilabInteger",
+      "intPrecision": "sci_int32",
+      "value": 0
+    },
+    "state": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "dState": {
+      "height": 0,
+      "width": 0,
+      "type": "ScilabDouble"
+    },
+    "oDState": {
+      "type": "ScilabList"
+    },
+    "equations": {
+      "type": "ScilabList"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": -2,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "value": ""
+      }
+    ],
+    "explicitOutputs": [],
+    "implicitInputs": [],
+    "implicitOutputs": [],
+    "controls": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "value": ""
+      }
+    ],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"CMATVIEW\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"cmatview\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CMATVIEW\">\n  <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"jet(25)\"/>\n    <data line=\"1\" column=\"0\" value=\"0\"/>\n    <data line=\"2\" column=\"0\" value=\"100\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"77\">\n    <!-- jet(25) colormap expanded: RGB values for 25 colors + min/max bounds -->\n  </ScilabDouble>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"3\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"0\"/>\n    <data line=\"0\" column=\"1\" value=\"100\"/>\n    <data line=\"0\" column=\"2\" value=\"25\"/>\n  </ScilabInteger>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "dataColumns=-2, dataLines=-1 (auto-dimension for matrix)",
+    "realParameters width=77 (large colormap data)",
+    "Contains full colormap RGB data in realParameters",
+    "exprs line 0: colormap expression 'jet(25)'",
+    "Integer parameters: [min_value, max_value, num_colors]",
+    "Visualization only - no outputs"
+  ],
+  "criticalRules": [
+    "Control port is refresh trigger, NOT clock",
+    "dataColumns=-2 for matrix auto-sizing",
+    "exprs: colormap, min, max values",
+    "C_OR_FORTRAN simulation function type",
+    "Preserve colormap data in realParameters"
+  ],
+  "commonUses": [
+    "Heatmap visualization of matrix data",
+    "Image processing - display 2D data",
+    "Finite element result visualization",
+    "Signal processing spectrograms",
+    "Data monitoring with color coding"
+  ],
+  "relatedBlocks": [
+    "CMAT3D",
+    "CSCOPE",
+    "CANIMXY",
+    "CANIMXY3D"
+  ]
+}

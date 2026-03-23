@@ -1,0 +1,16 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "EXTRACTBITS block",
+  "anomalies": [
+    "INT32_MATRIX integer data",
+    "Non-standard width: 80.0"
+  ],
+  "name": "EXTRACTBITS",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/EXTRACTBITS.sci"
+}

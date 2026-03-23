@@ -1,0 +1,27 @@
+{
+  "description": "Event input block - receives clock/event signals into the diagram",
+  "name": "CLKINV_f",
+  "anomalies": [
+    "Uses EventInBlock tag instead of BasicBlock",
+    "Very small geometry: 20x20 (smallest block size)",
+    "Command port has initialState=-1.0 (event port default)",
+    "exprs value '1' is stored as string in ScilabString"
+  ],
+  "criticalRules": [
+    "Must be paired with a corresponding event source",
+    "Command port outputs event signal (not continuous data)",
+    "geometry width=20, height=20 is fixed for event blocks"
+  ],
+  "commonUses": [
+    "Receiving clock signals from external sources",
+    "Synchronizing multiple event-driven blocks",
+    "Event input at subsystem boundaries"
+  ],
+  "relatedBlocks": [
+    "CLKOUTV_f",
+    "CLKFROM",
+    "CLKGOTO",
+    "CLKSOMV_f"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CLKINV_f.sci"
+}

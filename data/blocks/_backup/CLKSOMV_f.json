@@ -1,0 +1,20 @@
+{
+  "description": "Event summer - computes the union of multiple event streams",
+  "name": "CLKSOMV_f",
+  "anomalies": [
+    "Tag is RoundBlock",
+    "No exprs or parameters in reference",
+    "Combines 3 event inputs into 1 output (OR logic)"
+  ],
+  "criticalRules": [
+    "Must have 3 control ports in reference setup"
+  ],
+  "commonUses": [
+    "Merging multiple event sources to trigger a block"
+  ],
+  "relatedBlocks": [
+    "CLKSPLIT_f",
+    "ANDBLK"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/CLKSOMV_f.sci"
+}

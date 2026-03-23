@@ -1,0 +1,31 @@
+{
+  "relatedBlocks": [
+    "CBLOCK4",
+    "c_block",
+    "fortran_block",
+    "scifunc_block_m"
+  ],
+  "criticalRules": [
+    "First exprs element is the C function file name",
+    "User must provide C code in external file",
+    "DYNAMIC_EXPLICIT_4 type requires custom compilation",
+    "exprs is nested ScilabList with ScilabString inside"
+  ],
+  "description": "C-code block for custom continuous dynamics (2 continuous states)",
+  "anomalies": [
+    "Width=80 (non-standard, wider than typical 40)",
+    "simulationFunctionName=' ' (space) - name derived from exprs[0]",
+    "simulationFunctionType='DYNAMIC_EXPLICIT_4' - user-defined",
+    "exprs is ScilabList (nested structure) - highly unusual",
+    "Empty realParameters and integerParameters - all params in exprs",
+    "14 parameters for C code configuration"
+  ],
+  "name": "CBLOCK",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/CBLOCK.sci",
+  "commonUses": [
+    "Custom C algorithms",
+    "Legacy code integration",
+    "Performance-critical user blocks",
+    "External library calls"
+  ]
+}

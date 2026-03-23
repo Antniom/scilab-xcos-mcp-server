@@ -1,0 +1,59 @@
+{
+  "name": "EVTDLY_c",
+  "description": "Event Delay - delays an input event by a specified time period",
+  "category": "Signal Routing/Events",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "EVTDLY_c",
+  "simulationFunctionName": "evtdly4",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [
+      "0.1",
+      "0"
+    ],
+    "realParameters": [0.1, 0.0],
+    "integerParameters": [],
+    "state": [],
+    "dState": [],
+    "nbZerosCrossing": 0,
+    "nmode": 0
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [],
+    "controlPorts": [
+      {
+        "id": "1",
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0"
+      }
+    ],
+    "commandPorts": [
+      {
+        "id": "1",
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock interfaceFunctionName=\"EVTDLY_c\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"evtdly4\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"EVTDLY_c\">\n  <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"0.1\"/>\n    <data line=\"1\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" width=\"60.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Width=60 (Legacy event delay size)"
+  ],
+  "criticalRules": [
+    "Cannot delay multiple events simultaneously (single buffer)"
+  ],
+  "commonUses": [
+    "Sampling time control",
+    "Logic loop prevention"
+  ],
+  "relatedBlocks": [
+    "EVTGEN_f",
+    "SampleCLK"
+  ]
+}

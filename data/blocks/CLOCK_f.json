@@ -1,0 +1,28 @@
+{
+  "name": "CLOCK_f",
+  "description": "Older Scicos-era periodic clock generator (use CLOCK_c for new diagrams)",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CLOCK_f.sci",
+  "criticalRules": [
+    "SUPERBLOCK — blockType='h', simulationFunctionName='csuper', simulationFunctionType='DEFAULT'.",
+    "ALL top-level exprs/realParameters/integerParameters MUST be ScilabDouble height='0' width='0'. Parameters live inside the SuperBlockDiagram.",
+    "MUST contain a <SuperBlockDiagram> child AFTER <mxGeometry>.",
+    "SuperBlockDiagram contains: EventOutBlock(CLKOUT_f) + BasicBlock(EVTDLY_f) + SplitBlock(CLKSPLIT_f) + 3 CommandControlLinks.",
+    "EVTDLY_f uses simulationFunctionName='evtdly', simulationFunctionType='C_OR_FORTRAN' (NOT evtdly4/CLOCK_c variant).",
+    "EVTDLY_f exprs: ScilabString height='2' — ['0.1', '0.1'] (period and initial fire time).",
+    "EVTDLY_f realParameters: ScilabDouble height='1' width='2' — [0.1, 0.1].",
+    "CLKOUT_f inside SuperBlockDiagram uses tag <EventOutBlock>, NOT <BasicBlock>.",
+    "Top-level CommandPort: ONE CommandPort sibling of the block (parent = block id), ordering='1', initialState='-1.0'.",
+    "No reference .xcos file exists for CLOCK_f — call get_xcos_block_source('CLOCK_f') for defaults, and model the SuperBlockDiagram structure after CLOCK_c.xcos (replacing EVTDLY_c with EVTDLY_f)."
+  ],
+  "anomalies": [
+    "SuperBlock — Scilab-era version of CLOCK_c. Use CLOCK_c for new diagrams.",
+    "Internal EVTDLY_f differs from CLOCK_c's EVTDLY_c: different C simulation function name.",
+    "Has a single CommandPort at bottom for event output (same as CLOCK_c)."
+  ],
+  "commonUses": [
+    "Legacy diagram compatibility",
+    "Periodic event generation (older Scicos style)",
+    "When CLOCK_c is not available in older palettes"
+  ],
+  "relatedBlocks": ["CLOCK_c", "EVTDLY_f", "EVTDLY_c", "CLKSPLIT_f", "CLKOUT_f"]
+}

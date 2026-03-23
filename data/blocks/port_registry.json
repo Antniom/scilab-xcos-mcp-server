@@ -1,0 +1,50 @@
+{
+  "CANIMXY": {
+    "inputs": [[1, 1], [1, 1]],
+    "outputs": []
+  },
+  "BARXY": {
+    "inputs": [[-1, 1], [-1, 1]],
+    "outputs": []
+  },
+  "CSCOPXY": {
+    "inputs": [[1, 1], [1, 1]],
+    "outputs": []
+  },
+  "MUX": {
+    "inputs": "variadic",
+    "outputs": [[-1, 1]]
+  },
+  "DEMUX": {
+    "inputs": [[-1, 1]],
+    "outputs": "variadic"
+  },
+  "GAINBLK_f": {
+    "inputs": [[-1, -2]],
+    "outputs": [[-1, -2]]
+  },
+  "SineVoltage": {
+    "inputs": [],
+    "outputs": [[1, 1]]
+  },
+  "CONST_f": {
+    "inputs": [],
+    "outputs": [[1, 1]]
+  },
+  "INTEGRAL_m": {
+    "inputs": [[-1, -2]],
+    "outputs": [[-1, -2]]
+  },
+  "SUMMATION": {
+    "inputs": "variadic",
+    "outputs": [[-1, -2]]
+  },
+  "PRODUCT": {
+    "inputs": "variadic",
+    "outputs": [[-1, -2]]
+  },
+  "SPLIT_f": {
+    "inputs": [[-1, 1]],
+    "outputs": "variadic"
+  }
+}

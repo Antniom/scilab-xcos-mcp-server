@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CLKINV_f",
+    "CLKOUTV_f",
+    "CLKFROM",
+    "CLKGOTO"
+  ],
+  "criticalRules": [
+    "Used internally by XCOS for clock-related operations",
+    "Block is automatically generated - users rarely place it manually",
+    "Width=60 is non-standard but required for this block",
+    "state height=\"1\" width=\"1\": MUST contain <data line=\"0\" column=\"0\" realPart=\"0.0\"/>"
+  ],
+  "description": "Clock dummy block - placeholder for continuous-time clock functionality",
+  "anomalies": [
+    "Empty exprs (ScilabDouble with height=0, width=0)",
+    "Zero ports - no inputs or outputs",
+    "Non-standard width of 60 (instead of 40)",
+    "Has state with realPart=0.0 despite being a dummy block",
+    "dependsOnT=1 but no time-dependent behavior visible"
+  ],
+  "name": "CLINDUMMY_f",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/CLINDUMMY_f.sci",
+  "commonUses": [
+    "Internal XCOS placeholder for clock synchronization",
+    "Maintaining compatibility between continuous and event systems",
+    "Supporting legacy models"
+  ]
+}

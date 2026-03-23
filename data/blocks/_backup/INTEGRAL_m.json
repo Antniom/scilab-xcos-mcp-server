@@ -1,0 +1,110 @@
+{
+  "name": "INTEGRAL_m",
+  "description": "Integrator block - computes the integral of the input signal over time",
+  "category": "Continuous/Integration",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "INTEGRAL_m",
+  "simulationFunctionName": "integral_func",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "INTEGRAL_m",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 5,
+      "width": 1,
+      "values": ["0", "0", "0", "1", "-1"],
+      "labels": ["initial", "scale", "saturate", "min", "max"]
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "state": {
+      "height": 1,
+      "width": 1,
+      "values": [0.0]
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"INTEGRAL_m\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"integral_func\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"INTEGRAL_m\">\n    <ScilabString as=\"exprs\" height=\"5\" width=\"1\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n        <data line=\"1\" column=\"0\" value=\"0\" />\n        <data line=\"2\" column=\"0\" value=\"0\" />\n        <data line=\"3\" column=\"0\" value=\"1\" />\n        <data line=\"4\" column=\"0\" value=\"-1\" />\n    </ScilabString>\n    <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n    <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n    <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n    <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabDouble as=\"state\" height=\"1\" width=\"1\">\n        <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n    </ScilabDouble>\n    <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n    <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n    <Array as=\"equations\" scilabClass=\"ScilabList\" />\n    <mxGeometry as=\"geometry\" x=\"150.0\" y=\"150.0\" width=\"40.0\" height=\"40.0\" />\n</BasicBlock>",
+  "anomalies": [
+    "dependsOnU=0 but dependsOnT=1 (time-dependent integration)",
+    "Has state field storing current accumulated value",
+    "5 parameters in exprs - more than typical blocks",
+    "state array tracks integration value"
+  ],
+  "criticalRules": [
+    "Output(t) = integral from 0 to t of Input(dt)",
+    "Initial condition from exprs[0]",
+    "Optional saturation limits (exprs[3]=min, exprs[4]=max)",
+    "dependsOnT=1 indicates time-dependent operation"
+  ],
+  "commonUses": [
+    "Computing position from velocity",
+    "Velocity from acceleration",
+    "Controller integrators (PID)",
+    "Cumulative sums"
+  ],
+  "paramSets": {
+    "default": {
+      "exprs": ["0", "0", "0", "1", "-1"],
+      "description": "No saturation, zero initial condition"
+    },
+    "with_saturation": {
+      "exprs": ["0", "0", "1", "-10", "10"],
+      "description": "Saturated between -10 and 10"
+    },
+    "nonzero_initial": {
+      "exprs": ["5", "0", "0", "1", "-1"],
+      "description": "Start with initial value 5"
+    }
+  },
+  "relatedBlocks": [
+    "DERIV - differentiation",
+    "INTEGRAL_f - floating point integrator",
+    "DLR - discrete transfer function",
+    "SAMPHOLD - sample and hold"
+  ]
+}

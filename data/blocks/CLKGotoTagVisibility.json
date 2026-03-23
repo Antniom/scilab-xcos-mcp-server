@@ -1,0 +1,31 @@
+{
+  "relatedBlocks": [
+    "CLKGOTO",
+    "CLKFROM",
+    "GotoTagVisibility",
+    "GotoTagVisibilityMO"
+  ],
+  "criticalRules": [
+    "Place in the subsystem where the goto tag should be visible",
+    "Tag name must match CLKGOTO/CLKFROM pairs exactly",
+    "Multiple visibility blocks can define different scopes for same tag",
+    "Does NOT connect to any other blocks - sets scope by position",
+    "blockType='c' means it's evaluated in continuous context"
+  ],
+  "description": "Clock Goto Tag Visibility - controls the scope of clock/event goto tags",
+  "anomalies": [
+    "Zero ports - no inputs or outputs",
+    "Tag value 'A' is duplicated in exprs AND objectsParameters",
+    "simulationFunctionName is very long: 'clkgototagvisibility'",
+    "Purely a scope-defining block - no functional behavior",
+    "blockType='c' (continuous) despite dealing with event tags"
+  ],
+  "name": "CLKGotoTagVisibility",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/CLKGotoTagVisibility.sci",
+  "commonUses": [
+    "Limiting goto tag scope to specific subsystems",
+    "Resolving tag name conflicts between subsystems",
+    "Managing event signal visibility in hierarchical models",
+    "Creating scoped event connections without visible wires"
+  ]
+}

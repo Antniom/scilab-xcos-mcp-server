@@ -1,0 +1,157 @@
+{
+  "name": "CSCOPXY3D",
+  "description": "3D XY scope for 3D trajectory and parametric curve visualization",
+  "category": "Sinks/Visualization",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CSCOPXY3D",
+  "simulationFunctionName": "cscopxy3d",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "CSCOPXY3D",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 11,
+      "width": 1,
+      "values": [
+        "1",
+        "1 2 3 4 5 6 7 13",
+        "1 1 1 1 1 1 1 1",
+        "-1",
+        "[]",
+        "[600;400]",
+        "-15 15",
+        "-15 15",
+        "-15 15",
+        "50 280",
+        "2"
+      ],
+      "labels": [
+        "number_of_curves",
+        "color",
+        "thickness",
+        "line_style",
+        " Legends",
+        "window_size",
+        "x_min_max",
+        "y_min_max",
+        "z_min_max",
+        "clipping",
+        "buffer_size"
+      ],
+      "descriptions": [
+        "Number of 3D curves",
+        "Space-separated color indices",
+        "Space-separated thickness values",
+        "Line style (-1=auto)",
+        "Legend labels []=none",
+        "Window size [width;height]",
+        "X-axis limits [min max]",
+        "Y-axis limits [min max]",
+        "Z-axis limits [min max]",
+        "Clipping box [x y]",
+        "Circular buffer size"
+      ]
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 8,
+      "values": [-15.0, 15.0, -15.0, 15.0, -15.0, 15.0, 50.0, 280.0],
+      "description": "X/Y/Z axis limits and clipping parameters"
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 25,
+      "values": [-1, 8, 2, 1, 2, 3, 4, 5, 6, 7, 13, 1, 1, 1, 1, 1, 1, 1, 1, 8, -1, -1, -1, -1, 1],
+      "intPrecision": "sci_int32",
+      "description": "25-element packed config: displayID(1), num_curves(1), buffer(1), colors(8), thicknesses(8), style(1), window(4), flags(1)"
+    },
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "X coordinate (3D horizontal)"
+      },
+      {
+        "ordering": 2,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Y coordinate (3D depth)"
+      },
+      {
+        "ordering": 3,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Z coordinate (3D vertical)"
+      }
+    ],
+    "explicitOutputs": [],
+    "controls": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "description": "Event trigger for 3D point sampling"
+      }
+    ],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CSCOPXY3D\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"cscopxy3d\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CSCOPXY3D\">\n  <ScilabString as=\"exprs\" height=\"11\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n    <data line=\"1\" column=\"0\" value=\"1 2 3 4 5 6 7 13\"/>\n    <data line=\"2\" column=\"0\" value=\"1 1 1 1 1 1 1 1\"/>\n    <data line=\"3\" column=\"0\" value=\"-1\"/>\n    <data line=\"4\" column=\"0\" value=\"[]\"/>\n    <data line=\"5\" column=\"0\" value=\"[600;400]\"/>\n    <data line=\"6\" column=\"0\" value=\"-15 15\"/>\n    <data line=\"7\" column=\"0\" value=\"-15 15\"/>\n    <data line=\"8\" column=\"0\" value=\"-15 15\"/>\n    <data line=\"9\" column=\"0\" value=\"50 280\"/>\n    <data line=\"10\" column=\"0\" value=\"2\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" x=\"300.0\" y=\"200.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "25 integerParameters - same structure as CANIMXY3D",
+    "3 explicit inputs for 3D coordinates",
+    "Space-separated values in exprs for arrays",
+    "exprs[6-8] use space-separated format for min/max pairs",
+    "Clipping parameter in exprs[9] is '50 280'"
+  ],
+  "criticalRules": [
+    "Samples 3D point (X,Y,Z) on each event",
+    "Colors specified as '1 2 3 4 5 6 7 13' space-separated",
+    "Thickness specified as '1 1 1 1 1 1 1 1' for each curve",
+    "Axis limits use space 'min max' format not [min;max]"
+  ],
+  "commonUses": [
+    "3D trajectory plotting",
+    "Attractor visualization (Lorenz, Rossler)",
+    "3D parametric curves",
+    "Orbital mechanics 3D plots"
+  ],
+  "relatedBlocks": ["CANIMXY3D", "CSCOPXY", "CANIMXY", "CSCOPE"]
+}

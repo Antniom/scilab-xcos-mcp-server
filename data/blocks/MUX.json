@@ -1,0 +1,30 @@
+{
+  "relatedBlocks": [
+    "DEMUX - inverse operation (splitter)",
+    "MUX_f - floating point multiplexer",
+    "SELECT_m - select from multiple inputs"
+  ],
+  "criticalRules": [
+    "exprs[0] determines number of inputs",
+    "integerParameters[0] MUST match exprs value",
+    "MUST include ALL standard parameter blocks (realParameters, integerParameters, objectsParameters, etc.)",
+    "Output is a vector combining all inputs",
+    "For scalar inputs, set ALL input port dataLines to 1; only use -2 on later inputs when you intentionally rely on variable-size vector auto-sizing",
+    "Width is 10 (very narrow)"
+  ],
+  "description": "Multiplexer - combines multiple signals into a single vector output",
+  "anomalies": [
+    "Very narrow width (10) - minimal visual representation",
+    "dataLines=0 on output - dimension is computed from inputs",
+    "Reference XML uses dataLines=-1 and -2 on inputs, which is a trap for all-scalar fan-in",
+    "exprs value must match integerParameters value"
+  ],
+  "name": "MUX",
+  "commonUses": [
+    "Combining scalar signals into vectors",
+    "Creating multi-channel signals",
+    "Preparing data for matrix operations",
+    "Connecting to blocks expecting vector inputs"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/MUX.sci"
+}

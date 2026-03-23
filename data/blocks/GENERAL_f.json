@@ -1,0 +1,18 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "GENERAL_f block",
+  "anomalies": [
+    "Contains CommandPort",
+    "Non-standard width: 60.0",
+    "nbZerosCrossing=1",
+    "initialState=-1.0 for event port"
+  ],
+  "name": "GENERAL_f",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Threshold/GENERAL_f.sci"
+}

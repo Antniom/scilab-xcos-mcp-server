@@ -1,0 +1,126 @@
+{
+  "name": "M_freq",
+  "description": "M_freq block",
+  "category": "Uncategorized",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "M_freq",
+  "simulationFunctionName": "m_frequ",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 60.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "2",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "[1;2]"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "[0;0]"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "controlPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "commandPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0",
+        "initialState": "-1.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0",
+        "initialState": "-1.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7eb6\" parent=\"0:2:0\" interfaceFunctionName=\"M_freq\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"m_frequ\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"M_freq\">\n        <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"[1;2]\" />\n          <data line=\"1\" column=\"0\" value=\"[0;0]\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\">\n          <ScilabDouble height=\"3\" width=\"3\">\n            <data line=\"0\" column=\"0\" realPart=\"1.0\" />\n            <data line=\"0\" column=\"1\" realPart=\"1.0\" />\n            <data line=\"0\" column=\"2\" realPart=\"1.0\" />\n            <data line=\"1\" column=\"0\" realPart=\"1.0\" />\n            <data line=\"1\" column=\"1\" realPart=\"1.0\" />\n            <data line=\"1\" column=\"2\" realPart=\"3.0\" />\n            <data line=\"2\" column=\"0\" realPart=\"0.0\" />\n            <data line=\"2\" column=\"1\" realPart=\"1.0\" />\n            <data line=\"2\" column=\"2\" realPart=\"2.0\" />\n          </ScilabDouble>\n          <ScilabDouble height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" realPart=\"1.0\" />\n          </ScilabDouble>\n          <ScilabDouble height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n          </ScilabDouble>\n          <ScilabDouble height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n          </ScilabDouble>\n        </Array>\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "initialState=-1.0 for event port",
+    "Contains ControlPort",
+    "Non-standard width: 60.0",
+    "Contains CommandPort"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

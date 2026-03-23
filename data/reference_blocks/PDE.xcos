@@ -1,0 +1,228 @@
+<?xml version="1.0" ?>
+<XcosDiagram debugLevel="0" finalIntegrationTime="30.0" integratorAbsoluteTolerance="1.0E-6" integratorRelativeTolerance="1.0E-6" toleranceOnTime="1.0E-10" maxIntegrationTimeInterval="100001.0" maximumStepSize="0.0" realTimeScaling="0.0" solver="1.0" background="-1" gridEnabled="1" title="Untitled"><!--Xcos - 2.0 - scilab-2026.0.1 - 20260205 0935-->
+  <Array as="context" scilabClass="String[]"></Array>
+  <mxGraphModel as="model">
+    <root>
+      <mxCell id="0:1:0"/>
+      <mxCell id="0:2:0" parent="0:1:0"/>
+      <BasicBlock id="-3be62bc8:19ce985ed1e:-7f89" parent="0:2:0" interfaceFunctionName="PDE" blockType="c" dependsOnU="0" dependsOnT="1" simulationFunctionName="PDE" simulationFunctionType="DEFAULT" style="PDE">
+        <Array as="exprs" scilabClass="ScilabList">
+          <Array scilabClass="ScilabTList">
+            <ScilabString height="44" width="1">
+              <data line="0" column="0" value="paramspde"/>
+              <data line="1" column="0" value="a"/>
+              <data line="2" column="0" value="b"/>
+              <data line="3" column="0" value="txt_exp"/>
+              <data line="4" column="0" value="check_op1"/>
+              <data line="5" column="0" value="a1"/>
+              <data line="6" column="0" value="b1"/>
+              <data line="7" column="0" value="check_op2"/>
+              <data line="8" column="0" value="a2"/>
+              <data line="9" column="0" value="b2"/>
+              <data line="10" column="0" value="check_op3"/>
+              <data line="11" column="0" value="a3"/>
+              <data line="12" column="0" value="b3"/>
+              <data line="13" column="0" value="check_op4"/>
+              <data line="14" column="0" value="a4"/>
+              <data line="15" column="0" value="b4"/>
+              <data line="16" column="0" value="check_op5"/>
+              <data line="17" column="0" value="a5"/>
+              <data line="18" column="0" value="b5"/>
+              <data line="19" column="0" value="check_op6"/>
+              <data line="20" column="0" value="a6"/>
+              <data line="21" column="0" value="b6"/>
+              <data line="22" column="0" value="check_op7"/>
+              <data line="23" column="0" value="a7"/>
+              <data line="24" column="0" value="b7"/>
+              <data line="25" column="0" value="discr_cst"/>
+              <data line="26" column="0" value="discr_non_cst"/>
+              <data line="27" column="0" value="signe"/>
+              <data line="28" column="0" value="rad_automatique"/>
+              <data line="29" column="0" value="rad_manuel"/>
+              <data line="30" column="0" value="methode"/>
+              <data line="31" column="0" value="ord1"/>
+              <data line="32" column="0" value="ord2"/>
+              <data line="33" column="0" value="ord3"/>
+              <data line="34" column="0" value="degre"/>
+              <data line="35" column="0" value="nnode"/>
+              <data line="36" column="0" value="txt_pas"/>
+              <data line="37" column="0" value="CI"/>
+              <data line="38" column="0" value="dCI"/>
+              <data line="39" column="0" value="CLa"/>
+              <data line="40" column="0" value="CLa_exp"/>
+              <data line="41" column="0" value="CLb"/>
+              <data line="42" column="0" value="CLb_exp"/>
+              <data line="43" column="0" value="points"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_EDP1(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_EDP2(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_EDP3(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_EDP4(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_EDP5(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_EDP6(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_EDP7(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_CL1(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="IN_CL2(t)"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value=""/>
+            </ScilabString>
+          </Array>
+          <ScilabDouble height="0" width="0"/>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value=""/>
+          </ScilabString>
+        </Array>
+        <ScilabDouble as="realParameters" height="0" width="0"/>
+        <ScilabDouble as="integerParameters" height="0" width="0"/>
+        <Array as="objectsParameters" scilabClass="ScilabList"/>
+        <ScilabInteger as="nbZerosCrossing" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabInteger as="nmode" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabDouble as="state" height="1" width="10">
+          <data line="0" column="0" realPart="0.0"/>
+          <data line="0" column="1" realPart="0.0"/>
+          <data line="0" column="2" realPart="0.0"/>
+          <data line="0" column="3" realPart="0.0"/>
+          <data line="0" column="4" realPart="0.0"/>
+          <data line="0" column="5" realPart="0.0"/>
+          <data line="0" column="6" realPart="0.0"/>
+          <data line="0" column="7" realPart="0.0"/>
+          <data line="0" column="8" realPart="0.0"/>
+          <data line="0" column="9" realPart="0.0"/>
+        </ScilabDouble>
+        <ScilabDouble as="dState" height="0" width="0"/>
+        <Array as="oDState" scilabClass="ScilabList"/>
+        <Array as="equations" scilabClass="ScilabList"/>
+        <mxGeometry as="geometry" x="0.0" y="-10.0" width="60.0" height="60.0"/>
+      </BasicBlock>
+      <ExplicitInputPort id="-3be62bc8:19ce985ed1e:-7f88" parent="-3be62bc8:19ce985ed1e:-7f89" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitInputPort id="-3be62bc8:19ce985ed1e:-7f87" parent="-3be62bc8:19ce985ed1e:-7f89" ordering="2" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitInputPort id="-3be62bc8:19ce985ed1e:-7f86" parent="-3be62bc8:19ce985ed1e:-7f89" ordering="3" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitInputPort id="-3be62bc8:19ce985ed1e:-7f85" parent="-3be62bc8:19ce985ed1e:-7f89" ordering="4" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitInputPort id="-3be62bc8:19ce985ed1e:-7f84" parent="-3be62bc8:19ce985ed1e:-7f89" ordering="5" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitOutputPort id="-3be62bc8:19ce985ed1e:-7f83" parent="-3be62bc8:19ce985ed1e:-7f89" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="10" initialState="0.0" style="ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitOutputPort id="-3be62bc8:19ce985ed1e:-7f82" parent="-3be62bc8:19ce985ed1e:-7f89" ordering="2" dataType="REAL_MATRIX" dataColumns="1" dataLines="0" initialState="0.0" style="ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0" value=""/>
+    </root>
+  </mxGraphModel>
+  <mxCell as="defaultParent" id="0:2:0" parent="0:1:0"/>
+</XcosDiagram>

@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "PID block",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size",
+    "blockType='h' indicates SuperBlock with internal diagram",
+    "Empty exprs"
+  ],
+  "name": "PID",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/PID.sci"
+}

@@ -1,0 +1,117 @@
+{
+  "name": "MUX",
+  "description": "Multiplexer - combines multiple signals into a single vector output",
+  "category": "Signal Routing",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "MUX",
+  "simulationFunctionName": "multiplex",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 10.0,
+    "height": 40.0
+  },
+  "style": "MUX",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 1,
+      "width": 1,
+      "values": ["2"],
+      "description": "Number of inputs to multiplex"
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [2]
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "First input to multiplex"
+      },
+      {
+        "ordering": 2,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -2,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Second input to multiplex"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 0,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "description": "Combined vector output"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"MUX\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"multiplex\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"MUX\">\n    <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n        <data line=\"0\" column=\"0\" value=\"2\" />\n    </ScilabString>\n    <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n    <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"2\" />\n    </ScilabInteger>\n    <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n    <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n    <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n    <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n    <Array as=\"equations\" scilabClass=\"ScilabList\" />\n    <mxGeometry as=\"geometry\" x=\"100.0\" y=\"100.0\" width=\"10.0\" height=\"40.0\" />\n</BasicBlock>",
+  "anomalies": [
+    "Very narrow width (10) - minimal visual representation",
+    "dataLines=0 on output - dimension is computed from inputs",
+    "dataLines=-1,-2 on inputs indicates auto-sizing",
+    "exprs value must match integerParameters value"
+  ],
+  "criticalRules": [
+    "exprs[0] determines number of inputs",
+    "integerParameters[0] MUST match exprs value",
+    "MUST include ALL standard parameter blocks (realParameters, integerParameters, objectsParameters, etc.)",
+    "Output is a vector combining all inputs",
+    "Width is 10 (very narrow)"
+  ],
+  "commonUses": [
+    "Combining scalar signals into vectors",
+    "Creating multi-channel signals",
+    "Preparing data for matrix operations",
+    "Connecting to blocks expecting vector inputs"
+  ],
+  "paramSets": {
+    "2_inputs": {
+      "exprs": ["2"],
+      "integerParameters": [2]
+    },
+    "4_inputs": {
+      "exprs": ["4"],
+      "integerParameters": [4]
+    },
+    "8_inputs": {
+      "exprs": ["8"],
+      "integerParameters": [8]
+    }
+  },
+  "relatedBlocks": [
+    "DEMUX - inverse operation (splitter)",
+    "MUX_f - floating point multiplexer",
+    "SELECT_m - select from multiple inputs"
+  ]
+}

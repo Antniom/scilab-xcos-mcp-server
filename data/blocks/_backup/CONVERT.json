@@ -1,0 +1,92 @@
+{
+  "name": "CONVERT",
+  "description": "Data type converter - converts signal between different numeric types",
+  "category": "Signal Attributes",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CONVERT",
+  "simulationFunctionName": "convert",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 3,
+      "width": 1,
+      "values": ["1", "3", "0"],
+      "description": "exprs[0]=input type, exprs[1]=output type, exprs[2]=do rounding"
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [2],
+      "description": "Type conversion code"
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": -2,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Input with auto-dimension (dataColumns=-2, dataLines=-1)"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "INT32_MATRIX",
+        "dataColumns": -2,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "description": "Output with converted type and auto-dimension"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CONVERT\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"convert\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CONVERT\">\n  <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n    <data line=\"1\" column=\"0\" value=\"3\"/>\n    <data line=\"2\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n    <data line=\"0\" column=\"0\" value=\"2\"/>\n  </ScilabInteger>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "dataColumns=-2 and dataLines=-1 (auto-dimensioning)",
+    "Input dataType=REAL_MATRIX, Output dataType=INT32_MATRIX (type conversion)",
+    "No realParameters - uses integerParameters for type code",
+    "Special negative values for dimension handling"
+  ],
+  "criticalRules": [
+    "Type codes: 1=double, 2=int32, 3=uint32, 4=int16, 5=uint16, 6=int8, 7=uint8",
+    "exprs[0]=input type, exprs[1]=output type",
+    "exprs[2]=0: truncate, 1: round when converting to integer",
+    "dataColumns=-2 enables auto-dimensioning for vector/matrix inputs",
+    "Converts both data type and can round/truncate values"
+  ],
+  "commonUses": [
+    "Converting between double and integer types",
+    "Preparing data for BITSET/BITCLEAR operations",
+    "Signal conditioning for hardware interfaces",
+    "Type-safe signal routing"
+  ],
+  "relatedBlocks": ["BITSET", "BITCLEAR", "DOLLAR", "REGISTER"]
+}

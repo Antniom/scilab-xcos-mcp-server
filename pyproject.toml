@@ -1,0 +1,20 @@
+[project]
+name = "scilab-xcos-mcp-server"
+version = "0.1.0"
+description = "A stateless MCP server for Scilab Xcos engineering environments"
+authors = [{ name = "Principal Software Engineer", email = "engineer@example.com" }]
+dependencies = [
+    "mcp>=0.1.0",
+    "lxml>=5.1.0",
+    "colorama>=0.4.6",
+    "starlette>=0.46.0",
+    "uvicorn>=0.35.0",
+]
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+scilab-xcos-server = "server:main"

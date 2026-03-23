@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.git/
+logs/
+sessions/
+data/temp/
+launcher/node_modules/
+launcher/mascot_*.png

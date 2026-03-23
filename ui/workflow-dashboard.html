@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xcos Workflow Dashboard</title>
+    <style>
+      :root {
+        --bg: #f5efe4;
+        --panel: #fffaf1;
+        --line: #d8c8ae;
+        --text: #2d241c;
+        --muted: #756657;
+        --accent: #b94f2d;
+        --accent-soft: #eac2b5;
+        --success: #2f7d4d;
+        --warn: #a76620;
+        --danger: #9e3d2f;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        background: radial-gradient(circle at top left, #fff7ea, var(--bg));
+        color: var(--text);
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 100vh;
+      }
+      .sidebar, .main {
+        padding: 20px;
+      }
+      .sidebar {
+        border-right: 1px solid var(--line);
+        background: rgba(255, 250, 241, 0.8);
+      }
+      .main {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 12px 30px rgba(91, 66, 36, 0.08);
+      }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { font-size: 26px; margin-bottom: 8px; }
+      h2 { font-size: 20px; margin-bottom: 10px; }
+      h3 { font-size: 16px; margin-bottom: 10px; }
+      .muted { color: var(--muted); }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        border: 1px solid currentColor;
+      }
+      .status.pending, .status.in_progress { color: var(--warn); }
+      .status.awaiting_approval { color: var(--accent); }
+      .status.approved, .status.completed { color: var(--success); }
+      .status.changes_requested, .status.failed { color: var(--danger); }
+      .workflow-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .workflow-item {
+        width: 100%;
+        text-align: left;
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        cursor: pointer;
+      }
+      .workflow-item.active {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(185, 79, 45, 0.14);
+      }
+      .phase-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      textarea, input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font: inherit;
+        background: #fffdfa;
+        color: var(--text);
+      }
+      textarea { min-height: 180px; resize: vertical; }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font: inherit;
+        background: #2d241c;
+        color: white;
+      }
+      button.secondary {
+        background: #efe1cc;
+        color: var(--text);
+      }
+      button.success { background: var(--success); }
+      button.warn { background: var(--warn); }
+      button.danger { background: var(--danger); }
+      button:disabled { opacity: 0.55; cursor: default; }
+      .banner {
+        border-left: 4px solid var(--accent);
+        padding: 10px 12px;
+        background: #fff3ef;
+        border-radius: 10px;
+      }
+      .empty {
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+      }
+      code {
+        background: #f0e6d6;
+        border-radius: 8px;
+        padding: 1px 6px;
+      }
+      @media (max-width: 900px) {
+        .shell { grid-template-columns: 1fr; }
+        .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <h1>Xcos Workflow</h1>
+        <p class="muted" id="mode-label">Connecting...</p>
+        <div class="card">
+          <h2>Create Workflow</h2>
+          <textarea id="problem-statement" placeholder="Describe the control system problem to solve."></textarea>
+          <div class="row" style="margin-top: 10px;">
+            <button id="create-workflow-btn">Create</button>
+            <button class="secondary" id="refresh-btn">Refresh</button>
+          </div>
+        </div>
+        <div class="workflow-list" id="workflow-list"></div>
+      </aside>
+      <main class="main">
+        <div id="message-box"></div>
+        <div id="workflow-detail" class="empty">Create or select a workflow to review Phase 1 and Phase 2.</div>
+      </main>
+    </div>
+
+    <script type="module">
+      const state = {
+        mode: "loading",
+        app: null,
+        workflows: [],
+        selectedWorkflowId: null,
+        drafts: {},
+      };
+
+      const phaseOrder = [
+        "phase1_math_model",
+        "phase2_architecture",
+        "phase3_implementation",
+      ];
+
+      const modeLabel = document.getElementById("mode-label");
+      const workflowListEl = document.getElementById("workflow-list");
+      const workflowDetailEl = document.getElementById("workflow-detail");
+      const messageBoxEl = document.getElementById("message-box");
+      const createBtn = document.getElementById("create-workflow-btn");
+      const refreshBtn = document.getElementById("refresh-btn");
+      const problemStatementEl = document.getElementById("problem-statement");
+
+      function setMessage(text, kind = "info") {
+        messageBoxEl.innerHTML = "";
+        if (!text) return;
+        const div = document.createElement("div");
+        div.className = "banner";
+        if (kind === "error") div.style.borderLeftColor = "#9e3d2f";
+        if (kind === "success") div.style.borderLeftColor = "#2f7d4d";
+        div.textContent = text;
+        messageBoxEl.appendChild(div);
+      }
+
+      function upsertWorkflow(workflow) {
+        const index = state.workflows.findIndex((item) => item.workflow_id === workflow.workflow_id);
+        if (index >= 0) {
+          state.workflows[index] = workflow;
+        } else {
+          state.workflows.unshift(workflow);
+        }
+        if (!state.selectedWorkflowId) {
+          state.selectedWorkflowId = workflow.workflow_id;
+        }
+      }
+
+      function selectedWorkflow() {
+        return state.workflows.find((item) => item.workflow_id === state.selectedWorkflowId) || null;
+      }
+
+      function statusPill(status) {
+        return `<span class="status ${status}">${status.replaceAll("_", " ")}</span>`;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function renderWorkflowList() {
+        workflowListEl.innerHTML = "";
+        if (state.workflows.length === 0) {
+          workflowListEl.innerHTML = `<div class="empty">No workflows yet.</div>`;
+          return;
+        }
+
+        for (const workflow of state.workflows) {
+          const button = document.createElement("button");
+          button.className = "workflow-item" + (workflow.workflow_id === state.selectedWorkflowId ? " active" : "");
+          button.innerHTML = `
+            <strong>${escapeHtml(workflow.problem_statement.slice(0, 70) || "Untitled workflow")}</strong>
+            <div class="muted" style="margin-top: 6px;">${escapeHtml(workflow.current_phase_label)}</div>
+          `;
+          button.addEventListener("click", () => {
+            state.selectedWorkflowId = workflow.workflow_id;
+            render();
+          });
+          workflowListEl.appendChild(button);
+        }
+      }
+
+      function phaseCard(workflow, phaseKey) {
+        const phase = workflow.phases[phaseKey];
+        const reviewable = phaseKey !== "phase3_implementation";
+        const submitDisabled =
+          phaseKey !== workflow.current_phase &&
+          !(phase.status === "changes_requested" || phase.status === "awaiting_approval");
+
+        const reviewControls = reviewable && phase.status === "awaiting_approval"
+          ? `
+              <div class="row" style="margin-top: 10px;">
+                <input id="feedback-${phaseKey}" placeholder="Optional review feedback" />
+              </div>
+              <div class="row" style="margin-top: 10px;">
+                <button class="success" data-action="approve" data-phase="${phaseKey}">Approve</button>
+                <button class="danger" data-action="request_changes" data-phase="${phaseKey}">Request changes</button>
+              </div>
+            `
+          : "";
+
+        const metadata = [];
+        if (phase.submitted_at) metadata.push(`Submitted: ${escapeHtml(phase.submitted_at)}`);
+        if (phase.reviewed_at) metadata.push(`Reviewed: ${escapeHtml(phase.reviewed_at)}`);
+        if (phase.feedback) metadata.push(`Feedback: ${escapeHtml(phase.feedback)}`);
+        if (phase.last_error) metadata.push(`Last error: ${escapeHtml(phase.last_error)}`);
+
+        return `
+          <section class="card">
+            <div class="row" style="justify-content: space-between;">
+              <h3>${escapeHtml(phase.label)}</h3>
+              ${statusPill(phase.status)}
+            </div>
+            <textarea id="content-${phaseKey}" placeholder="Draft the content for this phase.">${escapeHtml(phase.content || "")}</textarea>
+            <div class="row" style="margin-top: 10px;">
+              <button data-action="submit" data-phase="${phaseKey}" ${submitDisabled ? "disabled" : ""}>Submit phase</button>
+            </div>
+            ${reviewControls}
+            ${metadata.length ? `<p class="muted" style="margin-top: 10px;">${metadata.join("<br />")}</p>` : ""}
+          </section>
+        `;
+      }
+
+      function renderWorkflowDetail() {
+        const workflow = selectedWorkflow();
+        if (!workflow) {
+          workflowDetailEl.className = "empty";
+          workflowDetailEl.textContent = "Create or select a workflow to review Phase 1 and Phase 2.";
+          return;
+        }
+
+        workflowDetailEl.className = "";
+        const lastVerified = workflow.last_verified
+          ? `<div class="card"><h3>Latest Verification</h3><p><strong>Success:</strong> ${escapeHtml(String(workflow.last_verified.success))}</p><p><strong>Origin:</strong> ${escapeHtml(workflow.last_verified.origin || "")}</p><p><strong>File:</strong> <code>${escapeHtml(workflow.last_verified.file_path || "")}</code></p>${workflow.last_verified.error ? `<p><strong>Error:</strong> ${escapeHtml(workflow.last_verified.error)}</p>` : ""}</div>`
+          : "";
+
+        const startDraftButton = workflow.phases.phase2_architecture.status === "approved" && !workflow.draft_session_id
+          ? `<button id="start-draft-btn">Start Phase 3 Draft Session</button>`
+          : "";
+
+        workflowDetailEl.innerHTML = `
+          <div class="card">
+            <div class="row" style="justify-content: space-between;">
+              <div>
+                <h2>${escapeHtml(workflow.problem_statement)}</h2>
+                <p class="muted">Workflow ID: <code>${escapeHtml(workflow.workflow_id)}</code></p>
+              </div>
+              ${statusPill(workflow.phases[workflow.current_phase].status)}
+            </div>
+            <p><strong>Current phase:</strong> ${escapeHtml(workflow.current_phase_label)}</p>
+            ${workflow.draft_session_id ? `<p><strong>Draft session:</strong> <code>${escapeHtml(workflow.draft_session_id)}</code></p>` : startDraftButton}
+          </div>
+          <div class="phase-grid">
+            ${phaseOrder.map((phaseKey) => phaseCard(workflow, phaseKey)).join("")}
+          </div>
+          ${lastVerified}
+        `;
+
+        const startDraftBtn = document.getElementById("start-draft-btn");
+        if (startDraftBtn) {
+          startDraftBtn.addEventListener("click", async () => {
+            await startDraft(workflow.workflow_id);
+          });
+        }
+
+        workflowDetailEl.querySelectorAll("[data-action='submit']").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const phase = button.getAttribute("data-phase");
+            const content = document.getElementById(`content-${phase}`).value;
+            await submitPhase(workflow.workflow_id, phase, content);
+          });
+        });
+
+        workflowDetailEl.querySelectorAll("[data-action='approve'], [data-action='request_changes']").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const phase = button.getAttribute("data-phase");
+            const decision = button.getAttribute("data-action");
+            const feedback = document.getElementById(`feedback-${phase}`).value;
+            await reviewPhase(workflow.workflow_id, phase, decision, feedback);
+          });
+        });
+      }
+
+      function render() {
+        modeLabel.textContent = state.mode === "mcp" ? "MCP app mode" : state.mode === "standalone" ? "Standalone browser mode" : "Connecting...";
+        renderWorkflowList();
+        renderWorkflowDetail();
+      }
+
+      function parseTextPayload(result) {
+        const text = result?.content?.find?.((item) => item.type === "text")?.text;
+        if (!text) return null;
+        try { return JSON.parse(text); } catch { return null; }
+      }
+
+      function payloadFromResult(result) {
+        return result?.structuredContent || parseTextPayload(result) || {};
+      }
+
+      async function mcpCall(name, args = {}) {
+        const result = await state.app.callServerTool({ name, arguments: args });
+        const payload = payloadFromResult(result);
+        if (payload.workflow) upsertWorkflow(payload.workflow);
+        if (payload.workflows) state.workflows = payload.workflows;
+        return payload;
+      }
+
+      async function apiCall(path, options = {}) {
+        const response = await fetch(path, {
+          headers: { "Content-Type": "application/json" },
+          ...options,
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || "Request failed");
+        }
+        return payload;
+      }
+
+      async function createWorkflow() {
+        const problemStatement = problemStatementEl.value.trim();
+        if (!problemStatement) {
+          setMessage("Describe the problem statement first.", "error");
+          return;
+        }
+        try {
+          const payload = state.mode === "mcp"
+            ? await mcpCall("xcos_create_workflow", { problem_statement: problemStatement })
+            : await apiCall("/workflow-ui/api/workflows", { method: "POST", body: JSON.stringify({ problem_statement: problemStatement }) });
+          upsertWorkflow(payload.workflow);
+          state.selectedWorkflowId = payload.workflow.workflow_id;
+          problemStatementEl.value = "";
+          setMessage("Workflow created.", "success");
+          render();
+        } catch (error) {
+          setMessage(error.message, "error");
+        }
+      }
+
+      async function refreshWorkflows() {
+        try {
+          const payload = state.mode === "mcp"
+            ? await mcpCall("xcos_list_workflows")
+            : await apiCall("/workflow-ui/api/workflows");
+          state.workflows = payload.workflows || [];
+          if (!selectedWorkflow() && state.workflows.length) {
+            state.selectedWorkflowId = state.workflows[0].workflow_id;
+          }
+          render();
+        } catch (error) {
+          setMessage(error.message, "error");
+        }
+      }
+
+      async function submitPhase(workflowId, phase, content) {
+        try {
+          const payload = state.mode === "mcp"
+            ? await mcpCall("xcos_submit_phase", { workflow_id: workflowId, phase, content, artifact_type: "markdown" })
+            : await apiCall(`/workflow-ui/api/workflows/${workflowId}/phases/${phase}/submit`, {
+                method: "POST",
+                body: JSON.stringify({ content, artifact_type: "markdown" }),
+              });
+          upsertWorkflow(payload.workflow);
+          setMessage(`${phase} submitted.`, "success");
+          render();
+        } catch (error) {
+          setMessage(error.message, "error");
+        }
+      }
+
+      async function reviewPhase(workflowId, phase, decision, feedback) {
+        try {
+          const payload = state.mode === "mcp"
+            ? await mcpCall("xcos_review_phase", { workflow_id: workflowId, phase, decision, feedback })
+            : await apiCall(`/workflow-ui/api/workflows/${workflowId}/phases/${phase}/review`, {
+                method: "POST",
+                body: JSON.stringify({ decision, feedback }),
+              });
+          upsertWorkflow(payload.workflow);
+          setMessage(`Review saved for ${phase}.`, "success");
+          render();
+        } catch (error) {
+          setMessage(error.message, "error");
+        }
+      }
+
+      async function startDraft(workflowId) {
+        try {
+          const payload = state.mode === "mcp"
+            ? await mcpCall("xcos_start_draft", { workflow_id: workflowId, schema_version: "1.1" })
+            : await apiCall(`/workflow-ui/api/workflows/${workflowId}/draft/start`, { method: "POST", body: "{}" });
+          if (payload.workflow_id) {
+            await refreshWorkflows();
+          }
+          setMessage(`Draft session ${payload.session_id} started.`, "success");
+        } catch (error) {
+          setMessage(error.message, "error");
+        }
+      }
+
+      async function init() {
+        try {
+          const { App } = await import("https://esm.sh/@modelcontextprotocol/ext-apps");
+          state.app = new App({ name: "Xcos Workflow Dashboard", version: "1.0.0" });
+          state.app.ontoolresult = (result) => {
+            const payload = payloadFromResult(result);
+            if (payload.workflows) state.workflows = payload.workflows;
+            if (payload.workflow) upsertWorkflow(payload.workflow);
+            render();
+          };
+          await state.app.connect();
+          state.mode = "mcp";
+          const initial = await mcpCall("xcos_open_workflow_ui");
+          state.workflows = initial.workflows || [];
+          if (state.workflows.length) state.selectedWorkflowId = state.workflows[0].workflow_id;
+        } catch (_) {
+          state.mode = "standalone";
+          await refreshWorkflows();
+        }
+
+        render();
+      }
+
+      createBtn.addEventListener("click", createWorkflow);
+      refreshBtn.addEventListener("click", refreshWorkflows);
+      init();
+    </script>
+  </body>
+</html>

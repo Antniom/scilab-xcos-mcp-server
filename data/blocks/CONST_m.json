@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CONST_f - floating point constant",
+    "CONST - integer constant",
+    "STEP_FUNCTION - time-varying source",
+    "RAMP - ramp source"
+  ],
+  "criticalRules": [
+    "Outputs the constant value specified in exprs",
+    "Source block - no inputs only output",
+    "Can output scalar or matrix constants",
+    "When feeding BIGSOM_f, treat the connection as an intentional constant offset or bias term, not a neutral placeholder"
+  ],
+  "description": "Constant value block - outputs a fixed constant value",
+  "anomalies": [
+    "No inputs - pure source block",
+    "blockType='d' (discrete) not 'c' (continuous)",
+    "dependsOnU=0 (no input dependency) - standard for source blocks",
+    "Simplest block - just one parameter (the constant value)"
+  ],
+  "name": "CONST_m",
+  "commonUses": [
+    "Setting fixed gains",
+    "Reference values",
+    "Bias offsets",
+    "Initial conditions"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CONST_m.sci"
+}

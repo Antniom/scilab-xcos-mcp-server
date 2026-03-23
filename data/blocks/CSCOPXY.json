@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CANIMXY",
+    "CSCOPXY3D",
+    "BARXY",
+    "CSCOPE"
+  ],
+  "criticalRules": [
+    "Input 1 is X coordinate, Input 2 is Y coordinate",
+    "Event on ControlPort samples new (X,Y) point",
+    "Plots Y vs X (not Y vs time like CSCOPE)",
+    "Uses circular buffer for trajectory storage"
+  ],
+  "description": "XY scope for plotting Y vs X with event-triggered refresh",
+  "anomalies": [
+    "Two explicit inputs (X and Y) vs CSCOPE's one",
+    "blockType='d' - discrete sampling on events",
+    "Similar to CANIMXY but with different parameter ordering",
+    "11 parameters - complex configuration"
+  ],
+  "name": "CSCOPXY",
+  "commonUses": [
+    "Phase portraits",
+    "Lissajous figures",
+    "XY trajectory plotting",
+    "Parametric curve visualization"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CSCOPXY.sci"
+}

@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "SOM_f",
+    "SUMMATION",
+    "CONST_m"
+  ],
+  "criticalRules": [
+    "Uses BigSom tag (not BasicBlock)",
+    "exprs encodes input signs: [1;1]=sum, [-1;1]=difference, [-1]=single-input negation",
+    "For single-input negation, set exprs=\"[-1]\", realParameters height=\"1\" width=\"1\" with value -1.0, and keep exactly one ExplicitInputPort",
+    "Reference 2-input geometry uses height 60; keep the port count, sign vector, and geometry aligned with the exact variant you are building",
+    "Use scalar dataLines/dataColumns when the connected signals are scalar; reserve dataLines=-1 for genuinely variable-size signals"
+  ],
+  "description": "Big Summer block - sums multiple inputs with configurable signs",
+  "anomalies": [
+    "Uses BigSom tag (not BasicBlock)",
+    "exprs encodes input signs instead of using a separate operator parameter",
+    "Height 60 (1.5x standard) to accommodate multiple inputs",
+    "Single-input negation reuses the same block family with a 1x1 sign vector"
+  ],
+  "name": "BIGSOM_f",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/BIGSOM_f.sci",
+  "commonUses": [
+    "Summing multiple signals",
+    "Single-input negation in ODE feedback loops",
+    "Differential signal computation",
+    "Combining signed control signals"
+  ]
+}

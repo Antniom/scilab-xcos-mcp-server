@@ -1,0 +1,170 @@
+{
+  "name": "TCLSS",
+  "description": "TCLSS block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "TCLSS",
+  "simulationFunctionName": "tcslti4",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 60.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "5",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "1"
+        },
+        {
+          "line": "2",
+          "column": "0",
+          "value": "1"
+        },
+        {
+          "line": "3",
+          "column": "0",
+          "value": "0"
+        },
+        {
+          "line": "4",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "1",
+      "width": "4",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": null
+        }
+      ]
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        }
+      ]
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "controlPorts": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-3be62bc8:19ce985ed1e:-7fad\" parent=\"0:2:0\" interfaceFunctionName=\"TCLSS\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"tcslti4\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"TCLSS\">\n        <ScilabString as=\"exprs\" height=\"5\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n          <data line=\"1\" column=\"0\" value=\"1\" />\n          <data line=\"2\" column=\"0\" value=\"1\" />\n          <data line=\"3\" column=\"0\" value=\"0\" />\n          <data line=\"4\" column=\"0\" value=\"0\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"1\" width=\"4\">\n          <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"1\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"2\" realPart=\"1.0\" />\n          <data line=\"0\" column=\"3\" realPart=\"0.0\" />\n        </ScilabDouble>\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"1\" width=\"1\">\n          <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n        </ScilabDouble>\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Contains ControlPort",
+    "Non-standard width: 60.0"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

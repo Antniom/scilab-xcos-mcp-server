@@ -1,0 +1,95 @@
+{
+  "name": "DERIV",
+  "description": "Derivative block - computes the time derivative of the input signal",
+  "category": "Continuous/Differentiation",
+  "blockType": "x",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DERIV",
+  "simulationFunctionName": "deriv",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "DERIV",
+  "parameters": {
+    "exprs": {
+      "height": 0,
+      "width": 0
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0;rotation=0",
+        "description": "Signal to differentiate"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0;rotation=0",
+        "description": "Derivative of input"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"DERIV\" blockType=\"x\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"deriv\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"DERIV\">\n  <ScilabDouble as=\"exprs\" height=\"0\" width=\"0\"/>\n  <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\"/>\n  <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\"/>\n  <mxGeometry as=\"geometry\" x=\"100.0\" y=\"100.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "blockType='x' (uncommon - most are 'c' or 'd')",
+    "No parameters - no configuration needed",
+    "Output is sensitive to noise in input",
+    "dataLines=-1 supports variable-size vectors"
+  ],
+  "criticalRules": [
+    "Output = d(Input)/dt (time derivative)",
+    "No parameters to configure",
+    "Sensitive to high-frequency noise",
+    "Uses blockType='x'"
+  ],
+  "commonUses": [
+    "Velocity from position",
+    "Acceleration from velocity",
+    "Rate of change calculations",
+    "PID controller derivative term"
+  ],
+  "relatedBlocks": [
+    "INTEGRAL_m - integration (inverse operation)",
+    "INTEGRAL_f - floating point integrator",
+    "DLR - discrete transfer function",
+    "SAMPHOLD - sample and hold"
+  ],
+  "warnings": [
+    "Derivative amplifies noise - consider adding a filter",
+    "Use cautiously in physical models",
+    "Prefer algebraic relationships when possible"
+  ]
+}

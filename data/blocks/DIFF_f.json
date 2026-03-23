@@ -1,0 +1,22 @@
+{
+  "relatedBlocks": [
+    "DERIV",
+    "CLR",
+    "CLSS"
+  ],
+  "criticalRules": [
+    "Numerically unstable for high-frequency noise",
+    "OLDBLOCKS type must be handled correctly in simulation"
+  ],
+  "description": "Differentiator - legacy derivative block using numerical differentiation",
+  "anomalies": [
+    "simulationFunctionType='OLDBLOCKS'",
+    "dependsOnT=1 (Depends on time)",
+    "Uses 'state' instead of 'dState' for buffer in reference"
+  ],
+  "name": "DIFF_f",
+  "commonUses": [
+    "Approximating derivatives of continuous signals"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/DIFF_f.sci"
+}

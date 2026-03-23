@@ -1,0 +1,20 @@
+{
+  "relatedBlocks": [
+    "DELAYV_f",
+    "TIME_DELAY"
+  ],
+  "criticalRules": [
+    "Internal structure must be preserved if modified"
+  ],
+  "description": "Fixed delay SuperBlock - provides a fixed time delay using internal register and event delay",
+  "anomalies": [
+    "blockType='h' (SuperBlock)",
+    "Encapsulates REGISTER_f and EVTDLY_f",
+    "No external event ports, used for continuous-like fixed delay"
+  ],
+  "name": "DELAY_f",
+  "commonUses": [
+    "Fixed time delay for continuous signals"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DELAY_f.sci"
+}

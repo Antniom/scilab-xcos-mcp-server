@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "DERIV - differentiation",
+    "INTEGRAL_f - floating point integrator",
+    "DLR - discrete transfer function",
+    "SAMPHOLD - sample and hold"
+  ],
+  "criticalRules": [
+    "Output(t) = integral from 0 to t of Input(dt)",
+    "Initial condition from exprs[0]",
+    "Optional saturation limits (exprs[3]=min, exprs[4]=max)",
+    "dependsOnT=1 indicates time-dependent operation"
+  ],
+  "description": "Integrator block - computes the integral of the input signal over time",
+  "anomalies": [
+    "dependsOnU=0 but dependsOnT=1 (time-dependent integration)",
+    "Has state field storing current accumulated value",
+    "5 parameters in exprs - more than typical blocks",
+    "state array tracks integration value"
+  ],
+  "name": "INTEGRAL_m",
+  "commonUses": [
+    "Computing position from velocity",
+    "Velocity from acceleration",
+    "Controller integrators (PID)",
+    "Cumulative sums"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/INTEGRAL_m.sci"
+}

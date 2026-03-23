@@ -1,0 +1,33 @@
+{
+  "relatedBlocks": [
+    "CMAT3D",
+    "CSCOPE",
+    "CANIMXY",
+    "CANIMXY3D"
+  ],
+  "criticalRules": [
+    "Control port is refresh trigger, NOT clock",
+    "dataColumns=-2 for matrix auto-sizing",
+    "exprs: colormap, min, max values",
+    "C_OR_FORTRAN simulation function type",
+    "Preserve colormap data in realParameters"
+  ],
+  "description": "Matrix viewer block - displays matrix data as 2D color map visualization",
+  "anomalies": [
+    "dataColumns=-2, dataLines=-1 (auto-dimension for matrix)",
+    "realParameters width=77 (large colormap data)",
+    "Contains full colormap RGB data in realParameters",
+    "exprs line 0: colormap expression 'jet(25)'",
+    "Integer parameters: [min_value, max_value, num_colors]",
+    "Visualization only - no outputs"
+  ],
+  "name": "CMATVIEW",
+  "commonUses": [
+    "Heatmap visualization of matrix data",
+    "Image processing - display 2D data",
+    "Finite element result visualization",
+    "Signal processing spectrograms",
+    "Data monitoring with color coding"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CMATVIEW.sci"
+}

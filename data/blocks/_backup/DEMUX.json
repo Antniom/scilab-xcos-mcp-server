@@ -1,0 +1,92 @@
+{
+  "name": "DEMUX",
+  "description": "De-multiplexer - splits a vector input signal into multiple components",
+  "category": "Signal Routing",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DEMUX",
+  "simulationFunctionName": "multiplex",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 10.0,
+    "height": 40.0
+  },
+  "style": "DEMUX",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 1,
+      "width": 1,
+      "values": ["2"]
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [2]
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 0,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      },
+      {
+        "ordering": 2,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -2,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"DEMUX\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"multiplex\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"DEMUX\">\n    <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n        <data line=\"0\" column=\"0\" value=\"2\" />\n    </ScilabString>\n    <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n    <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"2\" />\n    </ScilabInteger>\n    <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n    <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n        <data line=\"0\" column=\"0\" value=\"0\" />\n    </ScilabInteger>\n    <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n    <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n    <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n    <Array as=\"equations\" scilabClass=\"ScilabList\" />\n    <mxGeometry as=\"geometry\" x=\"100.0\" y=\"100.0\" width=\"10.0\" height=\"40.0\" />\n</BasicBlock>",
+  "anomalies": [
+    "Very narrow width (10)",
+    "dataLines=-1/-2 (Variable size outputs)",
+    "Uses simulationFunctionName='multiplex' for DE-multiplexing"
+  ],
+  "criticalRules": [
+    "Input size must match sum of output sizes",
+    "dataLines negative values indicate auto-dimensioning"
+  ],
+  "commonUses": [
+    "Breaking down vector signals into individual lines"
+  ],
+  "relatedBlocks": [
+    "MUX",
+    "DEMUX_f",
+    "SELECT_m"
+  ]
+}

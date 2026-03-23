@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "INTEGRAL_m - integration (inverse operation)",
+    "INTEGRAL_f - floating point integrator",
+    "DLR - discrete transfer function",
+    "SAMPHOLD - sample and hold"
+  ],
+  "criticalRules": [
+    "Output = d(Input)/dt (time derivative)",
+    "No parameters to configure",
+    "Sensitive to high-frequency noise",
+    "Uses blockType='x'"
+  ],
+  "description": "Derivative block - computes the time derivative of the input signal",
+  "anomalies": [
+    "blockType='x' (uncommon - most are 'c' or 'd')",
+    "No parameters - no configuration needed",
+    "Output is sensitive to noise in input",
+    "dataLines=-1 supports variable-size vectors"
+  ],
+  "name": "DERIV",
+  "commonUses": [
+    "Velocity from position",
+    "Acceleration from velocity",
+    "Rate of change calculations",
+    "PID controller derivative term"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DERIV.sci"
+}

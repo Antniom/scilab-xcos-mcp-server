@@ -1,0 +1,30 @@
+{
+  "description": "Clock From block - receives clock/event signals from a CLKGOTO block via tag",
+  "name": "CLKFROM",
+  "anomalies": [
+    "Short height of 20 (half of standard 40)",
+    "Has 'value' attribute showing display label \"From\"",
+    "Tag value 'A' is duplicated in exprs AND objectsParameters",
+    "objectsParameters contains ScilabString with same tag value",
+    "Command port with initialState=-1.0 (event port signature)"
+  ],
+  "criticalRules": [
+    "Must match with a CLKGOTO block with the same tag name",
+    "Use CLKGotoTagVisibility to manage tag scope",
+    "Can receive from multiple CLKGOTO blocks with same tag",
+    "Creates implicit connection - no visible wire needed"
+  ],
+  "commonUses": [
+    "Event signal routing across long distances in diagram",
+    "Connecting event signals across subsystem boundaries",
+    "Avoiding wire clutter in event-driven models",
+    "Implementing broadcast/multicast event patterns"
+  ],
+  "relatedBlocks": [
+    "CLKGOTO",
+    "CLKGotoTagVisibility",
+    "FROM",
+    "GOTO"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/CLKFROM.sci"
+}

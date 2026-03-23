@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "MATTRAN block",
+  "anomalies": [
+    "dataLines=-2 indicates auto-dimension",
+    "dataLines=-1 indicates variable-size",
+    "Non-standard width: 60.0"
+  ],
+  "name": "MATTRAN",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/MatrixOp/MATTRAN.sci"
+}

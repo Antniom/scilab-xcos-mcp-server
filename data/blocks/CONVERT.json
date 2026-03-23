@@ -1,0 +1,30 @@
+{
+  "relatedBlocks": [
+    "BITSET",
+    "BITCLEAR",
+    "DOLLAR",
+    "REGISTER"
+  ],
+  "criticalRules": [
+    "Type codes: 1=double, 2=int32, 3=uint32, 4=int16, 5=uint16, 6=int8, 7=uint8",
+    "exprs[0]=input type, exprs[1]=output type",
+    "exprs[2]=0: truncate, 1: round when converting to integer",
+    "dataColumns=-2 enables auto-dimensioning for vector/matrix inputs",
+    "Converts both data type and can round/truncate values"
+  ],
+  "description": "Data type converter - converts signal between different numeric types",
+  "anomalies": [
+    "dataColumns=-2 and dataLines=-1 (auto-dimensioning)",
+    "Input dataType=REAL_MATRIX, Output dataType=INT32_MATRIX (type conversion)",
+    "No realParameters - uses integerParameters for type code",
+    "Special negative values for dimension handling"
+  ],
+  "name": "CONVERT",
+  "commonUses": [
+    "Converting between double and integer types",
+    "Preparing data for BITSET/BITCLEAR operations",
+    "Signal conditioning for hardware interfaces",
+    "Type-safe signal routing"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/CONVERT.sci"
+}

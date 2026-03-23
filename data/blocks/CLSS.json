@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CLR",
+    "DLSS",
+    "TCLSS",
+    "INTEGRAL_m"
+  ],
+  "criticalRules": [
+    "Matrices must be entered as Scilab expressions in exprs",
+    "A, B, C, D matrices define the state-space system",
+    "Default is [-1, 1, 1, 0, 0] - a simple first-order system",
+    "Time-dependent (dependsOnT=1) - evolves continuously"
+  ],
+  "description": "Continuous Linear State Space - State-space representation of continuous-time linear systems",
+  "anomalies": [
+    "Width=80 (non-standard - wider block for state-space)",
+    "Height=40 (standard)",
+    "exprs contains 5 values but only 4 realParameters (flattened matrices)",
+    "Initial state is in exprs[4] but realParameters only contains ABCD"
+  ],
+  "name": "CLSS",
+  "commonUses": [
+    "Multi-input multi-output (MIMO) systems",
+    "State-feedback control design",
+    "Observer implementations",
+    "Modeling physical systems from differential equations"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/CLSS.sci"
+}

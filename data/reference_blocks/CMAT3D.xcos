@@ -1,0 +1,120 @@
+<?xml version="1.0" ?>
+<XcosDiagram debugLevel="0" finalIntegrationTime="30.0" integratorAbsoluteTolerance="1.0E-6" integratorRelativeTolerance="1.0E-6" toleranceOnTime="1.0E-10" maxIntegrationTimeInterval="100001.0" maximumStepSize="0.0" realTimeScaling="0.0" solver="1.0" background="-1" gridEnabled="1" title="CFSCOPE"><!--Xcos - 2.0 - scilab-2026.0.1 - 20260205 0935-->
+  <Array as="context" scilabClass="String[]"></Array>
+  <mxGraphModel as="model">
+    <root>
+      <mxCell id="0:1:0"/>
+      <mxCell id="0:2:0" parent="0:1:0"/>
+      <BasicBlock id="-4ca061a2:19ce98e0b72:-7cd6" parent="0:2:0" interfaceFunctionName="CMAT3D" blockType="c" dependsOnU="1" dependsOnT="0" simulationFunctionName="cmat3d" simulationFunctionType="C_OR_FORTRAN" style="CMAT3D">
+        <ScilabString as="exprs" height="5" width="1">
+          <data line="0" column="0" value="-1"/>
+          <data line="1" column="0" value="-1"/>
+          <data line="2" column="0" value="jet(25)"/>
+          <data line="3" column="0" value="0"/>
+          <data line="4" column="0" value="100"/>
+        </ScilabString>
+        <ScilabDouble as="realParameters" height="1" width="77">
+          <data line="0" column="0" realPart="0.0"/>
+          <data line="0" column="1" realPart="0.0"/>
+          <data line="0" column="2" realPart="0.0"/>
+          <data line="0" column="3" realPart="0.0"/>
+          <data line="0" column="4" realPart="0.0"/>
+          <data line="0" column="5" realPart="0.0"/>
+          <data line="0" column="6" realPart="0.0"/>
+          <data line="0" column="7" realPart="0.0"/>
+          <data line="0" column="8" realPart="0.0"/>
+          <data line="0" column="9" realPart="0.020000000000000018"/>
+          <data line="0" column="10" realPart="0.18000000000000016"/>
+          <data line="0" column="11" realPart="0.3400000000000001"/>
+          <data line="0" column="12" realPart="0.5"/>
+          <data line="0" column="13" realPart="0.6600000000000001"/>
+          <data line="0" column="14" realPart="0.8200000000000003"/>
+          <data line="0" column="15" realPart="0.98"/>
+          <data line="0" column="16" realPart="1.0"/>
+          <data line="0" column="17" realPart="1.0"/>
+          <data line="0" column="18" realPart="1.0"/>
+          <data line="0" column="19" realPart="1.0"/>
+          <data line="0" column="20" realPart="1.0"/>
+          <data line="0" column="21" realPart="1.0"/>
+          <data line="0" column="22" realPart="0.8999999999999999"/>
+          <data line="0" column="23" realPart="0.7399999999999998"/>
+          <data line="0" column="24" realPart="0.5800000000000001"/>
+          <data line="0" column="25" realPart="0.0"/>
+          <data line="0" column="26" realPart="0.0"/>
+          <data line="0" column="27" realPart="0.0"/>
+          <data line="0" column="28" realPart="0.05999999999999994"/>
+          <data line="0" column="29" realPart="0.21999999999999997"/>
+          <data line="0" column="30" realPart="0.38"/>
+          <data line="0" column="31" realPart="0.54"/>
+          <data line="0" column="32" realPart="0.7000000000000002"/>
+          <data line="0" column="33" realPart="0.8600000000000001"/>
+          <data line="0" column="34" realPart="1.0"/>
+          <data line="0" column="35" realPart="1.0"/>
+          <data line="0" column="36" realPart="1.0"/>
+          <data line="0" column="37" realPart="1.0"/>
+          <data line="0" column="38" realPart="1.0"/>
+          <data line="0" column="39" realPart="1.0"/>
+          <data line="0" column="40" realPart="1.0"/>
+          <data line="0" column="41" realPart="0.8599999999999999"/>
+          <data line="0" column="42" realPart="0.6999999999999997"/>
+          <data line="0" column="43" realPart="0.54"/>
+          <data line="0" column="44" realPart="0.3799999999999999"/>
+          <data line="0" column="45" realPart="0.21999999999999975"/>
+          <data line="0" column="46" realPart="0.06000000000000005"/>
+          <data line="0" column="47" realPart="0.0"/>
+          <data line="0" column="48" realPart="0.0"/>
+          <data line="0" column="49" realPart="0.0"/>
+          <data line="0" column="50" realPart="0.58"/>
+          <data line="0" column="51" realPart="0.74"/>
+          <data line="0" column="52" realPart="0.9"/>
+          <data line="0" column="53" realPart="1.0"/>
+          <data line="0" column="54" realPart="1.0"/>
+          <data line="0" column="55" realPart="1.0"/>
+          <data line="0" column="56" realPart="1.0"/>
+          <data line="0" column="57" realPart="1.0"/>
+          <data line="0" column="58" realPart="1.0"/>
+          <data line="0" column="59" realPart="0.98"/>
+          <data line="0" column="60" realPart="0.8199999999999998"/>
+          <data line="0" column="61" realPart="0.6599999999999999"/>
+          <data line="0" column="62" realPart="0.5"/>
+          <data line="0" column="63" realPart="0.33999999999999986"/>
+          <data line="0" column="64" realPart="0.17999999999999972"/>
+          <data line="0" column="65" realPart="0.020000000000000018"/>
+          <data line="0" column="66" realPart="0.0"/>
+          <data line="0" column="67" realPart="0.0"/>
+          <data line="0" column="68" realPart="0.0"/>
+          <data line="0" column="69" realPart="0.0"/>
+          <data line="0" column="70" realPart="0.0"/>
+          <data line="0" column="71" realPart="0.0"/>
+          <data line="0" column="72" realPart="0.0"/>
+          <data line="0" column="73" realPart="0.0"/>
+          <data line="0" column="74" realPart="0.0"/>
+          <data line="0" column="75" realPart="-1.0"/>
+          <data line="0" column="76" realPart="-1.0"/>
+        </ScilabDouble>
+        <ScilabInteger as="integerParameters" height="1" width="5" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+          <data line="0" column="1" value="100"/>
+          <data line="0" column="2" value="25"/>
+          <data line="0" column="3" value="1"/>
+          <data line="0" column="4" value="1"/>
+        </ScilabInteger>
+        <Array as="objectsParameters" scilabClass="ScilabList"/>
+        <ScilabInteger as="nbZerosCrossing" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabInteger as="nmode" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabDouble as="state" height="0" width="0"/>
+        <ScilabDouble as="dState" height="0" width="0"/>
+        <Array as="oDState" scilabClass="ScilabList"/>
+        <Array as="equations" scilabClass="ScilabList"/>
+        <mxGeometry as="geometry" x="0.0" y="-10.0" width="40.0" height="40.0"/>
+      </BasicBlock>
+      <ControlPort id="-4ca061a2:19ce98e0b72:-7cd5" parent="-4ca061a2:19ce98e0b72:-7cd6" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ControlPort;align=center;verticalAlign=top;spacing=10.0" value=""/>
+      <ExplicitInputPort id="-4ca061a2:19ce98e0b72:-7cd4" parent="-4ca061a2:19ce98e0b72:-7cd6" ordering="1" dataType="REAL_MATRIX" dataColumns="-2" dataLines="-1" initialState="0.0" style="ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+    </root>
+  </mxGraphModel>
+  <mxCell as="defaultParent" id="0:2:0" parent="0:1:0"/>
+</XcosDiagram>

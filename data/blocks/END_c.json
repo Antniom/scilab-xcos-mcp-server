@@ -1,0 +1,18 @@
+{
+  "relatedBlocks": [
+    "ENDBLK",
+    "HALT_f"
+  ],
+  "criticalRules": [
+    "Immediately stops simulation when triggered by event"
+  ],
+  "description": "Legacy Termination Block - terminates simulation at a predefined final time",
+  "anomalies": [
+    "initialState=1.0E8 for CommandPort (End condition)"
+  ],
+  "name": "END_c",
+  "commonUses": [
+    "Conditional simulation termination"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/END_c.sci"
+}

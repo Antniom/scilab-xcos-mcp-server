@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "INTEGRAL_m",
+    "DERIV",
+    "SUMMATION",
+    "INTEGRAL_f"
+  ],
+  "criticalRules": [
+    "dataColumns=-2 propagates input dimensions to output",
+    "dataLines=-1 allows variable row count",
+    "Cumsum direction 1=column-wise (tall matrices)",
+    "Reset option for event-triggered accumulation reset"
+  ],
+  "description": "Cumulative sum of input signal over time",
+  "anomalies": [
+    "Width=60 (non-standard, wider than typical 40)",
+    "dataColumns=-2 AND dataLines=-1 for automatic matrix dimensioning",
+    "Empty realParameters and integerParameters",
+    "Only 2 parameters - simplest block configuration"
+  ],
+  "name": "CUMSUM",
+  "commonUses": [
+    "Signal integration approximation",
+    "Running total calculation",
+    "Cumulative statistics",
+    "Position from velocity (discrete)"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/MatrixOp/CUMSUM.sci"
+}

@@ -1,0 +1,186 @@
+{
+  "name": "PDE",
+  "description": "PDE block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "PDE",
+  "simulationFunctionName": "PDE",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 60.0,
+    "height": 60.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "0",
+      "width": "0"
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "1",
+      "width": "10",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "4",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "5",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "6",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "7",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "8",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "9",
+          "value": null
+        }
+      ]
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 10,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-3be62bc8:19ce985ed1e:-7f89\" parent=\"0:2:0\" interfaceFunctionName=\"PDE\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"PDE\" simulationFunctionType=\"DEFAULT\" style=\"PDE\">\n        <Array as=\"exprs\" scilabClass=\"ScilabList\">\n          <Array scilabClass=\"ScilabTList\">\n            <ScilabString height=\"44\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"paramspde\" />\n              <data line=\"1\" column=\"0\" value=\"a\" />\n              <data line=\"2\" column=\"0\" value=\"b\" />\n              <data line=\"3\" column=\"0\" value=\"txt_exp\" />\n              <data line=\"4\" column=\"0\" value=\"check_op1\" />\n              <data line=\"5\" column=\"0\" value=\"a1\" />\n              <data line=\"6\" column=\"0\" value=\"b1\" />\n              <data line=\"7\" column=\"0\" value=\"check_op2\" />\n              <data line=\"8\" column=\"0\" value=\"a2\" />\n              <data line=\"9\" column=\"0\" value=\"b2\" />\n              <data line=\"10\" column=\"0\" value=\"check_op3\" />\n              <data line=\"11\" column=\"0\" value=\"a3\" />\n              <data line=\"12\" column=\"0\" value=\"b3\" />\n              <data line=\"13\" column=\"0\" value=\"check_op4\" />\n              <data line=\"14\" column=\"0\" value=\"a4\" />\n              <data line=\"15\" column=\"0\" value=\"b4\" />\n              <data line=\"16\" column=\"0\" value=\"check_op5\" />\n              <data line=\"17\" column=\"0\" value=\"a5\" />\n              <data line=\"18\" column=\"0\" value=\"b5\" />\n              <data line=\"19\" column=\"0\" value=\"check_op6\" />\n              <data line=\"20\" column=\"0\" value=\"a6\" />\n              <data line=\"21\" column=\"0\" value=\"b6\" />\n              <data line=\"22\" column=\"0\" value=\"check_op7\" />\n              <data line=\"23\" column=\"0\" value=\"a7\" />\n              <data line=\"24\" column=\"0\" value=\"b7\" />\n              <data line=\"25\" column=\"0\" value=\"discr_cst\" />\n              <data line=\"26\" column=\"0\" value=\"discr_non_cst\" />\n              <data line=\"27\" column=\"0\" value=\"signe\" />\n              <data line=\"28\" column=\"0\" value=\"rad_automatique\" />\n              <data line=\"29\" column=\"0\" value=\"rad_manuel\" />\n              <data line=\"30\" column=\"0\" value=\"methode\" />\n              <data line=\"31\" column=\"0\" value=\"ord1\" />\n              <data line=\"32\" column=\"0\" value=\"ord2\" />\n              <data line=\"33\" column=\"0\" value=\"ord3\" />\n              <data line=\"34\" column=\"0\" value=\"degre\" />\n              <data line=\"35\" column=\"0\" value=\"nnode\" />\n              <data line=\"36\" column=\"0\" value=\"txt_pas\" />\n              <data line=\"37\" column=\"0\" value=\"CI\" />\n              <data line=\"38\" column=\"0\" value=\"dCI\" />\n              <data line=\"39\" column=\"0\" value=\"CLa\" />\n              <data line=\"40\" column=\"0\" value=\"CLa_exp\" />\n              <data line=\"41\" column=\"0\" value=\"CLb\" />\n              <data line=\"42\" column=\"0\" value=\"CLb_exp\" />\n              <data line=\"43\" column=\"0\" value=\"points\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_EDP1(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_EDP2(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_EDP3(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_EDP4(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_EDP5(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_EDP6(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_EDP7(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_CL1(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"IN_CL2(t)\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"\" />\n            </ScilabString>\n          </Array>\n          <ScilabDouble height=\"0\" width=\"0\" />\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"\" />\n          </ScilabString>\n        </Array>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"1\" width=\"10\">\n          <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"1\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"2\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"3\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"4\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"5\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"6\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"7\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"8\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"9\" realPart=\"0.0\" />\n        </ScilabDouble>\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"60.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Empty exprs",
+    "Non-standard height: 60.0",
+    "Non-standard width: 60.0"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

@@ -1,0 +1,20 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "Uses SplitBlock tag",
+    "Minimal geometry size",
+    "Exactly one control port and two command ports"
+  ],
+  "description": "Clock Split block - forks an event signal into two identical event signals",
+  "anomalies": [
+    "Uses SplitBlock tag",
+    "Near-zero width/height (0.33) - represents a junction point",
+    "Splits event/clock signals (no explicit data ports)"
+  ],
+  "name": "CLKSPLIT_f",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/CLKSPLIT_f.sci",
+  "commonUses": [
+    "Forking clock signals to multiple blocks",
+    "Creating feedback loops in event-driven systems"
+  ]
+}

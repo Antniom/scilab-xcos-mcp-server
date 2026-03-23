@@ -1,0 +1,20 @@
+{
+  "relatedBlocks": [
+    "CLKSOMV_f",
+    "EVTDLY_c"
+  ],
+  "criticalRules": [
+    "Generates command event on detected edges"
+  ],
+  "description": "Edge Trigger - generates an output event based on edge detection from an input signal",
+  "anomalies": [
+    "SuperBlock with internal logic (EDGETRIGGER + IFTHEL_f)",
+    "Width=60"
+  ],
+  "name": "EDGE_TRIGGER",
+  "commonUses": [
+    "Hybrid systems synchronization",
+    "Event generation from continuous signals"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/EDGE_TRIGGER.sci"
+}

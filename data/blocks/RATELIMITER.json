@@ -1,0 +1,15 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "RATELIMITER block",
+  "anomalies": [
+    "Non-standard width: 70.0"
+  ],
+  "name": "RATELIMITER",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/RATELIMITER.sci"
+}

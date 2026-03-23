@@ -1,0 +1,26 @@
+{
+  "relatedBlocks": [
+    "CLKSPLIT_f",
+    "MUX",
+    "DEMUX"
+  ],
+  "criticalRules": [
+    "Uses SplitBlock tag (not BasicBlock)",
+    "Scilab source macro uses simulationFunctionName=\"lsplit\" with blockType=\"c\" and near-zero geometry",
+    "Use SPLIT_f when one explicit data signal must fan out to multiple downstream blocks",
+    "Reference superblock examples show a default 3-output form; preserve the exact output count and port layout from the diagram variant you are mirroring"
+  ],
+  "description": "Data signal splitter / fan-out junction for explicit data links",
+  "anomalies": [
+    "Uses SplitBlock tag",
+    "Near-zero width/height (0.3333333) makes it render like a junction point",
+    "Source macro defines one input and multiple outputs rather than a standard rectangular block body"
+  ],
+  "name": "SPLIT_f",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/SPLIT_f.sci",
+  "commonUses": [
+    "Forking one signal to multiple consumers",
+    "Breaking illegal direct fan-out before verification",
+    "Adding monitor/debug branches without changing the main signal path"
+  ]
+}

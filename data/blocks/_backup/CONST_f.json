@@ -1,0 +1,77 @@
+{
+  "name": "CONST_f",
+  "description": "Fortran-type constant source block - older constant block implementation",
+  "category": "Sources",
+  "blockType": "d",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CONST_f",
+  "simulationFunctionName": "cstblk",
+  "simulationFunctionType": "TYPE_1",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 1,
+      "width": 1,
+      "values": ["1"],
+      "description": "Constant value to output"
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [1.0]
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CONST_f\" blockType=\"d\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"cstblk\" simulationFunctionType=\"TYPE_1\" style=\"CONST_f\">\n  <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" realPart=\"1.0\"/>\n  </ScilabDouble>\n  <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "simulationFunctionType='TYPE_1' (older type system)",
+    "Different simulationFunctionName from CONST (cstblk vs cstblk4)",
+    "Legacy block - prefers CONST for new designs"
+  ],
+  "criticalRules": [
+    "TYPE_1 simulation function is legacy Scicos type",
+    "Use CONST (cstblk4) for newer designs",
+    "Functionally equivalent to CONST but with older implementation",
+    "Minimal source block with no inputs"
+  ],
+  "commonUses": [
+    "Legacy model compatibility",
+    "Backward compatibility with old Scicos models",
+    "Simple constant generation"
+  ],
+  "relatedBlocks": ["CONST", "CONST_m", "STEP_FUNCTION"]
+}

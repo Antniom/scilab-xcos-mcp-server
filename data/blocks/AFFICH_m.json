@@ -1,0 +1,22 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "Has ControlPort for event trigger (not clock)",
+    "dState array stores display history",
+    "Display/scope block - consumes simulation data"
+  ],
+  "description": "Display block for showing signal values during simulation",
+  "anomalies": [
+    "Has ControlPort for event trigger - NOT a clock input but a refresh trigger",
+    "dState array stores display history - unique among blocks",
+    "Display/scope block - consumes simulation data with no outputs",
+    "Width is 60 (1.5x standard) to accommodate display area"
+  ],
+  "name": "AFFICH_m",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/AFFICH_m.sci",
+  "commonUses": [
+    "Real-time signal monitoring",
+    "Debugging simulation values",
+    "Displaying matrix values"
+  ]
+}

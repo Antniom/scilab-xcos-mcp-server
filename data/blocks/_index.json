@@ -1,0 +1,1473 @@
+{
+  "index_version": "1.0",
+  "description": "XCOS Block Index - Individual block files for easy AI agent context management",
+  "last_updated": "2026-03-21",
+  "block_files": [
+    {
+      "name": "CMAT3D",
+      "file": "CMAT3D.json",
+      "category": "Sinks/Visualization",
+      "description": "3D matrix viewer - displays matrix data as 3D colored surface",
+      "complexity": "high"
+    },
+    {
+      "name": "CMATVIEW",
+      "file": "CMATVIEW.json",
+      "category": "Sinks/Visualization",
+      "description": "Matrix viewer - displays matrix data as 2D color map",
+      "complexity": "medium"
+    },
+    {
+      "name": "CMSCOPE",
+      "file": "CMSCOPE.json",
+      "category": "Sinks/Visualization",
+      "description": "Multi-channel scope for multiple signal display",
+      "complexity": "medium"
+    },
+    {
+      "name": "SPLIT_f",
+      "file": "SPLIT_f.json",
+      "category": "Signal Routing",
+      "description": "Data split junction for explicit signal fan-out",
+      "complexity": "simple"
+    },
+    {
+      "name": "COSBLK_f",
+      "file": "COSBLK_f.json",
+      "category": "Math Operations/Trigonometry",
+      "description": "Cosine function block",
+      "complexity": "simple"
+    },
+    {
+      "name": "Counter",
+      "file": "Counter.json",
+      "category": "Discrete/Events",
+      "description": "Event counter block",
+      "complexity": "medium"
+    },
+    {
+      "name": "ABS_VALUE",
+      "file": "ABS_VALUE.json",
+      "category": "Math Operations",
+      "description": "Computes absolute value",
+      "complexity": "simple"
+    },
+    {
+      "name": "AFFICH_m",
+      "file": "AFFICH_m.json",
+      "category": "Sinks/Visualization",
+      "description": "Display block for signal values",
+      "complexity": "medium"
+    },
+    {
+      "name": "ANDBLK",
+      "file": "ANDBLK.json",
+      "category": "Logic Gates/SuperBlocks",
+      "description": "AND gate SuperBlock with 2 clock inputs",
+      "complexity": "high"
+    },
+    {
+      "name": "ANDLOG_f",
+      "file": "ANDLOG_f.json",
+      "category": "Logic Gates",
+      "description": "AND logic gate with 2 control inputs",
+      "complexity": "medium"
+    },
+    {
+      "name": "AUTOMAT",
+      "file": "AUTOMAT.json",
+      "category": "Signal Processing/Control",
+      "description": "Finite state machine block",
+      "complexity": "high"
+    },
+    {
+      "name": "BACKLASH",
+      "file": "BACKLASH.json",
+      "category": "Discontinuities",
+      "description": "Backlash/deadzone for mechanical systems",
+      "complexity": "medium"
+    },
+    {
+      "name": "BARXY",
+      "file": "BARXY.json",
+      "category": "Sinks/Visualization",
+      "description": "XY Bar chart visualization",
+      "complexity": "medium"
+    },
+    {
+      "name": "BIGSOM_f",
+      "file": "BIGSOM_f.json",
+      "category": "Math Operations",
+      "description": "Big Summer with configurable signs",
+      "complexity": "medium"
+    },
+    {
+      "name": "BITCLEAR",
+      "file": "BITCLEAR.json",
+      "category": "Bit Operations",
+      "description": "Clear a specific bit in integer value",
+      "complexity": "medium"
+    },
+    {
+      "name": "BITSET",
+      "file": "BITSET.json",
+      "category": "Bit Operations",
+      "description": "Set a specific bit in integer value",
+      "complexity": "medium"
+    },
+    {
+      "name": "BOUNCE",
+      "file": "BOUNCE.json",
+      "category": "Physics/Simulation",
+      "description": "Bouncing ball physics simulation with gravity and collision",
+      "complexity": "high"
+    },
+    {
+      "name": "BOUNCEXY",
+      "file": "BOUNCEXY.json",
+      "category": "Sinks/Visualization",
+      "description": "XY animation scope for bouncing balls",
+      "complexity": "medium"
+    },
+    {
+      "name": "BPLATFORM",
+      "file": "BPLATFORM.json",
+      "category": "Sinks/Visualization",
+      "description": "Platform/bat animation for games",
+      "complexity": "medium"
+    },
+    {
+      "name": "CANIMXY",
+      "file": "CANIMXY.json",
+      "category": "Sinks/Visualization",
+      "description": "Animated XY scope with trajectory display",
+      "complexity": "medium"
+    },
+    {
+      "name": "CANIMXY3D",
+      "file": "CANIMXY3D.json",
+      "category": "Sinks/Visualization",
+      "description": "3D animated XY scope for trajectories",
+      "complexity": "high"
+    },
+    {
+      "name": "CBLOCK",
+      "file": "CBLOCK.json",
+      "category": "User-Defined Functions",
+      "description": "C-code block for custom continuous dynamics",
+      "complexity": "high"
+    },
+    {
+      "name": "CBLOCK4",
+      "file": "CBLOCK4.json",
+      "category": "User-Defined Functions",
+      "description": "C-code block with 4 continuous states",
+      "complexity": "high"
+    },
+    {
+      "name": "CEVENTSCOPE",
+      "file": "CEVENTSCOPE.json",
+      "category": "Sinks/Visualization",
+      "description": "Event scope for timing visualization",
+      "complexity": "medium"
+    },
+    {
+      "name": "CFSCOPE",
+      "file": "CFSCOPE.json",
+      "category": "Sinks/Visualization",
+      "description": "Floating scope for independent display",
+      "complexity": "medium"
+    },
+    {
+      "name": "CLOCK_c",
+      "file": "CLOCK_c.json",
+      "category": "Sources/Event Generation",
+      "description": "Periodic clock event generator",
+      "complexity": "medium"
+    },
+    {
+      "name": "CONST_m",
+      "file": "CONST_m.json",
+      "category": "Sources",
+      "description": "Constant value block",
+      "complexity": "simple"
+    },
+    {
+      "name": "CSCOPE",
+      "file": "CSCOPE.json",
+      "category": "Sinks/Visualization",
+      "description": "C-based Scope for signal visualization",
+      "complexity": "medium"
+    },
+    {
+      "name": "CSCOPXY",
+      "file": "CSCOPXY.json",
+      "category": "Sinks/Visualization",
+      "description": "XY scope for Y vs X plotting",
+      "complexity": "medium"
+    },
+    {
+      "name": "CSCOPXY3D",
+      "file": "CSCOPXY3D.json",
+      "category": "Sinks/Visualization",
+      "description": "3D XY scope for 3D trajectory plotting",
+      "complexity": "high"
+    },
+    {
+      "name": "CUMSUM",
+      "file": "CUMSUM.json",
+      "category": "Math Operations",
+      "description": "Cumulative sum of input signal",
+      "complexity": "simple"
+    },
+    {
+      "name": "DERIV",
+      "file": "DERIV.json",
+      "category": "Continuous/Differentiation",
+      "description": "Time derivative block",
+      "complexity": "simple"
+    },
+    {
+      "name": "GAINBLK_f",
+      "file": "GAINBLK_f.json",
+      "category": "Math Operations",
+      "description": "Gain/multiplier block",
+      "complexity": "simple"
+    },
+    {
+      "name": "INTEGRAL_m",
+      "file": "INTEGRAL_m.json",
+      "category": "Continuous/Integration",
+      "description": "Integrator block with saturation",
+      "complexity": "medium"
+    },
+    {
+      "name": "MUX",
+      "file": "MUX.json",
+      "category": "Signal Routing",
+      "description": "Signal multiplexer (combines inputs)",
+      "complexity": "medium"
+    },
+    {
+      "name": "PRODUCT",
+      "file": "PRODUCT.json",
+      "category": "Math Operations",
+      "description": "Product/multiplier with division support",
+      "complexity": "medium"
+    },
+    {
+      "name": "SINBLK_f",
+      "file": "SINBLK_f.json",
+      "category": "Math Operations/Trigonometry",
+      "description": "Sine function block",
+      "complexity": "simple"
+    },
+    {
+      "name": "STEP_FUNCTION",
+      "file": "STEP_FUNCTION.json",
+      "category": "Sources",
+      "description": "Step function signal generator",
+      "complexity": "medium"
+    },
+    {
+      "name": "CLKINV_f",
+      "file": "CLKINV_f.json",
+      "category": "Signal Routing/Events",
+      "description": "Event input block - receives clock/event signals into the diagram",
+      "complexity": "simple"
+    },
+    {
+      "name": "CLINDUMMY_f",
+      "file": "CLINDUMMY_f.json",
+      "category": "Signal Routing/Events",
+      "description": "Clock dummy block - placeholder for continuous-time clock functionality",
+      "complexity": "simple"
+    },
+    {
+      "name": "CLKFROM",
+      "file": "CLKFROM.json",
+      "category": "Signal Routing/Events",
+      "description": "Clock From block - receives clock/event signals from a CLKGOTO block via tag",
+      "complexity": "medium"
+    },
+    {
+      "name": "CLKGOTO",
+      "file": "CLKGOTO.json",
+      "category": "Signal Routing/Events",
+      "description": "Clock Goto block - sends clock/event signals to a CLKFROM block via tag",
+      "complexity": "medium"
+    },
+    {
+      "name": "CLKGotoTagVisibility",
+      "file": "CLKGotoTagVisibility.json",
+      "category": "Signal Routing/Events",
+      "description": "Clock Goto Tag Visibility - controls the scope of clock/event goto tags",
+      "complexity": "medium"
+    },
+    {
+      "name": "CLR",
+      "file": "CLR.json",
+      "category": "Continuous/Linear Systems",
+      "description": "Continuous Linear System Representation - Transfer function block with polynomial coefficients",
+      "complexity": "medium"
+    },
+    {
+      "name": "CLSS",
+      "file": "CLSS.json",
+      "category": "Continuous/Linear Systems",
+      "description": "Continuous Linear State Space - State-space representation of continuous-time linear systems",
+      "complexity": "medium"
+    },
+    {
+      "name": "CONST",
+      "file": "CONST.json",
+      "category": "Sources",
+      "description": "Constant value source block - outputs a fixed constant value",
+      "complexity": "simple"
+    },
+    {
+      "name": "CONSTRAINT_c",
+      "file": "CONSTRAINT_c.json",
+      "category": "Continuous/Constraints",
+      "description": "Constraint block for continuous systems - enforces algebraic constraints",
+      "complexity": "high"
+    },
+    {
+      "name": "CONSTRAINT2_c",
+      "file": "CONSTRAINT2_c.json",
+      "category": "Continuous/Constraints",
+      "description": "Dual output constraint block for continuous systems with two outputs",
+      "complexity": "high"
+    },
+    {
+      "name": "CONST_f",
+      "file": "CONST_f.json",
+      "category": "Sources",
+      "description": "Fortran-type constant source block - legacy constant implementation",
+      "complexity": "simple"
+    },
+    {
+      "name": "CONVERT",
+      "file": "CONVERT.json",
+      "category": "Signal Attributes",
+      "description": "Data type converter - converts signal between different numeric types",
+      "complexity": "medium"
+    },
+    {
+      "name": "CURV_f",
+      "file": "CURV_f.json",
+      "category": "Lookup Tables",
+      "description": "Curve lookup table - outputs values from a pre-defined curve using interpolation",
+      "complexity": "medium"
+    },
+    {
+      "name": "DEADBAND",
+      "file": "DEADBAND.json",
+      "category": "Discontinuities",
+      "description": "Deadband block - creates a deadzone where output is zero within a range",
+      "complexity": "medium"
+    },
+    {
+      "name": "DEBUG",
+      "file": "DEBUG.json",
+      "category": "User-Defined Functions",
+      "description": "Debug block - provides interactive debugging capabilities with GUI",
+      "complexity": "high"
+    },
+    {
+      "name": "CLKOUTV_f",
+      "file": "CLKOUTV_f.json",
+      "category": "Signal Routing/Events",
+      "description": "Event output port - sends events from a SuperBlock to the parent diagram",
+      "complexity": "simple"
+    },
+    {
+      "name": "CLKSOMV_f",
+      "file": "CLKSOMV_f.json",
+      "category": "Signal Routing/Events",
+      "description": "Event summer - computes the union of multiple event streams",
+      "complexity": "simple"
+    },
+    {
+      "name": "DELAYV_f",
+      "file": "DELAYV_f.json",
+      "category": "Continuous",
+      "description": "Variable delay block - delayed output based on a variable delay time input",
+      "complexity": "medium"
+    },
+    {
+      "name": "DELAY_f",
+      "file": "DELAY_f.json",
+      "category": "Continuous",
+      "description": "Fixed delay SuperBlock - provides a fixed time delay using internal register and event delay",
+      "complexity": "high"
+    },
+    {
+      "name": "DEMUX",
+      "file": "DEMUX.json",
+      "category": "Signal Routing",
+      "description": "De-multiplexer - splits a vector input signal into multiple components",
+      "complexity": "medium"
+    },
+    {
+      "name": "DEMUX_f",
+      "file": "DEMUX_f.json",
+      "category": "Signal Routing",
+      "description": "Legacy de-multiplexer - legacy version of the DEMUX block",
+      "complexity": "medium"
+    },
+    {
+      "name": "DFLIPFLOP",
+      "file": "DFLIPFLOP.json",
+      "category": "Discrete",
+      "description": "D Flip-Flop - stores one bit of information on the rising edge of the clock signal",
+      "complexity": "high"
+    },
+    {
+      "name": "DIFF_f",
+      "file": "DIFF_f.json",
+      "category": "Continuous",
+      "description": "Differentiator - legacy derivative block using numerical differentiation",
+      "complexity": "medium"
+    },
+    {
+      "name": "DLATCH",
+      "file": "DLATCH.json",
+      "category": "Discrete",
+      "description": "D Latch - transparent latch where output follows input when enable is high",
+      "complexity": "high"
+    },
+    {
+      "name": "DLR",
+      "file": "DLR.json",
+      "category": "Discrete",
+      "description": "Discrete Linear State-Space - represents linear time-invariant systems in discrete state-space form",
+      "complexity": "medium"
+    },
+    {
+      "name": "DLRADAPT_f",
+      "file": "DLRADAPT_f.json",
+      "category": "Discrete",
+      "description": "Discrete Linear Adaptive System - represents a discrete-time linear system with adaptive parameters",
+      "complexity": "high"
+    },
+    {
+      "name": "DLSS",
+      "file": "DLSS.json",
+      "category": "Discrete",
+      "description": "Discrete Linear State-Space - represents a discrete-time linear system in state-space form",
+      "complexity": "medium"
+    },
+    {
+      "name": "DOLLAR",
+      "file": "DOLLAR.json",
+      "category": "Discrete",
+      "description": "Unit Delay - delays the input signal by one sample period (z^-1)",
+      "complexity": "simple"
+    },
+    {
+      "name": "DOLLAR_f",
+      "file": "DOLLAR_f.json",
+      "category": "Discrete",
+      "description": "Legacy Unit Delay - legacy implementation of the unit delay block",
+      "complexity": "simple"
+    },
+    {
+      "name": "DOLLAR_m",
+      "file": "DOLLAR_m.json",
+      "category": "Discrete",
+      "description": "Matrix Unit Delay - unit delay supporting matrix signals",
+      "complexity": "simple"
+    },
+    {
+      "name": "EDGE_TRIGGER",
+      "file": "EDGE_TRIGGER.json",
+      "category": "Continuous",
+      "description": "Edge Trigger - generates an output event based on edge detection from an input signal",
+      "complexity": "medium"
+    },
+    {
+      "name": "ENDBLK",
+      "file": "ENDBLK.json",
+      "category": "Signal Routing/Events",
+      "description": "Simulation End Block - stops the simulation after a specific time or event",
+      "complexity": "medium"
+    },
+    {
+      "name": "END_c",
+      "file": "END_c.json",
+      "category": "Signal Routing/Events",
+      "description": "Legacy Termination Block - terminates simulation at a predefined final time",
+      "complexity": "simple"
+    },
+    {
+      "name": "ESELECT_f",
+      "file": "ESELECT_f.json",
+      "category": "Signal Routing/Events",
+      "description": "Event Selector - selects one from multiple event output paths based on input value",
+      "complexity": "medium"
+    },
+    {
+      "name": "EVTDLY_c",
+      "file": "EVTDLY_c.json",
+      "category": "Signal Routing/Events",
+      "description": "Event Delay - delays an input event by a specified time period",
+      "complexity": "simple"
+    },
+    {
+      "name": "EVTGEN_f",
+      "file": "EVTGEN_f.json",
+      "category": "Uncategorized",
+      "description": "EVTGEN_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "EVTVARDLY",
+      "file": "EVTVARDLY.json",
+      "category": "Uncategorized",
+      "description": "EVTVARDLY block",
+      "complexity": "medium"
+    },
+    {
+      "name": "EXPBLK_m",
+      "file": "EXPBLK_m.json",
+      "category": "Uncategorized",
+      "description": "EXPBLK_m block",
+      "complexity": "medium"
+    },
+    {
+      "name": "EXPRESSION",
+      "file": "EXPRESSION.json",
+      "category": "Uncategorized",
+      "description": "EXPRESSION block",
+      "complexity": "medium"
+    },
+    {
+      "name": "EXTRACT",
+      "file": "EXTRACT.json",
+      "category": "Uncategorized",
+      "description": "EXTRACT block",
+      "complexity": "medium"
+    },
+    {
+      "name": "EXTRACTBITS",
+      "file": "EXTRACTBITS.json",
+      "category": "Uncategorized",
+      "description": "EXTRACTBITS block",
+      "complexity": "medium"
+    },
+    {
+      "name": "EXTRACTOR",
+      "file": "EXTRACTOR.json",
+      "category": "Uncategorized",
+      "description": "EXTRACTOR block",
+      "complexity": "medium"
+    },
+    {
+      "name": "EXTTRI",
+      "file": "EXTTRI.json",
+      "category": "Uncategorized",
+      "description": "EXTTRI block",
+      "complexity": "medium"
+    },
+    {
+      "name": "Extract_Activation",
+      "file": "Extract_Activation.json",
+      "category": "Uncategorized",
+      "description": "Extract_Activation block",
+      "complexity": "medium"
+    },
+    {
+      "name": "FROM",
+      "file": "FROM.json",
+      "category": "Uncategorized",
+      "description": "FROM block",
+      "complexity": "medium"
+    },
+    {
+      "name": "FROMMO",
+      "file": "FROMMO.json",
+      "category": "Uncategorized",
+      "description": "FROMMO block",
+      "complexity": "medium"
+    },
+    {
+      "name": "FROMWSB",
+      "file": "FROMWSB.json",
+      "category": "Uncategorized",
+      "description": "FROMWSB block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GAINBLK",
+      "file": "GAINBLK.json",
+      "category": "Uncategorized",
+      "description": "GAINBLK block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GAIN_f",
+      "file": "GAIN_f.json",
+      "category": "Uncategorized",
+      "description": "GAIN_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GENERAL_f",
+      "file": "GENERAL_f.json",
+      "category": "Uncategorized",
+      "description": "GENERAL_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GENSIN_f",
+      "file": "GENSIN_f.json",
+      "category": "Uncategorized",
+      "description": "GENSIN_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GENSQR_f",
+      "file": "GENSQR_f.json",
+      "category": "Uncategorized",
+      "description": "GENSQR_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GOTO",
+      "file": "GOTO.json",
+      "category": "Uncategorized",
+      "description": "GOTO block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GOTOMO",
+      "file": "GOTOMO.json",
+      "category": "Uncategorized",
+      "description": "GOTOMO block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GotoTagVisibility",
+      "file": "GotoTagVisibility.json",
+      "category": "Uncategorized",
+      "description": "GotoTagVisibility block",
+      "complexity": "medium"
+    },
+    {
+      "name": "GotoTagVisibilityMO",
+      "file": "GotoTagVisibilityMO.json",
+      "category": "Uncategorized",
+      "description": "GotoTagVisibilityMO block",
+      "complexity": "medium"
+    },
+    {
+      "name": "HALT_f",
+      "file": "HALT_f.json",
+      "category": "Uncategorized",
+      "description": "HALT_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "HYSTHERESIS",
+      "file": "HYSTHERESIS.json",
+      "category": "Uncategorized",
+      "description": "HYSTHERESIS block",
+      "complexity": "medium"
+    },
+    {
+      "name": "IFTHEL_f",
+      "file": "IFTHEL_f.json",
+      "category": "Uncategorized",
+      "description": "IFTHEL_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "INIMPL_f",
+      "file": "INIMPL_f.json",
+      "category": "Uncategorized",
+      "description": "INIMPL_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "INTEGRAL_f",
+      "file": "INTEGRAL_f.json",
+      "category": "Uncategorized",
+      "description": "INTEGRAL_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "INTMUL",
+      "file": "INTMUL.json",
+      "category": "Uncategorized",
+      "description": "INTMUL block",
+      "complexity": "medium"
+    },
+    {
+      "name": "INTRP2BLK_f",
+      "file": "INTRP2BLK_f.json",
+      "category": "Uncategorized",
+      "description": "INTRP2BLK_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "INTRPLBLK_f",
+      "file": "INTRPLBLK_f.json",
+      "category": "Uncategorized",
+      "description": "INTRPLBLK_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "INVBLK",
+      "file": "INVBLK.json",
+      "category": "Uncategorized",
+      "description": "INVBLK block",
+      "complexity": "medium"
+    },
+    {
+      "name": "IN_f",
+      "file": "IN_f.json",
+      "category": "Uncategorized",
+      "description": "IN_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "ISELECT_m",
+      "file": "ISELECT_m.json",
+      "category": "Uncategorized",
+      "description": "ISELECT_m block",
+      "complexity": "medium"
+    },
+    {
+      "name": "JKFLIPFLOP",
+      "file": "JKFLIPFLOP.json",
+      "category": "Uncategorized",
+      "description": "JKFLIPFLOP block",
+      "complexity": "medium"
+    },
+    {
+      "name": "LOGBLK_f",
+      "file": "LOGBLK_f.json",
+      "category": "Uncategorized",
+      "description": "LOGBLK_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "LOGIC",
+      "file": "LOGIC.json",
+      "category": "Uncategorized",
+      "description": "LOGIC block",
+      "complexity": "medium"
+    },
+    {
+      "name": "LOGICAL_OP",
+      "file": "LOGICAL_OP.json",
+      "category": "Uncategorized",
+      "description": "LOGICAL_OP block",
+      "complexity": "medium"
+    },
+    {
+      "name": "LOOKUP_f",
+      "file": "LOOKUP_f.json",
+      "category": "Uncategorized",
+      "description": "LOOKUP_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATBKSL",
+      "file": "MATBKSL.json",
+      "category": "Uncategorized",
+      "description": "MATBKSL block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATCATH",
+      "file": "MATCATH.json",
+      "category": "Uncategorized",
+      "description": "MATCATH block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATCATV",
+      "file": "MATCATV.json",
+      "category": "Uncategorized",
+      "description": "MATCATV block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATDET",
+      "file": "MATDET.json",
+      "category": "Uncategorized",
+      "description": "MATDET block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATDIAG",
+      "file": "MATDIAG.json",
+      "category": "Uncategorized",
+      "description": "MATDIAG block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATDIV",
+      "file": "MATDIV.json",
+      "category": "Uncategorized",
+      "description": "MATDIV block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATEIG",
+      "file": "MATEIG.json",
+      "category": "Uncategorized",
+      "description": "MATEIG block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATEXPM",
+      "file": "MATEXPM.json",
+      "category": "Uncategorized",
+      "description": "MATEXPM block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATINV",
+      "file": "MATINV.json",
+      "category": "Uncategorized",
+      "description": "MATINV block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATLU",
+      "file": "MATLU.json",
+      "category": "Uncategorized",
+      "description": "MATLU block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATMAGPHI",
+      "file": "MATMAGPHI.json",
+      "category": "Uncategorized",
+      "description": "MATMAGPHI block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATMUL",
+      "file": "MATMUL.json",
+      "category": "Uncategorized",
+      "description": "MATMUL block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATPINV",
+      "file": "MATPINV.json",
+      "category": "Uncategorized",
+      "description": "MATPINV block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATRESH",
+      "file": "MATRESH.json",
+      "category": "Uncategorized",
+      "description": "MATRESH block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATSING",
+      "file": "MATSING.json",
+      "category": "Uncategorized",
+      "description": "MATSING block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATSUM",
+      "file": "MATSUM.json",
+      "category": "Uncategorized",
+      "description": "MATSUM block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATTRAN",
+      "file": "MATTRAN.json",
+      "category": "Uncategorized",
+      "description": "MATTRAN block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATZCONJ",
+      "file": "MATZCONJ.json",
+      "category": "Uncategorized",
+      "description": "MATZCONJ block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MATZREIM",
+      "file": "MATZREIM.json",
+      "category": "Uncategorized",
+      "description": "MATZREIM block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MAXMIN",
+      "file": "MAXMIN.json",
+      "category": "Uncategorized",
+      "description": "MAXMIN block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MAX_f",
+      "file": "MAX_f.json",
+      "category": "Uncategorized",
+      "description": "MAX_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MBLOCK",
+      "file": "MBLOCK.json",
+      "category": "Uncategorized",
+      "description": "MBLOCK block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MCLOCK_f",
+      "file": "MCLOCK_f.json",
+      "category": "Uncategorized",
+      "description": "MCLOCK_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MFCLCK_f",
+      "file": "MFCLCK_f.json",
+      "category": "Uncategorized",
+      "description": "MFCLCK_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MIN_f",
+      "file": "MIN_f.json",
+      "category": "Uncategorized",
+      "description": "MIN_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "MUX_f",
+      "file": "MUX_f.json",
+      "category": "Uncategorized",
+      "description": "MUX_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "M_SWITCH",
+      "file": "M_SWITCH.json",
+      "category": "Uncategorized",
+      "description": "M_SWITCH block",
+      "complexity": "medium"
+    },
+    {
+      "name": "M_freq",
+      "file": "M_freq.json",
+      "category": "Uncategorized",
+      "description": "M_freq block",
+      "complexity": "medium"
+    },
+    {
+      "name": "Modulo_Count",
+      "file": "Modulo_Count.json",
+      "category": "Uncategorized",
+      "description": "Modulo_Count block",
+      "complexity": "medium"
+    },
+    {
+      "name": "NEGTOPOS_f",
+      "file": "NEGTOPOS_f.json",
+      "category": "Uncategorized",
+      "description": "NEGTOPOS_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "NRMSOM_f",
+      "file": "NRMSOM_f.json",
+      "category": "Uncategorized",
+      "description": "NRMSOM_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "OUTIMPL_f",
+      "file": "OUTIMPL_f.json",
+      "category": "Uncategorized",
+      "description": "OUTIMPL_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "OUT_f",
+      "file": "OUT_f.json",
+      "category": "Uncategorized",
+      "description": "OUT_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "PDE",
+      "file": "PDE.json",
+      "category": "Uncategorized",
+      "description": "PDE block",
+      "complexity": "medium"
+    },
+    {
+      "name": "PID",
+      "file": "PID.json",
+      "category": "Uncategorized",
+      "description": "PID block",
+      "complexity": "medium"
+    },
+    {
+      "name": "POSTONEG_f",
+      "file": "POSTONEG_f.json",
+      "category": "Uncategorized",
+      "description": "POSTONEG_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "POWBLK_f",
+      "file": "POWBLK_f.json",
+      "category": "Uncategorized",
+      "description": "POWBLK_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "PROD_f",
+      "file": "PROD_f.json",
+      "category": "Uncategorized",
+      "description": "PROD_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "PULSE_SC",
+      "file": "PULSE_SC.json",
+      "category": "Uncategorized",
+      "description": "PULSE_SC block",
+      "complexity": "medium"
+    },
+    {
+      "name": "QUANT_f",
+      "file": "QUANT_f.json",
+      "category": "Uncategorized",
+      "description": "QUANT_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "RAMP",
+      "file": "RAMP.json",
+      "category": "Uncategorized",
+      "description": "RAMP block",
+      "complexity": "medium"
+    },
+    {
+      "name": "RAND_m",
+      "file": "RAND_m.json",
+      "category": "Uncategorized",
+      "description": "RAND_m block",
+      "complexity": "medium"
+    },
+    {
+      "name": "RATELIMITER",
+      "file": "RATELIMITER.json",
+      "category": "Uncategorized",
+      "description": "RATELIMITER block",
+      "complexity": "medium"
+    },
+    {
+      "name": "READAU_f",
+      "file": "READAU_f.json",
+      "category": "Uncategorized",
+      "description": "READAU_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "READC_f",
+      "file": "READC_f.json",
+      "category": "Uncategorized",
+      "description": "READC_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "REGISTER",
+      "file": "REGISTER.json",
+      "category": "Uncategorized",
+      "description": "REGISTER block",
+      "complexity": "medium"
+    },
+    {
+      "name": "RELATIONALOP",
+      "file": "RELATIONALOP.json",
+      "category": "Uncategorized",
+      "description": "RELATIONALOP block",
+      "complexity": "medium"
+    },
+    {
+      "name": "RELAY_f",
+      "file": "RELAY_f.json",
+      "category": "Uncategorized",
+      "description": "RELAY_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "RFILE_f",
+      "file": "RFILE_f.json",
+      "category": "Uncategorized",
+      "description": "RFILE_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "RICC",
+      "file": "RICC.json",
+      "category": "Uncategorized",
+      "description": "RICC block",
+      "complexity": "medium"
+    },
+    {
+      "name": "ROOTCOEF",
+      "file": "ROOTCOEF.json",
+      "category": "Uncategorized",
+      "description": "ROOTCOEF block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SAMPHOLD_m",
+      "file": "SAMPHOLD_m.json",
+      "category": "Uncategorized",
+      "description": "SAMPHOLD_m block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SATURATION",
+      "file": "SATURATION.json",
+      "category": "Uncategorized",
+      "description": "SATURATION block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SAWTOOTH_f",
+      "file": "SAWTOOTH_f.json",
+      "category": "Uncategorized",
+      "description": "SAWTOOTH_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SCALAR2VECTOR",
+      "file": "SCALAR2VECTOR.json",
+      "category": "Uncategorized",
+      "description": "SCALAR2VECTOR block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SCALE_CMSCOPE",
+      "file": "SCALE_CMSCOPE.json",
+      "category": "Uncategorized",
+      "description": "SCALE_CMSCOPE block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SCALE_CSCOPE",
+      "file": "SCALE_CSCOPE.json",
+      "category": "Uncategorized",
+      "description": "SCALE_CSCOPE block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SELECT_m",
+      "file": "SELECT_m.json",
+      "category": "Uncategorized",
+      "description": "SELECT_m block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SELF_SWITCH",
+      "file": "SELF_SWITCH.json",
+      "category": "Uncategorized",
+      "description": "SELF_SWITCH block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SHIFT",
+      "file": "SHIFT.json",
+      "category": "Uncategorized",
+      "description": "SHIFT block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SIGNUM",
+      "file": "SIGNUM.json",
+      "category": "Uncategorized",
+      "description": "SIGNUM block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SOM_f",
+      "file": "SOM_f.json",
+      "category": "Uncategorized",
+      "description": "SOM_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SQRT",
+      "file": "SQRT.json",
+      "category": "Uncategorized",
+      "description": "SQRT block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SRFLIPFLOP",
+      "file": "SRFLIPFLOP.json",
+      "category": "Uncategorized",
+      "description": "SRFLIPFLOP block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SSPInputConnector",
+      "file": "SSPInputConnector.json",
+      "category": "Uncategorized",
+      "description": "SSPInputConnector block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SUBMAT",
+      "file": "SUBMAT.json",
+      "category": "Uncategorized",
+      "description": "SUBMAT block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SUM_f",
+      "file": "SUM_f.json",
+      "category": "Uncategorized",
+      "description": "SUM_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SUPER_f",
+      "file": "SUPER_f.json",
+      "category": "Uncategorized",
+      "description": "SUPER_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SWITCH2_m",
+      "file": "SWITCH2_m.json",
+      "category": "Uncategorized",
+      "description": "SWITCH2_m block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SWITCH_f",
+      "file": "SWITCH_f.json",
+      "category": "Uncategorized",
+      "description": "SWITCH_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SampleCLK",
+      "file": "SampleCLK.json",
+      "category": "Uncategorized",
+      "description": "SampleCLK block",
+      "complexity": "medium"
+    },
+    {
+      "name": "Sigbuilder",
+      "file": "Sigbuilder.json",
+      "category": "Uncategorized",
+      "description": "Sigbuilder block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TANBLK_f",
+      "file": "TANBLK_f.json",
+      "category": "Uncategorized",
+      "description": "TANBLK_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TCLSS",
+      "file": "TCLSS.json",
+      "category": "Uncategorized",
+      "description": "TCLSS block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TEXT_f",
+      "file": "TEXT_f.json",
+      "category": "Uncategorized",
+      "description": "TEXT_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TIME_DELAY",
+      "file": "TIME_DELAY.json",
+      "category": "Uncategorized",
+      "description": "TIME_DELAY block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TIME_f",
+      "file": "TIME_f.json",
+      "category": "Uncategorized",
+      "description": "TIME_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TKSCALE",
+      "file": "TKSCALE.json",
+      "category": "Uncategorized",
+      "description": "TKSCALE block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TOWS_c",
+      "file": "TOWS_c.json",
+      "category": "Uncategorized",
+      "description": "TOWS_c block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TRASH_f",
+      "file": "TRASH_f.json",
+      "category": "Uncategorized",
+      "description": "TRASH_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "TrigFun",
+      "file": "TrigFun.json",
+      "category": "Uncategorized",
+      "description": "TrigFun block",
+      "complexity": "medium"
+    },
+    {
+      "name": "VARIABLE_DELAY",
+      "file": "VARIABLE_DELAY.json",
+      "category": "Uncategorized",
+      "description": "VARIABLE_DELAY block",
+      "complexity": "medium"
+    },
+    {
+      "name": "VirtualCLK0",
+      "file": "VirtualCLK0.json",
+      "category": "Uncategorized",
+      "description": "VirtualCLK0 block",
+      "complexity": "medium"
+    },
+    {
+      "name": "WRITEAU_f",
+      "file": "WRITEAU_f.json",
+      "category": "Uncategorized",
+      "description": "WRITEAU_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "WRITEC_f",
+      "file": "WRITEC_f.json",
+      "category": "Uncategorized",
+      "description": "WRITEC_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "ZCROSS_f",
+      "file": "ZCROSS_f.json",
+      "category": "Uncategorized",
+      "description": "ZCROSS_f block",
+      "complexity": "medium"
+    },
+    {
+      "name": "c_block",
+      "file": "c_block.json",
+      "category": "Uncategorized",
+      "description": "c_block block",
+      "complexity": "medium"
+    },
+    {
+      "name": "fortran_block",
+      "file": "fortran_block.json",
+      "category": "Uncategorized",
+      "description": "fortran_block block",
+      "complexity": "medium"
+    },
+    {
+      "name": "freq_div",
+      "file": "freq_div.json",
+      "category": "Uncategorized",
+      "description": "freq_div block",
+      "complexity": "medium"
+    },
+    {
+      "name": "generic_block3",
+      "file": "generic_block3.json",
+      "category": "Uncategorized",
+      "description": "generic_block3 block",
+      "complexity": "medium"
+    },
+    {
+      "name": "scifunc_block_m",
+      "file": "scifunc_block_m.json",
+      "category": "Uncategorized",
+      "description": "scifunc_block_m block",
+      "complexity": "medium"
+    },
+    {
+      "name": "SUMMATION",
+      "file": "SUMMATION.json",
+      "category": "Uncategorized",
+      "description": "SUMMATION block",
+      "complexity": "medium"
+    }
+  ],
+  "categories": [
+    "Math Operations",
+    "Sinks/Visualization",
+    "Logic Gates/SuperBlocks",
+    "Logic Gates",
+    "Signal Processing/Control",
+    "Discontinuities",
+    "Bit Operations",
+    "Physics/Simulation",
+    "User-Defined Functions",
+    "Sources/Event Generation",
+    "Sources",
+    "Continuous/Differentiation",
+    "Continuous/Integration",
+    "Signal Routing",
+    "Math Operations/Trigonometry",
+    "Signal Routing/Events",
+    "Continuous",
+    "Discrete"
+  ],
+  "common_patterns": {
+    "port_style": {
+      "explicit_input": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+      "explicit_output": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+      "control": "ControlPort;align=center;verticalAlign=top;spacing=10.0",
+      "command": "CommandPort;align=center;verticalAlign=bottom;spacing=10.0"
+    },
+    "data_types": [
+      "REAL_MATRIX",
+      "INT32_MATRIX",
+      "UINT32_MATRIX"
+    ],
+    "simulation_function_types": [
+      "C_OR_FORTRAN",
+      "SCILAB",
+      "TYPE_2",
+      "IMPLICIT_C_OR_FORTRAN",
+      "DEFAULT"
+    ]
+  },
+  "for_ai_agents": {
+    "notes": [
+      "Each block is in its own file - read only needed blocks",
+      "All block files are valid JSON with consistent schema",
+      "xmlExample shows actual XCOS XML structure",
+      "anomalies field highlights unusual patterns",
+      "criticalRules field documents essential constraints"
+    ],
+    "finding_blocks": "Use _index.json to locate block files by name or category",
+    "understanding_blocks": "Read the full JSON file for complete specification including XML examples",
+    "integration": "Use xmlExample as reference when generating XCOS XML"
+  }
+}

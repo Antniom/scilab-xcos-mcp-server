@@ -1,0 +1,20 @@
+{
+  "relatedBlocks": [
+    "DLR",
+    "DLSS"
+  ],
+  "criticalRules": [
+    "Depends on both U and event clock"
+  ],
+  "description": "Discrete Linear Adaptive System - represents a discrete-time linear system with adaptive parameters",
+  "anomalies": [
+    "Uses complex numbers in exprs for adaptive poles/zeros",
+    "Simulation function dlradp is DEFAULT type"
+  ],
+  "name": "DLRADAPT_f",
+  "commonUses": [
+    "Adaptive control systems",
+    "Self-tuning filters"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/DLRADAPT_f.sci"
+}

@@ -1,0 +1,23 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "exprs[0]=initial output, [1]=gap value, [2]=use zero-crossing",
+    "Backlash uses 2 zero crossings for gap entry/exit detection",
+    "Standard 1x1 data in/out block"
+  ],
+  "description": "Backlash/Deadzone block for mechanical systems with play",
+  "anomalies": [
+    "nbZerosCrossing=2 (rare - most blocks have 0 or -1)",
+    "Width is 60 (1.5x standard 40) to fit label",
+    "Uses 2 zero crossings for gap entry/exit detection",
+    "Models mechanical play/backlash phenomenon"
+  ],
+  "name": "BACKLASH",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BACKLASH.sci",
+  "commonUses": [
+    "Modeling gear backlash",
+    "Mechanical play simulation",
+    "Deadzone compensation",
+    "Hysteresis modeling"
+  ]
+}

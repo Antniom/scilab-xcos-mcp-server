@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "SELECT_m block",
+  "anomalies": [
+    "dataLines=-1 indicates variable-size",
+    "Contains ControlPort",
+    "Non-standard width: 60.0"
+  ],
+  "name": "SELECT_m",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/SELECT_m.sci"
+}

@@ -1,0 +1,27 @@
+{
+  "relatedBlocks": [
+    "SINBLK_f",
+    "TANBLK_f",
+    "TrigFun"
+  ],
+  "criticalRules": [
+    "Use DEFAULT simulationFunctionType",
+    "Preserve empty parameter structure",
+    "Reference XML includes rotation=0 in the port styles, but treat it as a cosmetic reference detail unless you are copying an existing diagram verbatim"
+  ],
+  "description": "Cosine function block - computes the cosine of the input signal",
+  "anomalies": [
+    "Empty exprs (height=0,width=0) - no parameters",
+    "dataLines=-1 for variable-size input/output",
+    "DEFAULT simulation function type (not C_OR_FORTRAN)",
+    "Reference block includes an unusual rotation=0 style suffix on both ports"
+  ],
+  "name": "COSBLK_f",
+  "commonUses": [
+    "Signal processing - convert phase to amplitude",
+    "Oscillator circuits - combine with sine for quadrature",
+    "Trigonometric calculations",
+    "Phase-locked loops"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/COSBLK_f.sci"
+}

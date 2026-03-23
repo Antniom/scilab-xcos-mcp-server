@@ -1,0 +1,30 @@
+{
+  "relatedBlocks": [
+    "CANIMXY3D",
+    "CSCOPXY",
+    "CANIMXY",
+    "CSCOPE"
+  ],
+  "criticalRules": [
+    "Samples 3D point (X,Y,Z) on each event",
+    "Colors specified as '1 2 3 4 5 6 7 13' space-separated",
+    "Thickness specified as '1 1 1 1 1 1 1 1' for each curve",
+    "Axis limits use space 'min max' format not [min;max]"
+  ],
+  "description": "3D XY scope for 3D trajectory and parametric curve visualization",
+  "anomalies": [
+    "25 integerParameters - same structure as CANIMXY3D",
+    "3 explicit inputs for 3D coordinates",
+    "Space-separated values in exprs for arrays",
+    "exprs[6-8] use space-separated format for min/max pairs",
+    "Clipping parameter in exprs[9] is '50 280'"
+  ],
+  "name": "CSCOPXY3D",
+  "commonUses": [
+    "3D trajectory plotting",
+    "Attractor visualization (Lorenz, Rossler)",
+    "3D parametric curves",
+    "Orbital mechanics 3D plots"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CSCOPXY3D.sci"
+}

@@ -1,0 +1,25 @@
+{
+  "relatedBlocks": [
+    "BOUNCE",
+    "BOUNCEXY"
+  ],
+  "criticalRules": [
+    "Platform dimensions define bat size",
+    "Input defines center position",
+    "SCILAB type means slower but flexible execution"
+  ],
+  "description": "Platform/bat animation for bouncing ball games",
+  "anomalies": [
+    "simulationFunctionType='SCILAB' - interpreted Scilab code",
+    "Empty integerParameters - only uses real parameters",
+    "Has ControlPort like other visualization blocks",
+    "Simple 1-element dState for position tracking"
+  ],
+  "name": "BPLATFORM",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BPLATFORM.sci",
+  "commonUses": [
+    "Pong-style game displays",
+    "Platform visualization",
+    "Animation of moving platforms"
+  ]
+}

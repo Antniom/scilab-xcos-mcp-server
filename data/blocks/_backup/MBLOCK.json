@@ -1,0 +1,119 @@
+{
+  "name": "MBLOCK",
+  "description": "MBLOCK block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "MBLOCK",
+  "simulationFunctionName": "generic",
+  "simulationFunctionType": "MODELICA",
+  "dependsOnU": 0,
+  "dependsOnT": 1,
+  "geometry": {
+    "width": 60.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "0",
+      "width": "0"
+    },
+    "realParameters": {
+      "height": "1",
+      "width": "2",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        }
+      ]
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "implicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ImplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "implicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ImplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7aa7\" parent=\"0:2:0\" interfaceFunctionName=\"MBLOCK\" blockType=\"c\" dependsOnU=\"0\" dependsOnT=\"1\" simulationFunctionName=\"generic\" simulationFunctionType=\"MODELICA\" style=\"MBLOCK\">\n        <Array as=\"exprs\" scilabClass=\"ScilabTList\">\n          <ScilabString height=\"1\" width=\"10\">\n            <data line=\"0\" column=\"0\" value=\"MBLOCK\" />\n            <data line=\"0\" column=\"1\" value=\"in\" />\n            <data line=\"0\" column=\"2\" value=\"intype\" />\n            <data line=\"0\" column=\"3\" value=\"out\" />\n            <data line=\"0\" column=\"4\" value=\"outtype\" />\n            <data line=\"0\" column=\"5\" value=\"param\" />\n            <data line=\"0\" column=\"6\" value=\"paramv\" />\n            <data line=\"0\" column=\"7\" value=\"pprop\" />\n            <data line=\"0\" column=\"8\" value=\"nameF\" />\n            <data line=\"0\" column=\"9\" value=\"funtxt\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"&quot;u1&quot;\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"&quot;I&quot;\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"[&quot;y1&quot;;&quot;y2&quot;]\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"[&quot;I&quot;;&quot;E&quot;]\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"[&quot;R&quot;;&quot;L&quot;]\" />\n          </ScilabString>\n          <Array scilabClass=\"ScilabList\">\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0.1\" />\n            </ScilabString>\n            <ScilabString height=\"1\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"0.0001\" />\n            </ScilabString>\n          </Array>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"[0;0]\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"generic\" />\n          </ScilabString>\n          <ScilabDouble height=\"0\" width=\"0\" />\n        </Array>\n        <ScilabDouble as=\"realParameters\" height=\"1\" width=\"2\">\n          <data line=\"0\" column=\"0\" realPart=\"0.1\" />\n          <data line=\"0\" column=\"1\" realPart=\"1.0E-4\" />\n        </ScilabDouble>\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabTList\">\n          <ScilabString height=\"1\" width=\"5\">\n            <data line=\"0\" column=\"0\" value=\"modelica\" />\n            <data line=\"0\" column=\"1\" value=\"model\" />\n            <data line=\"0\" column=\"2\" value=\"inputs\" />\n            <data line=\"0\" column=\"3\" value=\"outputs\" />\n            <data line=\"0\" column=\"4\" value=\"parameters\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"generic\" />\n          </ScilabString>\n          <ScilabString height=\"1\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"u1\" />\n          </ScilabString>\n          <ScilabString height=\"2\" width=\"1\">\n            <data line=\"0\" column=\"0\" value=\"y1\" />\n            <data line=\"1\" column=\"0\" value=\"y2\" />\n          </ScilabString>\n          <Array scilabClass=\"ScilabList\">\n            <ScilabString height=\"2\" width=\"1\">\n              <data line=\"0\" column=\"0\" value=\"R\" />\n              <data line=\"1\" column=\"0\" value=\"L\" />\n            </ScilabString>\n            <Array scilabClass=\"ScilabList\">\n              <ScilabDouble height=\"1\" width=\"1\">\n                <data line=\"0\" column=\"0\" realPart=\"0.1\" />\n              </ScilabDouble>\n              <ScilabDouble height=\"1\" width=\"1\">\n                <data line=\"0\" column=\"0\" realPart=\"1.0E-4\" />\n              </ScilabDouble>\n            </Array>\n          </Array>\n        </Array>\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"60.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Non-standard width: 60.0",
+    "Empty exprs"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

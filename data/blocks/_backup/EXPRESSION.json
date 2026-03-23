@@ -1,0 +1,217 @@
+{
+  "name": "EXPRESSION",
+  "description": "EXPRESSION block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "EXPRESSION",
+  "simulationFunctionName": "evaluate_expr",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 100.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "3",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "2"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "(u1>0)*sin(u2)^2"
+        },
+        {
+          "line": "2",
+          "column": "0",
+          "value": "1"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "1",
+      "width": "2",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": null
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": null
+        }
+      ]
+    },
+    "integerParameters": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "16",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "2"
+        },
+        {
+          "line": "0",
+          "column": "1",
+          "value": "1"
+        },
+        {
+          "line": "0",
+          "column": "2",
+          "value": "6"
+        },
+        {
+          "line": "0",
+          "column": "3",
+          "value": "1"
+        },
+        {
+          "line": "0",
+          "column": "4",
+          "value": "5"
+        },
+        {
+          "line": "0",
+          "column": "5",
+          "value": "18"
+        },
+        {
+          "line": "0",
+          "column": "6",
+          "value": "2"
+        },
+        {
+          "line": "0",
+          "column": "7",
+          "value": "2"
+        },
+        {
+          "line": "0",
+          "column": "8",
+          "value": "5"
+        },
+        {
+          "line": "0",
+          "column": "9",
+          "value": "101"
+        },
+        {
+          "line": "0",
+          "column": "10",
+          "value": "6"
+        },
+        {
+          "line": "0",
+          "column": "11",
+          "value": "2"
+        },
+        {
+          "line": "0",
+          "column": "12",
+          "value": "5"
+        },
+        {
+          "line": "0",
+          "column": "13",
+          "value": "15"
+        },
+        {
+          "line": "0",
+          "column": "14",
+          "value": "5"
+        },
+        {
+          "line": "0",
+          "column": "15",
+          "value": "3"
+        }
+      ]
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "1"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "1"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      },
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7dfd\" parent=\"0:2:0\" interfaceFunctionName=\"EXPRESSION\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"evaluate_expr\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"EXPRESSION\">\n        <ScilabString as=\"exprs\" height=\"3\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"2\" />\n          <data line=\"1\" column=\"0\" value=\"(u1&gt;0)*sin(u2)^2\" />\n          <data line=\"2\" column=\"0\" value=\"1\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"1\" width=\"2\">\n          <data line=\"0\" column=\"0\" realPart=\"0.0\" />\n          <data line=\"0\" column=\"1\" realPart=\"2.0\" />\n        </ScilabDouble>\n        <ScilabInteger as=\"integerParameters\" height=\"1\" width=\"16\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"2\" />\n          <data line=\"0\" column=\"1\" value=\"1\" />\n          <data line=\"0\" column=\"2\" value=\"6\" />\n          <data line=\"0\" column=\"3\" value=\"1\" />\n          <data line=\"0\" column=\"4\" value=\"5\" />\n          <data line=\"0\" column=\"5\" value=\"18\" />\n          <data line=\"0\" column=\"6\" value=\"2\" />\n          <data line=\"0\" column=\"7\" value=\"2\" />\n          <data line=\"0\" column=\"8\" value=\"5\" />\n          <data line=\"0\" column=\"9\" value=\"101\" />\n          <data line=\"0\" column=\"10\" value=\"6\" />\n          <data line=\"0\" column=\"11\" value=\"2\" />\n          <data line=\"0\" column=\"12\" value=\"5\" />\n          <data line=\"0\" column=\"13\" value=\"15\" />\n          <data line=\"0\" column=\"14\" value=\"5\" />\n          <data line=\"0\" column=\"15\" value=\"3\" />\n        </ScilabInteger>\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"1\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"1\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"100.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Non-standard width: 100.0",
+    "nbZerosCrossing=1"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

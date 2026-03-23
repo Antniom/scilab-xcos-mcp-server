@@ -1,0 +1,33 @@
+{
+  "relatedBlocks": [
+    "CMATVIEW",
+    "CSCOPXY3D",
+    "CANIMXY3D"
+  ],
+  "criticalRules": [
+    "Control port is refresh trigger, NOT clock",
+    "exprs line 0: alpha rotation angle (-1 = auto)",
+    "exprs line 1: theta view angle (-1 = auto)",
+    "exprs lines 2-4: colormap, min, max (same as CMATVIEW)",
+    "Integer parameters last 2 values control angle auto/manual",
+    "C_OR_FORTRAN simulation function type"
+  ],
+  "description": "3D matrix block - displays matrix data as 3D colored surface visualization",
+  "anomalies": [
+    "5-parameter exprs (vs 3 for CMATVIEW) - adds view angle parameters",
+    "dataColumns=-2, dataLines=-1 (auto-dimension for matrix)",
+    "realParameters width=77 (colormap + view bounds)",
+    "exprs line 0-1: alpha/theta view angles (-1 = auto)",
+    "Integer parameters: [min, max, colors, alpha_enable, theta_enable]",
+    "More complex than CMATVIEW with 3D view capabilities"
+  ],
+  "name": "CMAT3D",
+  "commonUses": [
+    "3D surface visualization",
+    "Topographic map display",
+    "Elevation data visualization",
+    "Scientific data 3D plotting",
+    "Real-time 3D data monitoring"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CMAT3D.sci"
+}

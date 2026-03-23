@@ -1,0 +1,28 @@
+{
+  "relatedBlocks": [
+    "CONST_m",
+    "CONST_f",
+    "STEP_FUNCTION",
+    "CLOCK_c"
+  ],
+  "criticalRules": [
+    "exprs[0] is the constant value to output",
+    "Value is stored in realParameters",
+    "No dependencies (dependsOnU=0, dependsOnT=0)",
+    "Outputs scalar by default"
+  ],
+  "description": "Constant value source block - outputs a fixed constant value",
+  "anomalies": [
+    "blockType='d' (discrete) but outputs continuous constant",
+    "No state storage needed (state height=0)",
+    "Simple source block with no inputs"
+  ],
+  "name": "CONST",
+  "commonUses": [
+    "Providing reference values",
+    "Setting initial conditions",
+    "Gain factors in feedback loops",
+    "Test signal generation"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CONST.sci"
+}

@@ -1,0 +1,33 @@
+{
+  "relatedBlocks": [
+    "CLKFROM",
+    "CLKGotoTagVisibility",
+    "FROM",
+    "GOTO",
+    "GotoTagVisibility"
+  ],
+  "criticalRules": [
+    "First exprs value is the tag name (must match CLKFROM)",
+    "Second exprs value is tag visibility scope (1=local, 2=scoped, 3=global)",
+    "integerParameters mirrors the visibility scope setting",
+    "Can connect to multiple CLKFROM blocks with same tag",
+    "Use CLKGotoTagVisibility to control tag scope explicitly"
+  ],
+  "description": "Clock Goto block - sends clock/event signals to a CLKFROM block via tag",
+  "anomalies": [
+    "Short height of 20 (half of standard 40)",
+    "Has 'value' attribute showing display label \"Goto\"",
+    "exprs has 2 rows - tag and tag visibility scope",
+    "Tag value 'A' is duplicated in exprs AND objectsParameters",
+    "integerParameters=1 maps to the visibility scope setting",
+    "Control port has initialState=0.0 (standard for control ports)"
+  ],
+  "name": "CLKGOTO",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/CLKGOTO.sci",
+  "commonUses": [
+    "Sending event signals across long distances in diagram",
+    "Event signal distribution from central source",
+    "Connecting event signals across subsystem boundaries",
+    "Implementing event broadcast patterns"
+  ]
+}

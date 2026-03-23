@@ -1,0 +1,32 @@
+{
+  "relatedBlocks": [
+    "Sigbuilder",
+    "LOOKUP_f",
+    "TIME_f",
+    "GENSIN_f"
+  ],
+  "criticalRules": [
+    "No input ports - operates as timed signal source",
+    "realParameters contain curve points in x1,y1,x2,y2,... order",
+    "integerParameters[0]=interpolation method (3=linear)",
+    "integerParameters[1]=extrapolation method (2=hold last value)",
+    "Outputs curve value based on current simulation time",
+    "Used for predefined reference signals/arbitrary waveforms"
+  ],
+  "description": "Curve lookup table - outputs values from a pre-defined curve using interpolation",
+  "anomalies": [
+    "Empty exprs (height=0, width=0) - configured via real/integerParameters",
+    "simulationFunctionName='intplt' (interpolation)",
+    "10 realParameters suggests 5 XY points (5 pairs)",
+    "5 integerParameters for configuration",
+    "Depends on time not input (no input ports)"
+  ],
+  "name": "CURV_f",
+  "commonUses": [
+    "Generating arbitrary time-based waveforms",
+    "Reference trajectories",
+    "Predefined motion profiles",
+    "Test signal generation"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CURV_f.sci"
+}

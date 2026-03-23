@@ -1,0 +1,20 @@
+{
+  "relatedBlocks": [
+    "SELECT_m",
+    "IFTHEL_f"
+  ],
+  "criticalRules": [
+    "Depends on input signal to route event"
+  ],
+  "description": "Event Selector - selects one from multiple event output paths based on input value",
+  "anomalies": [
+    "initialState=-1.0 for command ports (Ready state)",
+    "simulationFunctionType=\"ESELECT\""
+  ],
+  "name": "ESELECT_f",
+  "commonUses": [
+    "Conditional event routing",
+    "Finite State Machine control"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/ESELECT_f.sci"
+}

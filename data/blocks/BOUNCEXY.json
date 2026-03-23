@@ -1,0 +1,27 @@
+{
+  "relatedBlocks": [
+    "BOUNCE",
+    "BPLATFORM",
+    "CANIMXY",
+    "CSCOPE"
+  ],
+  "criticalRules": [
+    "ControlPort must receive events to update display",
+    "dataLines=-1 allows any number of balls",
+    "No outputs - pure visualization block"
+  ],
+  "description": "XY animation scope displaying bouncing balls with event refresh",
+  "anomalies": [
+    "dataLines=-1 for variable-size vector inputs",
+    "Has ControlPort for event-triggered refresh (like CSCOPE)",
+    "12-dimensional dState for figure graphics handles",
+    "blockType='d' - discrete event-driven visualization"
+  ],
+  "name": "BOUNCEXY",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BOUNCEXY.sci",
+  "commonUses": [
+    "Visualizing BOUNCE block output",
+    "XY scatter animation",
+    "Particle system visualization"
+  ]
+}

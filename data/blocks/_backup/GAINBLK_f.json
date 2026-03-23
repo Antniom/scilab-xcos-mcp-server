@@ -1,0 +1,115 @@
+{
+  "name": "GAINBLK_f",
+  "description": "Gain block - multiplies input by a constant gain factor",
+  "category": "Math Operations",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "GAINBLK_f",
+  "simulationFunctionName": "gain",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "GAINBLK_f",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 1,
+      "width": 1,
+      "values": ["1"],
+      "description": "Gain multiplier value"
+    },
+    "realParameters": {
+      "height": 1,
+      "width": 1,
+      "values": [1.0]
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0;rotation=0",
+        "description": "Input signal"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0;rotation=0",
+        "description": "Scaled output (input * gain)"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"GAINBLK_f\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"gain\" simulationFunctionType=\"DEFAULT\" style=\"GAINBLK_f\">\n  <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n  </ScilabString>\n  <ScilabDouble as=\"realParameters\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" realPart=\"1.0\"/>\n  </ScilabDouble>\n  <mxGeometry as=\"geometry\" x=\"100.0\" y=\"100.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Port style includes rotation=0 (standard, same as other blocks)",
+    "simulationFunctionType is DEFAULT, not C_OR_FORTRAN",
+    "One of the most commonly used blocks",
+    "Supports matrix gain (when exprs is a matrix)"
+  ],
+  "criticalRules": [
+    "Output = Input * Gain value from exprs/realParameters",
+    "Supports scalar, vector, and matrix gain",
+    "Standard algebraic block"
+  ],
+  "commonUses": [
+    "Amplifying signals",
+    "Unit conversion",
+    "Feedback loops",
+    "Attenuation",
+    "Inversion (gain=-1)"
+  ],
+  "paramSets": {
+    "pass_through": {
+      "exprs": ["1"],
+      "gain": 1.0
+    },
+    "inverter": {
+      "exprs": ["-1"],
+      "gain": -1.0
+    },
+    "double": {
+      "exprs": ["2"],
+      "gain": 2.0
+    },
+    "half": {
+      "exprs": ["0.5"],
+      "gain": 0.5
+    },
+    "pi_times": {
+      "exprs": ["%pi"],
+      "gain": 3.14159
+    }
+  },
+  "relatedBlocks": [
+    "GAIN_f - floating point gain",
+    "GAINBLK - matrix gain",
+    "PRODUCT - multiplication of two signals"
+  ]
+}

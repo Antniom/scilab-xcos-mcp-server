@@ -1,0 +1,46 @@
+{
+  "name": "ENDBLK",
+  "description": "Simulation End Block - stops the simulation after a specific time or event",
+  "category": "Signal Routing/Events",
+  "blockType": "h",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "ENDBLK",
+  "simulationFunctionName": "csuper",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 0,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 40
+  },
+  "parameters": {
+    "exprs": [],
+    "realParameters": [],
+    "integerParameters": [],
+    "state": [],
+    "dState": [],
+    "nbZerosCrossing": 0,
+    "nmode": 0
+  },
+  "ports": {
+    "explicitInputs": [],
+    "explicitOutputs": [],
+    "controlPorts": [],
+    "commandPorts": []
+  },
+  "xmlExample": "<BasicBlock interfaceFunctionName=\"ENDBLK\" blockType=\"h\" dependsOnU=\"0\" dependsOnT=\"0\" simulationFunctionName=\"csuper\" simulationFunctionType=\"DEFAULT\" style=\"ENDBLK\">\n  <mxGeometry as=\"geometry\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "SuperBlock with internal END_c block",
+    "blockType=\"h\""
+  ],
+  "criticalRules": [
+    "Ends simulation execution"
+  ],
+  "commonUses": [
+    "Automatic simulation termination"
+  ],
+  "relatedBlocks": [
+    "END_c",
+    "HALT_f"
+  ]
+}

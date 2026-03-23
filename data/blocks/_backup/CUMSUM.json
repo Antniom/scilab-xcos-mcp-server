@@ -1,0 +1,106 @@
+{
+  "name": "CUMSUM",
+  "description": "Cumulative sum of input signal over time",
+  "category": "Math Operations",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "CUMSUM",
+  "simulationFunctionName": "cumsum_m",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 60.0,
+    "height": 40.0
+  },
+  "style": "CUMSUM",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 2,
+      "width": 1,
+      "values": [
+        "1",
+        "0"
+      ],
+      "labels": [
+        "direction",
+        "reset"
+      ],
+      "descriptions": [
+        "Cumsum direction: 0=row-wise, 1=column-wise",
+        "Reset option: 0=no reset, 1=reset on event"
+      ]
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "state": {
+      "height": 0,
+      "width": 0
+    },
+    "dState": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": -2,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Input signal (auto-dimension matrix)"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": -2,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "description": "Cumulative sum output (same dimensions as input)"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"CUMSUM\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"cumsum_m\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"CUMSUM\">\n  <ScilabString as=\"exprs\" height=\"2\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\"1\"/>\n    <data line=\"1\" column=\"0\" value=\"0\"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" x=\"300.0\" y=\"200.0\" width=\"60.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "Width=60 (non-standard, wider than typical 40)",
+    "dataColumns=-2 AND dataLines=-1 for automatic matrix dimensioning",
+    "Empty realParameters and integerParameters",
+    "Only 2 parameters - simplest block configuration"
+  ],
+  "criticalRules": [
+    "dataColumns=-2 propagates input dimensions to output",
+    "dataLines=-1 allows variable row count",
+    "Cumsum direction 1=column-wise (tall matrices)",
+    "Reset option for event-triggered accumulation reset"
+  ],
+  "commonUses": [
+    "Signal integration approximation",
+    "Running total calculation",
+    "Cumulative statistics",
+    "Position from velocity (discrete)"
+  ],
+  "relatedBlocks": ["INTEGRAL_m", "DERIV", "SUMMATION", "INTEGRAL_f"]
+}

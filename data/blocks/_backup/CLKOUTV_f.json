@@ -1,0 +1,20 @@
+{
+  "description": "Event output port - sends events from a SuperBlock to the parent diagram",
+  "name": "CLKOUTV_f",
+  "anomalies": [
+    "Small standard size (20x20)",
+    "Event output port for SuperBlocks"
+  ],
+  "criticalRules": [
+    "Ordering must match the port number in the parent block"
+  ],
+  "commonUses": [
+    "Exporting clock/event signals from a SuperBlock"
+  ],
+  "relatedBlocks": [
+    "CLKIN_f",
+    "OUT_f",
+    "IN_f"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CLKOUTV_f.sci"
+}

@@ -1,0 +1,28 @@
+{
+  "description": "Set a specific bit in an integer value",
+  "name": "BITSET",
+  "anomalies": [
+    "exprs[0]=bit index to set, [1]=data type (0=uint32)",
+    "Uses INT32_MATRIX data type for both input and output",
+    "objectsParameters stores config with sci_uint32 precision",
+    "Block is 80x40 - wider than standard",
+    "Uses sci_uint32 in objectsParameters (unlike BITCLEAR which uses sci_int32)"
+  ],
+  "criticalRules": [
+    "exprs[0]=bit index to set, [1]=data type (0=uint32)",
+    "Uses INT32_MATRIX data type for both input and output",
+    "objectsParameters stores config with sci_uint32 precision",
+    "Block is 80x40 - wider than standard"
+  ],
+  "commonUses": [
+    "Setting flag bits in control systems",
+    "Integer manipulation",
+    "Bit-masking operations"
+  ],
+  "relatedBlocks": [
+    "BITCLEAR - clear specific bits",
+    "EXTRACTBITS - extract bit ranges",
+    "SHIFT - bitwise shift operations"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/BITSET.sci"
+}

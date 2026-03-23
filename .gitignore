@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.scilab_path
+.env
+
+logs/
+sessions/
+data/temp/
+launcher/node_modules/
+
+.pytest_cache/
+.mypy_cache/

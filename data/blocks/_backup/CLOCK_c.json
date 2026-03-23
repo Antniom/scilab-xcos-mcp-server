@@ -1,0 +1,26 @@
+{
+  "description": "Clock generator - generates periodic events with configurable period",
+  "name": "CLOCK_c",
+  "anomalies": [
+    "SuperBlock - contains internal EVTDLY_c and CLKSPLIT_f blocks",
+    "Has CommandPort at bottom (event output)",
+    "Internal feedback loop for periodic event generation",
+    "No explicit configuration parameters at top level"
+  ],
+  "criticalRules": [
+    "Clock generator - periodic event source",
+    "Ports are defined by CLKOUTV_f internal block",
+    "Period configured via internal EVTDLY_c parameters",
+    "SuperBlockDiagram MUST come AFTER mxGeometry.",
+    "First child of SuperBlockDiagram: <Array as=\"context\" ...></Array>",
+    "Internal blocks MUST be: EVTDLY_c, CLKSPLIT_f, CLKOUTV_f (NOT CLKOUT_f).",
+    "Must have CommandControlLinks: EVTDLY_c.cmd -> CLKSPLIT_f.ctrl, CLKSPLIT_f.cmd1 -> CLKOUTV_f.ctrl, CLKSPLIT_f.cmd2 -> EVTDLY_c.ctrl."
+  ],
+  "commonUses": [
+    "Periodic sampling triggers",
+    "Timed event generation",
+    "Simulation clock synchronization"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CLOCK_c.sci"
+}

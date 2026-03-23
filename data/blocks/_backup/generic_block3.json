@@ -1,0 +1,194 @@
+{
+  "name": "generic_block3",
+  "description": "generic_block3 block",
+  "category": "Uncategorized",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "generic_block3",
+  "simulationFunctionName": "sinblk",
+  "simulationFunctionType": "C_OR_FORTRAN",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 80.0,
+    "height": 40.0
+  },
+  "parameters": {
+    "exprs": {
+      "height": "19",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "sinblk"
+        },
+        {
+          "line": "1",
+          "column": "0",
+          "value": "4"
+        },
+        {
+          "line": "2",
+          "column": "0",
+          "value": "[1,1]"
+        },
+        {
+          "line": "3",
+          "column": "0",
+          "value": "1"
+        },
+        {
+          "line": "4",
+          "column": "0",
+          "value": "[1,1]"
+        },
+        {
+          "line": "5",
+          "column": "0",
+          "value": "1"
+        },
+        {
+          "line": "6",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "7",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "8",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "9",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "10",
+          "column": "0",
+          "value": "list()"
+        },
+        {
+          "line": "11",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "12",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "13",
+          "column": "0",
+          "value": "list()"
+        },
+        {
+          "line": "14",
+          "column": "0",
+          "value": "0"
+        },
+        {
+          "line": "15",
+          "column": "0",
+          "value": "0"
+        },
+        {
+          "line": "16",
+          "column": "0",
+          "value": "[]"
+        },
+        {
+          "line": "17",
+          "column": "0",
+          "value": "y"
+        },
+        {
+          "line": "18",
+          "column": "0",
+          "value": "n"
+        }
+      ]
+    },
+    "realParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "integerParameters": {
+      "height": "0",
+      "width": "0"
+    },
+    "nbZerosCrossing": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "nmode": {
+      "intPrecision": "sci_int32",
+      "height": "1",
+      "width": "1",
+      "data": [
+        {
+          "line": "0",
+          "column": "0",
+          "value": "0"
+        }
+      ]
+    },
+    "state": {
+      "height": "0",
+      "width": "0"
+    },
+    "dState": {
+      "height": "0",
+      "width": "0"
+    },
+    "objectsParameters": {
+      "height": "0",
+      "width": "0"
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "initialState": "0.0"
+      }
+    ]
+  },
+  "xmlExample": "<BasicBlock id=\"-4ca061a2:19ce98e0b72:-7a92\" parent=\"0:2:0\" interfaceFunctionName=\"generic_block3\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"sinblk\" simulationFunctionType=\"C_OR_FORTRAN\" style=\"generic_block3\">\n        <ScilabString as=\"exprs\" height=\"19\" width=\"1\">\n          <data line=\"0\" column=\"0\" value=\"sinblk\" />\n          <data line=\"1\" column=\"0\" value=\"4\" />\n          <data line=\"2\" column=\"0\" value=\"[1,1]\" />\n          <data line=\"3\" column=\"0\" value=\"1\" />\n          <data line=\"4\" column=\"0\" value=\"[1,1]\" />\n          <data line=\"5\" column=\"0\" value=\"1\" />\n          <data line=\"6\" column=\"0\" value=\"[]\" />\n          <data line=\"7\" column=\"0\" value=\"[]\" />\n          <data line=\"8\" column=\"0\" value=\"[]\" />\n          <data line=\"9\" column=\"0\" value=\"[]\" />\n          <data line=\"10\" column=\"0\" value=\"list()\" />\n          <data line=\"11\" column=\"0\" value=\"[]\" />\n          <data line=\"12\" column=\"0\" value=\"[]\" />\n          <data line=\"13\" column=\"0\" value=\"list()\" />\n          <data line=\"14\" column=\"0\" value=\"0\" />\n          <data line=\"15\" column=\"0\" value=\"0\" />\n          <data line=\"16\" column=\"0\" value=\"[]\" />\n          <data line=\"17\" column=\"0\" value=\"y\" />\n          <data line=\"18\" column=\"0\" value=\"n\" />\n        </ScilabString>\n        <ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\" />\n        <Array as=\"objectsParameters\" scilabClass=\"ScilabList\" />\n        <ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\">\n          <data line=\"0\" column=\"0\" value=\"0\" />\n        </ScilabInteger>\n        <ScilabDouble as=\"state\" height=\"0\" width=\"0\" />\n        <ScilabDouble as=\"dState\" height=\"0\" width=\"0\" />\n        <Array as=\"oDState\" scilabClass=\"ScilabList\" />\n        <Array as=\"equations\" scilabClass=\"ScilabList\" />\n        <mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"80.0\" height=\"40.0\" />\n      </BasicBlock>\n      ",
+  "anomalies": [
+    "Non-standard width: 80.0"
+  ],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "commonUses": [],
+  "relatedBlocks": []
+}

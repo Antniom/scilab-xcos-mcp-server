@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<XcosDiagram debugLevel="0" finalIntegrationTime="30.0" integratorAbsoluteTolerance="1.0E-6" integratorRelativeTolerance="1.0E-6" toleranceOnTime="1.0E-10" maxIntegrationTimeInterval="100001.0" maximumStepSize="0.0" realTimeScaling="0.0" solver="1.0" background="-1" gridEnabled="1" title="DEBUG"><!--Xcos - 2.0 - scilab-2026.0.1 - 20260205 0935-->
+  <Array as="context" scilabClass="String[]"></Array>
+  <mxGraphModel as="model">
+    <root>
+      <mxCell id="0:1:0"/>
+      <mxCell id="0:2:0" parent="0:1:0"/>
+      <BasicBlock id="-4ca061a2:19ce98e0b72:-7aa7" parent="0:2:0" interfaceFunctionName="MBLOCK" blockType="c" dependsOnU="0" dependsOnT="1" simulationFunctionName="generic" simulationFunctionType="MODELICA" style="MBLOCK">
+        <Array as="exprs" scilabClass="ScilabTList">
+          <ScilabString height="1" width="10">
+            <data line="0" column="0" value="MBLOCK"/>
+            <data line="0" column="1" value="in"/>
+            <data line="0" column="2" value="intype"/>
+            <data line="0" column="3" value="out"/>
+            <data line="0" column="4" value="outtype"/>
+            <data line="0" column="5" value="param"/>
+            <data line="0" column="6" value="paramv"/>
+            <data line="0" column="7" value="pprop"/>
+            <data line="0" column="8" value="nameF"/>
+            <data line="0" column="9" value="funtxt"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="&quot;u1&quot;"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="&quot;I&quot;"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="[&quot;y1&quot;;&quot;y2&quot;]"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="[&quot;I&quot;;&quot;E&quot;]"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="[&quot;R&quot;;&quot;L&quot;]"/>
+          </ScilabString>
+          <Array scilabClass="ScilabList">
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0.1"/>
+            </ScilabString>
+            <ScilabString height="1" width="1">
+              <data line="0" column="0" value="0.0001"/>
+            </ScilabString>
+          </Array>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="[0;0]"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="generic"/>
+          </ScilabString>
+          <ScilabDouble height="0" width="0"/>
+        </Array>
+        <ScilabDouble as="realParameters" height="1" width="2">
+          <data line="0" column="0" realPart="0.1"/>
+          <data line="0" column="1" realPart="1.0E-4"/>
+        </ScilabDouble>
+        <ScilabDouble as="integerParameters" height="0" width="0"/>
+        <Array as="objectsParameters" scilabClass="ScilabList"/>
+        <ScilabInteger as="nbZerosCrossing" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabInteger as="nmode" height="1" width="1" intPrecision="sci_int32">
+          <data line="0" column="0" value="0"/>
+        </ScilabInteger>
+        <ScilabDouble as="state" height="0" width="0"/>
+        <ScilabDouble as="dState" height="0" width="0"/>
+        <Array as="oDState" scilabClass="ScilabList"/>
+        <Array as="equations" scilabClass="ScilabTList">
+          <ScilabString height="1" width="5">
+            <data line="0" column="0" value="modelica"/>
+            <data line="0" column="1" value="model"/>
+            <data line="0" column="2" value="inputs"/>
+            <data line="0" column="3" value="outputs"/>
+            <data line="0" column="4" value="parameters"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="generic"/>
+          </ScilabString>
+          <ScilabString height="1" width="1">
+            <data line="0" column="0" value="u1"/>
+          </ScilabString>
+          <ScilabString height="2" width="1">
+            <data line="0" column="0" value="y1"/>
+            <data line="1" column="0" value="y2"/>
+          </ScilabString>
+          <Array scilabClass="ScilabList">
+            <ScilabString height="2" width="1">
+              <data line="0" column="0" value="R"/>
+              <data line="1" column="0" value="L"/>
+            </ScilabString>
+            <Array scilabClass="ScilabList">
+              <ScilabDouble height="1" width="1">
+                <data line="0" column="0" realPart="0.1"/>
+              </ScilabDouble>
+              <ScilabDouble height="1" width="1">
+                <data line="0" column="0" realPart="1.0E-4"/>
+              </ScilabDouble>
+            </Array>
+          </Array>
+        </Array>
+        <mxGeometry as="geometry" x="0.0" y="-10.0" width="60.0" height="40.0"/>
+      </BasicBlock>
+      <ImplicitInputPort id="-4ca061a2:19ce98e0b72:-7aa6" parent="-4ca061a2:19ce98e0b72:-7aa7" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ImplicitInputPort;align=left;verticalAlign=middle;spacing=10.0" value=""/>
+      <ImplicitOutputPort id="-4ca061a2:19ce98e0b72:-7aa5" parent="-4ca061a2:19ce98e0b72:-7aa7" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ImplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0" value=""/>
+      <ExplicitOutputPort id="-4ca061a2:19ce98e0b72:-7aa4" parent="-4ca061a2:19ce98e0b72:-7aa7" ordering="2" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0" value=""/>
+    </root>
+  </mxGraphModel>
+  <mxCell as="defaultParent" id="0:2:0" parent="0:1:0"/>
+</XcosDiagram>

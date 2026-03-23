@@ -1,0 +1,27 @@
+{
+  "relatedBlocks": [
+    "BOUNCEXY",
+    "BPLATFORM",
+    "BARXY"
+  ],
+  "criticalRules": [
+    "Zero-crossing surfaces detect ball-wall and ball-ball collisions",
+    "Gravity constant 9.81 embedded in realParameters",
+    "Position output is [2x1] for multiple balls"
+  ],
+  "description": "Bouncing ball physics simulation with gravity and ground collision",
+  "anomalies": [
+    "Width=60 (non-standard, typically 40)",
+    "No input ports - generates positions autonomously",
+    "dependsOnT=1 - requires time input internally",
+    "High nbZerosCrossing=9 for collision detection",
+    "State vector of dimension 8 tracks positions and velocities"
+  ],
+  "name": "BOUNCE",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BOUNCE.sci",
+  "commonUses": [
+    "Physics simulation demonstrations",
+    "Ball collision mechanics",
+    "Animation data generation"
+  ]
+}

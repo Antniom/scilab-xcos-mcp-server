@@ -1,0 +1,29 @@
+{
+  "relatedBlocks": [
+    "CANIMXY",
+    "CSCOPXY3D",
+    "CSCOPE"
+  ],
+  "criticalRules": [
+    "Event on ControlPort samples new 3D point and adds to trajectory",
+    "Color indices space-separated in exprs[1]",
+    "Thickness values space-separated in exprs[2]",
+    "Supports up to 8 curves with individual styling"
+  ],
+  "description": "3D animated XY scope for 3D trajectory visualization",
+  "anomalies": [
+    "25 integerParameters - largest in visualization blocks",
+    "Space-separated values in exprs for multiple colors/thicknesses",
+    "25-element integerParams pack: 1 display + 1 count + 1 style + 8 colors + 8 thicknesses + window flags",
+    "3 explicit inputs for X, Y, Z coordinates",
+    "Complex parameter structure with space-delimited matrices in strings"
+  ],
+  "name": "CANIMXY3D",
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CANIMXY3D.sci",
+  "commonUses": [
+    "3D trajectory visualization",
+    "Attractor animations (Lorenz, etc.)",
+    "Orbital mechanics displays",
+    "3D motion capture visualization"
+  ]
+}

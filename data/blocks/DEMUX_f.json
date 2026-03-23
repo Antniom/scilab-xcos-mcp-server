@@ -1,0 +1,20 @@
+{
+  "relatedBlocks": [
+    "DEMUX",
+    "MUX_f"
+  ],
+  "criticalRules": [
+    "Preserve TYPE_1 simulation function for compatibility"
+  ],
+  "description": "Legacy de-multiplexer - legacy version of the DEMUX block",
+  "anomalies": [
+    "Legacy block (Type 1)",
+    "Very narrow (10)",
+    "dataLines=-1/-2"
+  ],
+  "name": "DEMUX_f",
+  "commonUses": [
+    "De-multiplexing in older diagrams"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/DEMUX_f.sci"
+}

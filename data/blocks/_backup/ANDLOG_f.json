@@ -1,0 +1,21 @@
+{
+  "description": "AND logic gate with 2 control inputs (event triggered)",
+  "name": "ANDLOG_f",
+  "anomalies": [
+    "Has 2 ControlPort inputs and 1 ExplicitOutput (reverse of typical data flow)",
+    "Used inside SuperBlocks for conditional logic",
+    "Larger than standard: 60x60 to accommodate AND symbol"
+  ],
+  "criticalRules": [
+    "Logic gate with 2 control inputs (event triggers)",
+    "Produces 1 explicit output (REAL_MATRIX)",
+    "Used inside SuperBlocks for conditional logic"
+  ],
+  "commonUses": [
+    "Combining two event conditions",
+    "SuperBlock internal logic",
+    "AND condition for event triggering"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/ANDLOG_f.sci"
+}

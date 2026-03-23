@@ -1,0 +1,92 @@
+{
+  "name": "SINBLK_f",
+  "description": "Sine function block - computes the sine of the input",
+  "category": "Math Operations/Trigonometry",
+  "blockType": "c",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "SINBLK_f",
+  "simulationFunctionName": "sinblk",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "x": 0.0,
+    "y": -10.0,
+    "width": 40.0,
+    "height": 40.0
+  },
+  "style": "SINBLK_f",
+  "parameters": {
+    "exprs": {
+      "type": "ScilabString",
+      "height": 1,
+      "width": 1,
+      "values": [" "],
+      "description": "Placeholder (usually blank for trigonometric functions)"
+    },
+    "realParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "integerParameters": {
+      "height": 0,
+      "width": 0
+    },
+    "nbZerosCrossing": {
+      "value": 0
+    },
+    "nmode": {
+      "value": 0
+    }
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0",
+        "description": "Input angle in radians"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "REAL_MATRIX",
+        "dataColumns": 1,
+        "dataLines": -1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0",
+        "description": "Sine of input (sin(x))"
+      }
+    ],
+    "controls": [],
+    "commands": []
+  },
+  "xmlExample": "<BasicBlock id=\"b1\" parent=\"0:2:0\" interfaceFunctionName=\"SINBLK_f\" blockType=\"c\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"sinblk\" simulationFunctionType=\"DEFAULT\" style=\"SINBLK_f\">\n  <ScilabString as=\"exprs\" height=\"1\" width=\"1\">\n    <data line=\"0\" column=\"0\" value=\" \"/>\n  </ScilabString>\n  <mxGeometry as=\"geometry\" x=\"100.0\" y=\"100.0\" width=\"40.0\" height=\"40.0\"/>\n</BasicBlock>",
+  "anomalies": [
+    "exprs[0] is a space character (blank/placeholder)",
+    "Unitless input - expects radians not degrees",
+    "Standard 40x40 block",
+    "simulationFunctionType is DEFAULT (not C_OR_FORTRAN)"
+  ],
+  "criticalRules": [
+    "Output = sin(input)",
+    "Input in radians (not degrees)",
+    "Supports vector/matrix operations (dataLines=-1)"
+  ],
+  "commonUses": [
+    "Oscillator generation",
+    "Harmonic signal creation",
+    "Waveform synthesis",
+    "Mathematical modeling"
+  ],
+  "relatedBlocks": [
+    "COSBLK_f - cosine function",
+    "TANBLK_f - tangent function",
+    "GENSIN_f - sine wave generator (time-based)",
+    "TrigFun - generic trigonometric function selector"
+  ]
+}

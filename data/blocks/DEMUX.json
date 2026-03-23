@@ -1,0 +1,22 @@
+{
+  "relatedBlocks": [
+    "MUX",
+    "DEMUX_f",
+    "SELECT_m"
+  ],
+  "criticalRules": [
+    "Input size must match sum of output sizes",
+    "dataLines negative values indicate auto-dimensioning"
+  ],
+  "description": "De-multiplexer - splits a vector input signal into multiple components",
+  "anomalies": [
+    "Very narrow width (10)",
+    "dataLines=-1/-2 (Variable size outputs)",
+    "Uses simulationFunctionName='multiplex' for DE-multiplexing"
+  ],
+  "name": "DEMUX",
+  "commonUses": [
+    "Breaking down vector signals into individual lines"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/DEMUX.sci"
+}

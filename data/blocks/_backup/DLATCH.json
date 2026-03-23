@@ -1,0 +1,81 @@
+{
+  "name": "DLATCH",
+  "description": "D Latch - transparent latch where output follows input when enable is high",
+  "category": "Discrete",
+  "blockType": "h",
+  "tag": "BasicBlock",
+  "interfaceFunctionName": "DLATCH",
+  "simulationFunctionName": "csuper",
+  "simulationFunctionType": "DEFAULT",
+  "dependsOnU": 1,
+  "dependsOnT": 0,
+  "geometry": {
+    "width": 40,
+    "height": 60
+  },
+  "parameters": {
+    "exprs": [],
+    "realParameters": {},
+    "integerParameters": {},
+    "nbZerosCrossing": 0,
+    "nmode": 0,
+    "state": [],
+    "dState": []
+  },
+  "ports": {
+    "explicitInputs": [
+      {
+        "ordering": 1,
+        "dataType": "INT8_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      },
+      {
+        "ordering": 2,
+        "initialState": 0.0,
+        "style": "ExplicitInputPort;align=left;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "explicitOutputs": [
+      {
+        "ordering": 1,
+        "dataType": "INT8_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      },
+      {
+        "ordering": 2,
+        "dataType": "INT8_MATRIX",
+        "dataColumns": 1,
+        "dataLines": 1,
+        "initialState": 0.0,
+        "style": "ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0"
+      }
+    ],
+    "control": [],
+    "command": []
+  },
+  "xmlExample": "<BasicBlock id=\"...\" parent=\"...\" interfaceFunctionName=\"DLATCH\" blockType=\"h\" dependsOnU=\"1\" dependsOnT=\"0\" simulationFunctionName=\"csuper\" simulationFunctionType=\"DEFAULT\" style=\"DLATCH\"><ScilabDouble as=\"exprs\" height=\"0\" width=\"0\"/><ScilabDouble as=\"realParameters\" height=\"0\" width=\"0\"/><ScilabDouble as=\"integerParameters\" height=\"0\" width=\"0\"/><ScilabInteger as=\"nbZerosCrossing\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabInteger as=\"nmode\" height=\"1\" width=\"1\" intPrecision=\"sci_int32\"><data line=\"0\" column=\"0\" value=\"0\"/></ScilabInteger><ScilabDouble as=\"state\" height=\"0\" width=\"0\"/><ScilabDouble as=\"dState\" height=\"0\" width=\"0\"/><mxGeometry as=\"geometry\" x=\"0.0\" y=\"-10.0\" width=\"40.0\" height=\"60.0\"/><SuperBlockDiagram as=\"child\" ...>...</SuperBlockDiagram></BasicBlock>",
+  "anomalies": [
+    "Height=60 (Tall block)",
+    "blockType='h' (SuperBlock)",
+    "Uses INT8 data types",
+    "Transparent while Enable is high"
+  ],
+  "criticalRules": [
+    "Input 1 is D (Data), Input 2 is E (Enable)",
+    "Output 1 is Q, Output 2 is !Q"
+  ],
+  "commonUses": [
+    "Asynchronous memory elements",
+    "Gating signals"
+  ],
+  "relatedBlocks": [
+    "DFLIPFLOP",
+    "SRFLIPFLOP"
+  ]
+}

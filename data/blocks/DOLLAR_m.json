@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [
+    "DOLLAR",
+    "DOLLAR_f"
+  ],
+  "criticalRules": [
+    "Updates only on event clock edge"
+  ],
+  "description": "Matrix Unit Delay - unit delay supporting matrix signals",
+  "anomalies": [],
+  "name": "DOLLAR_m",
+  "commonUses": [
+    "Matrix signal delay",
+    "Modern unit delay implementation"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DOLLAR_m.sci"
+}

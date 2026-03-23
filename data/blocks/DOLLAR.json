@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [
+    "DOLLAR_f",
+    "DOLLAR_m"
+  ],
+  "criticalRules": [
+    "Updates only on event clock edge"
+  ],
+  "description": "Unit Delay - delays the input signal by one sample period (z^-1)",
+  "anomalies": [],
+  "name": "DOLLAR",
+  "commonUses": [
+    "Feedback loops in discrete systems",
+    "Simple delay"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DOLLAR.sci"
+}

@@ -1,0 +1,24 @@
+{
+  "description": "XY Bar chart visualization - displays 2D data as bar graph",
+  "name": "BARXY",
+  "anomalies": [
+    "Has 1 ControlPort (event trigger) - unique for scope/visualization",
+    "Has 2 ExplicitInputPorts for X and Y data",
+    "Uses SCILAB simulationFunctionType (interpreted, not compiled)",
+    "No explicit outputs - visualization only",
+    "dataLines=-1 allows variable-size inputs"
+  ],
+  "criticalRules": [
+    "Has 1 ControlPort (event trigger) - unique for scope/visualization",
+    "Has 2 ExplicitInputPorts for X and Y data",
+    "exprs: [xmin, xmax, ymin, ymax, bar thickness]",
+    "dataLines=-1 indicates variable/auto-dimensioned inputs"
+  ],
+  "commonUses": [
+    "XY bar chart visualization",
+    "2D histogram display",
+    "Data distribution plots"
+  ],
+  "relatedBlocks": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/BARXY.sci"
+}

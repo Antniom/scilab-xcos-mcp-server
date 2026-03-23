@@ -1,0 +1,30 @@
+{
+  "relatedBlocks": [
+    "CONSTRAINT_c",
+    "zc_func",
+    "INTEGRAL_m"
+  ],
+  "criticalRules": [
+    "exprs is an Array typed as ScilabList with 3 ScilabString children",
+    "2 outputs for dual constraint output",
+    "IMPLICIT_C_OR_FORTRAN requires DAE-capable solver",
+    "Used when constraint error and correction signals are needed separately"
+  ],
+  "description": "Dual output constraint block for continuous systems - enforces constraints with two outputs",
+  "anomalies": [
+    "ANOMALY: exprs is ScilabList containing 3 nested ScilabString elements (unusual structure)",
+    "Has TWO explicit outputs (ordering 1 and 2)",
+    "simulationFunctionType='IMPLICIT_C_OR_FORTRAN' requires implicit solver",
+    "Width=60 (non-standard)",
+    "No realParameters - uses integerParameters and state only",
+    "Same simulationFunctionName as CONSTRAINT_c but with different output configuration"
+  ],
+  "name": "CONSTRAINT2_c",
+  "commonUses": [
+    "DAE systems requiring dual constraint outputs",
+    "Constraint error monitoring",
+    "Advanced physical modeling",
+    "Index-1 DAE formulations"
+  ],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/CONSTRAINT2_c.sci"
+}

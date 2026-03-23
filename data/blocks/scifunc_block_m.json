@@ -1,0 +1,19 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly",
+    "objectsParameters MUST BE POPULATED with the SAME ScilabStrings as the function body Array in exprs (NOT an empty Array).",
+    "Second body string must be 'xd=[]' (not a space). Last ScilabString must have TWO lines: line 0=' ', line 1='y1=[]'.",
+    "Use y1=%e^(u1) for exponential equations (NOT y1=exp(u1))."
+  ],
+  "description": "scifunc_block_m block",
+  "anomalies": [
+    "Empty exprs",
+    "Non-standard width: 80.0"
+  ],
+  "name": "scifunc_block_m",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/scifunc_block_m.sci"
+}

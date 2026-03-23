@@ -1,0 +1,17 @@
+{
+  "relatedBlocks": [],
+  "criticalRules": [
+    "NEVER use spacingLeft - use spacing=10.0",
+    "Preserve exact port styles from reference",
+    "Copy parameter structures exactly"
+  ],
+  "description": "SUPER_f block",
+  "anomalies": [
+    "Empty exprs",
+    "blockType='h' indicates SuperBlock with internal diagram",
+    "Special tag: SuperBlock"
+  ],
+  "name": "SUPER_f",
+  "commonUses": [],
+  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/SUPER_f.sci"
+}
