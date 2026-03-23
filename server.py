@@ -24,18 +24,6 @@ from starlette.responses import HTMLResponse, JSONResponse, PlainTextResponse, R
 from starlette.routing import Route
 import uvicorn
 
-# SVG Icon Metadata
-SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#D97757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="20" y="20" width="24" height="24" rx="4"/>
-    <path d="M32 25 Q32 32 25 32 Q32 32 32 39 Q32 32 39 32 Q32 32 32 25" fill="#D97757" stroke="none"/>
-    <line x1="4" y1="32" x2="20" y2="32"/>
-    <polyline points="14,28 20,32 14,36"/>
-    <line x1="44" y1="32" x2="60" y2="32"/>
-    <polyline points="54,28 60,32 54,36"/>
-    <path d="M 52 32 V 52 H 12 V 32"/>
-    <polyline points="8,36 12,32 16,36"/>
-</svg>"""
-
 # Initialize colorama
 init(autoreset=True)
 
@@ -57,6 +45,7 @@ state = SharedState()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 UI_DIR = os.path.join(BASE_DIR, "ui")
+ICONS_DIR = os.path.join(BASE_DIR, "icons")
 PORT_REGISTRY_PATH = os.path.join(DATA_DIR, "blocks", "port_registry.json")
 TEMP_OUTPUT_DIR = os.environ.get("XCOS_TEMP_OUTPUT_DIR", os.path.join(DATA_DIR, "temp"))
 SESSION_OUTPUT_DIR = os.environ.get("XCOS_SESSION_OUTPUT_DIR", os.path.join(BASE_DIR, "sessions"))
@@ -76,6 +65,37 @@ WORKFLOW_PHASE_LABELS = {
     "phase3_implementation": "Phase 3: Implementation & Validation",
 }
 REVIEWABLE_PHASES = {"phase1_math_model", "phase2_architecture"}
+
+
+def icon_data_uri(filename: str, mime_type: str) -> str | None:
+    path = os.path.join(ICONS_DIR, filename)
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as handle:
+        encoded = base64.b64encode(handle.read()).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def load_server_icons() -> list[mcp_types.Icon]:
+    icons: list[mcp_types.Icon] = []
+    for filename, size in [
+        ("scilab_xcos_mcp_48.png", "48x48"),
+        ("scilab_xcos_mcp_96.png", "96x96"),
+        ("scilab_xcos_mcp_512.png", "512x512"),
+    ]:
+        src = icon_data_uri(filename, "image/png")
+        if src:
+            icons.append(
+                mcp_types.Icon(
+                    src=src,
+                    mimeType="image/png",
+                    sizes=[size],
+                )
+            )
+    return icons
+
+
+SERVER_ICONS = load_server_icons()
 
 
 def now_iso() -> str:
@@ -1502,11 +1522,13 @@ async def telemetry_loop():
 
 mcp_server = Server(
     "scilab-xcos-server",
+    version="0.1.0",
     instructions=(
         "Use the phased Xcos workflow. Phase 1 derives the mathematical model and waits for approval. "
         "Phase 2 defines block architecture, parameters, and links and waits for approval. "
         "Phase 3 starts only after approval and builds/verifies the draft."
     ),
+    icons=SERVER_ICONS or None,
 )
 
 streamable_http_manager = StreamableHTTPSessionManager(
@@ -1582,6 +1604,7 @@ async def handle_list_resources() -> list[mcp_types.Resource]:
             uri=WORKFLOW_UI_RESOURCE_URI,
             description="Interactive phased workflow dashboard for reviewing Xcos Phase 1 and Phase 2 before implementation.",
             mimeType=MCP_APP_MIME_TYPE,
+            icons=SERVER_ICONS or None,
             _meta=workflow_ui_meta(),
         )
     ]
@@ -1606,6 +1629,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             name="xcos_open_workflow_ui",
             description="Open the phased Xcos workflow dashboard UI.",
             inputSchema={"type": "object", "properties": {}},
+            icons=SERVER_ICONS or None,
             annotations=mcp_types.ToolAnnotations(
                 title="Open Workflow Dashboard",
                 readOnlyHint=True,
