@@ -1486,7 +1486,8 @@ async def run_http_server():
         app,
         host="0.0.0.0",
         port=SERVER_PORT,
-        log_level="info",
+        log_level="warning",
+        access_log=False,
     )
     server = uvicorn.Server(config)
     print(
@@ -1905,7 +1906,7 @@ async def handle_call_tool(name: str, arguments: dict | None):
         return [mcp_types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
 async def main():
-    mode = os.environ.get("XCOS_SERVER_MODE", "both").strip().lower()
+    mode = os.environ.get("XCOS_SERVER_MODE", "stdio").strip().lower()
     if mode not in {"both", "http", "stdio"}:
         raise RuntimeError("XCOS_SERVER_MODE must be one of: both, http, stdio")
 
