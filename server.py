@@ -764,7 +764,10 @@ async def run_subprocess_verification(xml_content: str, auto_fixed: bool):
     else:
         # Standard Scilab binary: ensure -nb -f are present
         if "-f" not in command:
-            command.extend(["-nb", "-f", verify_script_path])
+            if os.name != "nt":
+                command.extend(["-nw", "-nb", "-f", verify_script_path])
+            else:
+                command.extend(["-nb", "-f", verify_script_path])
 
     process = await asyncio.create_subprocess_exec(
         *command,
@@ -1052,7 +1055,10 @@ async def xcos_get_status_widget():
             
         lower_bin = scilab_bin.lower()
         if not lower_bin.endswith(".bat") and "-f" not in command:
-            command.extend(["-nb", "-f", script_path])
+            if os.name != "nt":
+                command.extend(["-nw", "-nb", "-f", script_path])
+            else:
+                command.extend(["-nb", "-f", script_path])
         elif lower_bin.endswith(".bat"):
             pass
 
@@ -2146,7 +2152,11 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             description="Lists all active Xcos draft sessions with block/link counts, saved file metadata, and last verification status.",
             inputSchema={"type": "object", "properties": {}},
         ),
-
+        mcp_types.Tool(
+            name="ping",
+            description="Simple tool to verify server responsiveness.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
     ]
 
 @mcp_server.call_tool()
@@ -2260,6 +2270,8 @@ async def handle_call_tool(name: str, arguments: dict | None):
         )
     elif name == "xcos_list_sessions":
         return await xcos_list_sessions()
+    elif name == "ping":
+        return make_structured_tool_result("Pong", {"status": "ok", "timestamp": now_iso()})
 
     else:
         return [mcp_types.TextContent(type="text", text=f"Unknown tool: {name}")]
