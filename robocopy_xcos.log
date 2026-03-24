@@ -1,0 +1,82 @@
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Monday, March 23, 2026 9:34:15 PM
+   Source : C:\Program Files\scilab-2026.0.1\modules\xcos\macros\
+     Dest : c:\Users\anton\Desktop\AI xcos module\scilab-xcos-mcp-server\data\macros\xcos\
+
+    Files : *.*
+	    
+  Options : *.* /S /E /DCOPY:DA /COPY:DAT /NP /R:2 /W:5 
+
+------------------------------------------------------------------------------
+
+	  New Dir         52	C:\Program Files\scilab-2026.0.1\modules\xcos\macros\
+	    New File  		    3595	%Block_xcosUpdateBlock.bin
+	    New File  		    1246	%Block_xcosUpdateBlock.sci
+	    New File  		     595	buildmacros.bat
+	    New File  		     724	buildmacros.sce
+	    New File  		     582	cleanmacros.bat
+	    New File  		   15620	generateBlockImage.bin
+	    New File  		    4487	generateBlockImage.sci
+	    New File  		   14043	generateBlockImages.bin
+	    New File  		    4558	generateBlockImages.sci
+	    New File  		    4281	getDiagramVersion.bin
+	    New File  		    1574	getDiagramVersion.sci
+	    New File  		    6437	getModelicaPath.bin
+	    New File  		    2755	getModelicaPath.sci
+	    New File  		   14184	importScicosPal.bin
+	    New File  		    4940	importScicosPal.sci
+	    New File  		    6378	importXcosDiagram.bin
+	    New File  		    2175	importXcosDiagram.sci
+	    New File  		    2543	lib
+	    New File  		    7708	loadXcosLibs.bin
+	    New File  		    2463	loadXcosLibs.sci
+	    New File  		    5170	xcosBlockEval.bin
+	    New File  		    1917	xcosBlockEval.sci
+	    New File  		    5073	xcosBlockInterface.bin
+	    New File  		    1792	xcosBlockInterface.sci
+	    New File  		    3527	xcosCodeGeneration.bin
+	    New File  		    1274	xcosCodeGeneration.sci
+	    New File  		    8127	xcosConfigureModelica.bin
+	    New File  		    2361	xcosConfigureModelica.sci
+	    New File  		   11360	xcosPal.bin
+	    New File  		    3811	xcosPal.sci
+	    New File  		    9319	xcosPalAdd.bin
+	    New File  		    3442	xcosPalAdd.sci
+	    New File  		   24426	xcosPalAddBlock.bin
+	    New File  		    8859	xcosPalAddBlock.sci
+	    New File  		    8554	xcosPalExport.bin
+	    New File  		    3357	xcosPalExport.sci
+	    New File  		    6470	xcosPalGenerateAllIcons.bin
+	    New File  		    2057	xcosPalGenerateAllIcons.sci
+	    New File  		    2364	xcosShowBlockWarning.bin
+	    New File  		     791	xcosShowBlockWarning.sci
+	    New File  		   12941	xcosValidateBlockSet.bin
+	    New File  		    3717	xcosValidateBlockSet.sci
+	    New File  		   10618	xcosValidateCompareBlock.bin
+	    New File  		    2702	xcosValidateCompareBlock.sci
+	    New File  		    8609	xcos_compile.bin
+	    New File  		    3018	xcos_compile.sci
+	    New File  		   76137	xcos_debug_gui.bin
+	    New File  		   20841	xcos_debug_gui.sci
+	    New File  		    2202	xcos_run.bin
+	    New File  		     920	xcos_run.sci
+	    New File  		   50901	xcos_simulate.bin
+	    New File  		   16296	xcos_simulate.sci
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :         1         1         0         0         0         0
+   Files :        52        52         0         0         0         0
+   Bytes :   413.9 k   413.9 k         0         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+
+
+   Speed :           1,744,201 Bytes/sec.
+   Speed :              99.804 MegaBytes/min.
+   Ended : Monday, March 23, 2026 9:34:16 PM
+

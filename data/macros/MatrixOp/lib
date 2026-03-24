@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<scilablib name="Matrixoplib">
+  <macro name="CUMSUM" file="CUMSUM.bin" md5="d4bed595fec1c927b129a444db8ef673"/>
+  <macro name="EXTRACT" file="EXTRACT.bin" md5="7c75d65ead8cd936ffcd7bc99510eee3"/>
+  <macro name="EXTTRI" file="EXTTRI.bin" md5="ff490de33db90c962eea70f104edb29f"/>
+  <macro name="MATBKSL" file="MATBKSL.bin" md5="36a02efb27a3001ae0b22518b83795dc"/>
+  <macro name="MATCATH" file="MATCATH.bin" md5="784f50751f3b4e811b04ef5f548320a1"/>
+  <macro name="MATCATV" file="MATCATV.bin" md5="20fe1b687180e21d7329c3104d8f597a"/>
+  <macro name="MATDET" file="MATDET.bin" md5="1e7f4b5c4c178b5c96c81a579fd8702f"/>
+  <macro name="MATDIAG" file="MATDIAG.bin" md5="0aa69f64b1100d4f8bd2471e0a71f241"/>
+  <macro name="MATDIV" file="MATDIV.bin" md5="8e010df962091d223bb7485f0e3c4593"/>
+  <macro name="MATEIG" file="MATEIG.bin" md5="9d6ce53a0f1c2c7877697380c1ceee27"/>
+  <macro name="MATEXPM" file="MATEXPM.bin" md5="1d287a83470f45e402ce3d005251677b"/>
+  <macro name="MATINV" file="MATINV.bin" md5="a5709d4e201ffba748e806c72fdea3ca"/>
+  <macro name="MATLU" file="MATLU.bin" md5="cc5ced7c0132bbbc7a7c91ebf13ba395"/>
+  <macro name="MATMAGPHI" file="MATMAGPHI.bin" md5="172a2e3fb40ed3016f81cd2038ef3d7f"/>
+  <macro name="MATMUL" file="MATMUL.bin" md5="59e0edd5334344534f8a76320c13766d"/>
+  <macro name="MATPINV" file="MATPINV.bin" md5="cbdc7a1a86b26c0de5339ca29e026d18"/>
+  <macro name="MATRESH" file="MATRESH.bin" md5="4b743fdcd1615e5a3c2bf0d201781e10"/>
+  <macro name="MATSING" file="MATSING.bin" md5="27422e43d2c602244918d1f642156708"/>
+  <macro name="MATSUM" file="MATSUM.bin" md5="7e01e59e162af8c962d337551d7cf9b4"/>
+  <macro name="MATTRAN" file="MATTRAN.bin" md5="d061a310b18fae62758927c8c12bc097"/>
+  <macro name="MATZCONJ" file="MATZCONJ.bin" md5="029678d1b182e18e31833c61602edb9c"/>
+  <macro name="MATZREIM" file="MATZREIM.bin" md5="416904e8ca630bbb41b686771027172b"/>
+  <macro name="RICC" file="RICC.bin" md5="bcb06afc9fdadf173e578aa5757d9d7c"/>
+  <macro name="ROOTCOEF" file="ROOTCOEF.bin" md5="359cc3872edaeedf1a84a60ad26c8fd4"/>
+  <macro name="SQRT" file="SQRT.bin" md5="0f7675f02ab84c8d35f92a1eb841df44"/>
+  <macro name="SUBMAT" file="SUBMAT.bin" md5="6d47a16777002965055f3933efeb78eb"/>
+</scilablib>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<scilablib name="Sinkslib">
+  <macro name="AFFICH_m" file="AFFICH_m.bin" md5="0f4563e7938cf28a79cd0bf95195f967"/>
+  <macro name="BARXY" file="BARXY.bin" md5="64edaaf87f593f46bd398f6e422f5ae7"/>
+  <macro name="BARXY_sim" file="BARXY_sim.bin" md5="d73b18355446b5dc26dcf3c9043c43a1"/>
+  <macro name="CANIMXY" file="CANIMXY.bin" md5="f44ea401e276f64b9f8d5bfaf1f9ba15"/>
+  <macro name="CANIMXY3D" file="CANIMXY3D.bin" md5="c5037759cd339865424661fc173aab11"/>
+  <macro name="CEVENTSCOPE" file="CEVENTSCOPE.bin" md5="99f399c61c207b28f177df8094a560c9"/>
+  <macro name="CFSCOPE" file="CFSCOPE.bin" md5="80fca253468aa7c6f2b9002fcf56cb13"/>
+  <macro name="CLKOUTV_f" file="CLKOUTV_f.bin" md5="740885804c32a6b70c62a5609bbfc526"/>
+  <macro name="CLKOUT_f" file="CLKOUT_f.bin" md5="fdc1648f0189294321666ec370d364dc"/>
+  <macro name="CMAT3D" file="CMAT3D.bin" md5="cd3e7409d4c641c07963c1a0b65dfde5"/>
+  <macro name="CMATVIEW" file="CMATVIEW.bin" md5="c70a975d922d012ef5083509cd96da70"/>
+  <macro name="CMSCOPE" file="CMSCOPE.bin" md5="0269ee074b5380941c94718a5ff303b2"/>
+  <macro name="CSCOPE" file="CSCOPE.bin" md5="850d2d148841bd68a69447bd9001a271"/>
+  <macro name="CSCOPXY" file="CSCOPXY.bin" md5="5fefe94d451576861351dc6f90347c1a"/>
+  <macro name="CSCOPXY3D" file="CSCOPXY3D.bin" md5="fe10a9849834ef36d5693b85076b7707"/>
+  <macro name="OUTIMPL_f" file="OUTIMPL_f.bin" md5="5745a14d57de930ac2a17a731986f712"/>
+  <macro name="OUT_f" file="OUT_f.bin" md5="d9524b54f05e5fc660f6dbf13137c4e3"/>
+  <macro name="SCALE_CMSCOPE" file="SCALE_CMSCOPE.bin" md5="6ac0f1933957689a34e518b7cccee5e7"/>
+  <macro name="SCALE_CSCOPE" file="SCALE_CSCOPE.bin" md5="9c095c3dc03c788298c360b369de5b04"/>
+  <macro name="TOWS_c" file="TOWS_c.bin" md5="da9b86393f5dbdc11a5058495cd5f187"/>
+  <macro name="TRASH_f" file="TRASH_f.bin" md5="2d5c680e9fdd96ec1c44e8f7a86c3534"/>
+  <macro name="WRITEAU_f" file="WRITEAU_f.bin" md5="1733dc9663e80ecaa1f6d75525ed2d7f"/>
+  <macro name="WRITEC_f" file="WRITEC_f.bin" md5="bd26f372b65231ac6f993a76402a6ecc"/>
+</scilablib>

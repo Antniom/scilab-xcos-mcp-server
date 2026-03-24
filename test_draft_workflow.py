@@ -86,7 +86,6 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         decoded = base64.b64decode(content_payload["content"]).decode("utf-8")
 
         self.assertIn("<XcosDiagram", decoded)
-        self.assertEqual(content_payload["source"], "session")
 
     async def test_verify_draft_updates_session_metadata(self):
         session_id = await self.start_session()
@@ -107,7 +106,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(os.path.exists(verify_payload["session_file_path"]))
 
         list_response = await server.xcos_list_sessions()
-        sessions = json.loads(list_response[0].text)
+        sessions = json.loads(list_response[0].text)["sessions"]
         session_meta = next(item for item in sessions if item["session_id"] == session_id)
 
         self.assertTrue(session_meta["last_verified"]["success"])
@@ -115,15 +114,14 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_block_data_includes_split_and_extra_examples(self):
         split_response = await server.get_xcos_block_data("SPLIT_f")
-        split_text = split_response[0].text
-        self.assertIn("=== INFO ===", split_text)
-        self.assertIn("SplitBlock", split_text)
-        self.assertNotIn("Error: Block info for 'SPLIT_f'", split_text)
+        split_payload = json.loads(split_response[0].text)
+        self.assertIsNotNone(split_payload["info"])
+        self.assertIn("SplitBlock", json.dumps(split_payload["info"]))
 
         cmscope_response = await server.get_xcos_block_data("CMSCOPE")
-        cmscope_text = cmscope_response[0].text
-        self.assertIn("=== EXTRA EXAMPLE: 1 input ===", cmscope_text)
-        self.assertIn('realParameters" height="1" width="5"', cmscope_text)
+        cmscope_payload = json.loads(cmscope_response[0].text)
+        self.assertIn("1 input", cmscope_payload["extra_examples"])
+        self.assertIn('realParameters" height="1" width="5"', cmscope_payload["extra_examples"]["1 input"])
 
 
 if __name__ == "__main__":

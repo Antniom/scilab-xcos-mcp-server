@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<scilablib name="Eventslib">
+  <macro name="ANDBLK" file="ANDBLK.bin" md5="5e0d74f094646a4a9e759316591ef96e"/>
+  <macro name="ANDLOG_f" file="ANDLOG_f.bin" md5="7940e5c67aeacf03b1b689e0e9c6873c"/>
+  <macro name="CLKSOMV_f" file="CLKSOMV_f.bin" md5="675544ae921f470213dc26318e7464b8"/>
+  <macro name="CLKSOM_f" file="CLKSOM_f.bin" md5="7b16200a8dbd24c14ceacd06d655e83a"/>
+  <macro name="CLKSPLIT_f" file="CLKSPLIT_f.bin" md5="3e3b65e9eb4c6df87b4d9138452bb088"/>
+  <macro name="END_c" file="END_c.bin" md5="fde9417cec0267ab0fbe48a2ec2d18fb"/>
+  <macro name="EVTDLY_c" file="EVTDLY_c.bin" md5="ae76aebe099a8f7f8187ca4861673046"/>
+  <macro name="EVTDLY_f" file="EVTDLY_f.bin" md5="18efd0aa166782d4502621805ef485cb"/>
+  <macro name="EVTGEN_f" file="EVTGEN_f.bin" md5="20e87c19b1189fafc8bcc5cecd67077f"/>
+  <macro name="EVTVARDLY" file="EVTVARDLY.bin" md5="b6c7a687e75b6fad3853bc66368d867f"/>
+  <macro name="HALT_f" file="HALT_f.bin" md5="bc3a3795ff0427988fc2d1fded698a72"/>
+  <macro name="IFTHEL_f" file="IFTHEL_f.bin" md5="a507dbccce17fa872425d42645f58fb5"/>
+  <macro name="MCLOCK_f" file="MCLOCK_f.bin" md5="426b3e9808acb187f21c162557a64965"/>
+  <macro name="MFCLCK_f" file="MFCLCK_f.bin" md5="d4810b3aad3a5aee2f0b0b004550c0cf"/>
+  <macro name="M_freq" file="M_freq.bin" md5="74ade5b46a104ab659ae1147cf366809"/>
+  <macro name="VirtualCLK0" file="VirtualCLK0.bin" md5="74729311872efea6867e2c849b3043c0"/>
+  <macro name="freq_div" file="freq_div.bin" md5="e327e1b65edcc7b82583db820ba720ff"/>
+</scilablib>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<scilablib name="Nonlinearlib">
+  <macro name="ABSBLK_f" file="ABSBLK_f.bin" md5="7af3cda93bcffb3873706e6066401de6"/>
+  <macro name="ABS_VALUE" file="ABS_VALUE.bin" md5="e296e79314c30204d2a226c69a72a57e"/>
+  <macro name="COSBLK_f" file="COSBLK_f.bin" md5="3076a12e19f33ebfabab8d1b10b19df0"/>
+  <macro name="DLRADAPT_f" file="DLRADAPT_f.bin" md5="02b9bb8b6f566f693651b4d8a33725d2"/>
+  <macro name="EXPBLK_f" file="EXPBLK_f.bin" md5="f47e5a35a1d448275d9ef32a621db162"/>
+  <macro name="EXPBLK_m" file="EXPBLK_m.bin" md5="ab5732e0e14736d104c663aa2006bb9f"/>
+  <macro name="EXPRESSION" file="EXPRESSION.bin" md5="f62eaca0f7ca4526d3885b4082cfc0c9"/>
+  <macro name="FSV_f" file="FSV_f.bin" md5="af2f8644d5197811a8e4148f556537a3"/>
+  <macro name="INTRP2BLK_f" file="INTRP2BLK_f.bin" md5="d1dcfb4c06a9ed75c55d274c1e4f934d"/>
+  <macro name="INTRPLBLK_f" file="INTRPLBLK_f.bin" md5="8a223349fe7efe6c5d03c46412aa88bb"/>
+  <macro name="INVBLK" file="INVBLK.bin" md5="5b915b5316c308f7e2937e82d366ae24"/>
+  <macro name="INVBLK_f" file="INVBLK_f.bin" md5="e087989ba828ef9cead95dff0c366c77"/>
+  <macro name="LOGBLK_f" file="LOGBLK_f.bin" md5="7ec3fde4ed09f929bdad180665b29e9e"/>
+  <macro name="LOOKUP2D" file="LOOKUP2D.bin" md5="c6ef78505965ad12f93abe995ebb68e8"/>
+  <macro name="LOOKUP_c" file="LOOKUP_c.bin" md5="d8eda7714fbe09f856eff9cc06f5582d"/>
+  <macro name="LOOKUP_f" file="LOOKUP_f.bin" md5="672725ff62ee154761d077b6ef2e8952"/>
+  <macro name="MAXMIN" file="MAXMIN.bin" md5="eafbbb0d36320aab7f796973508bfcc2"/>
+  <macro name="MAX_f" file="MAX_f.bin" md5="0887f5c4c71c873b5d3a7d42eb7c562c"/>
+  <macro name="MIN_f" file="MIN_f.bin" md5="77157d38e143e7088e82617407475ce1"/>
+  <macro name="POWBLK_f" file="POWBLK_f.bin" md5="89d0834b3a0c2b2e1ca37b1e6aa127cb"/>
+  <macro name="PRODUCT" file="PRODUCT.bin" md5="1a0e8461f5dd23dda9a8ebe3f42ae1ed"/>
+  <macro name="PROD_f" file="PROD_f.bin" md5="0f382eba9037088edb476efb08a5e893"/>
+  <macro name="QUANT_f" file="QUANT_f.bin" md5="a5bce36f54317fac48accf4af7241729"/>
+  <macro name="SATURATION" file="SATURATION.bin" md5="aed949bfd671e8c54d142a6214975f79"/>
+  <macro name="SAT_f" file="SAT_f.bin" md5="773aa6b06bc7abc1f3c4000a0f47ab91"/>
+  <macro name="SIGNUM" file="SIGNUM.bin" md5="9492b32bc0152cac7db5596a067e0ebe"/>
+  <macro name="SINBLK_f" file="SINBLK_f.bin" md5="f9844460dc10aadaf08c97bf46412293"/>
+  <macro name="TANBLK_f" file="TANBLK_f.bin" md5="e11c4aa3aaca42be9fcda4949404916e"/>
+  <macro name="TrigFun" file="TrigFun.bin" md5="98be690f2c4f44794c3c56ba9034af21"/>
+</scilablib>

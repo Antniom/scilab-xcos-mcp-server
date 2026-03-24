@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<scilablib name="Hydraulicslib">
+  <macro name="Bache" file="Bache.bin" md5="e6e65829ee270e9ddce35bc569b97b67"/>
+  <macro name="Flowmeter" file="Flowmeter.bin" md5="464f5ac3853e7040ee10bd522a1768a6"/>
+  <macro name="PerteDP" file="PerteDP.bin" md5="9e400087d5b779925da6bf0fd1be3834"/>
+  <macro name="PuitsP" file="PuitsP.bin" md5="f56eb32ff113f5218a3803025a055cad"/>
+  <macro name="SourceP" file="SourceP.bin" md5="9ea14f9835bf55ac67a227b319b19fd8"/>
+  <macro name="VanneReglante" file="VanneReglante.bin" md5="7b89228d7f185001f5cd2719117eef7f"/>
+</scilablib>

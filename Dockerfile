@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1 \
     XCOS_VALIDATION_MODE=subprocess
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends scilab && \
+    apt-get install -y --no-install-recommends scilab xvfb libgl1-mesa-glx libxtst6 libxi6 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

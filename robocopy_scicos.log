@@ -1,0 +1,723 @@
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Monday, March 23, 2026 9:33:59 PM
+   Source : C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\
+     Dest : c:\Users\anton\Desktop\AI xcos module\scilab-xcos-mcp-server\data\macros\
+
+    Files : *.*
+	    
+  Options : *.* /S /E /DCOPY:DA /COPY:DAT /NP /R:2 /W:5 
+
+------------------------------------------------------------------------------
+
+	                   1	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\
+	*EXTRA Dir        -1	c:\Users\anton\Desktop\AI xcos module\scilab-xcos-mcp-server\data\macros\sub\
+	    Older     		    1645	buildmacros.sce
+	                  56	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Branching\
+	    Older     		    1233	buildmacros.sce
+	    New File  		    7227	CLKFROM.bin
+	    Older     		    2048	CLKFROM.sci
+	    New File  		    9010	CLKGOTO.bin
+	    Older     		    2495	CLKGOTO.sci
+	    New File  		    7834	CLKGotoTagVisibility.bin
+	    Older     		    2255	CLKGotoTagVisibility.sci
+	    New File  		   10757	DEMUX.bin
+	    Older     		    2971	DEMUX.sci
+	    New File  		   10720	DEMUX_f.bin
+	    Older     		    2936	DEMUX_f.sci
+	    New File  		   11583	ESELECT_f.bin
+	    Older     		    2985	ESELECT_f.sci
+	    New File  		    7357	EXTRACTOR.bin
+	    Older     		    2075	EXTRACTOR.sci
+	    New File  		    7901	FROM.bin
+	    Older     		    2208	FROM.sci
+	    New File  		    8397	FROMMO.bin
+	    Older     		    2295	FROMMO.sci
+	    New File  		    9437	GOTO.bin
+	    Older     		    2562	GOTO.sci
+	    New File  		    9927	GOTOMO.bin
+	    Older     		    2657	GOTOMO.sci
+	    New File  		    7825	GotoTagVisibility.bin
+	    Older     		    2256	GotoTagVisibility.sci
+	    New File  		    7831	GotoTagVisibilityMO.bin
+	    Older     		    2262	GotoTagVisibilityMO.sci
+	    New File  		    8608	ISELECT_f.bin
+	    Older     		    2351	ISELECT_f.sci
+	    New File  		   11934	ISELECT_m.bin
+	    Older     		    3029	ISELECT_m.sci
+	    New File  		    2456	lib
+	    New File  		   10467	MUX.bin
+	    Older     		    2892	MUX.sci
+	    New File  		   10455	MUX_f.bin
+	    Older     		    2879	MUX_f.sci
+	    New File  		   12337	M_SWITCH.bin
+	    Older     		    3159	M_SWITCH.sci
+	    New File  		    6843	NRMSOM_f.bin
+	    Older     		    1941	NRMSOM_f.sci
+	    New File  		    8898	RELAY_f.bin
+	    Older     		    2370	RELAY_f.sci
+	    New File  		    7584	SCALAR2VECTOR.bin
+	    Older     		    2251	SCALAR2VECTOR.sci
+	    New File  		    8595	SELECT_f.bin
+	    Older     		    2328	SELECT_f.sci
+	    New File  		   12035	SELECT_m.bin
+	    Older     		    3018	SELECT_m.sci
+	    New File  		   14648	SELF_SWITCH.bin
+	    Older     		    2724	SELF_SWITCH.sci
+	    New File  		    9605	SWITCH2.bin
+	    Older     		    2589	SWITCH2.sci
+	    New File  		   13125	SWITCH2_m.bin
+	    Older     		    3264	SWITCH2_m.sci
+	    New File  		    8632	SWITCH_f.bin
+	    Older     		    2329	SWITCH_f.sci
+	                  51	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Electrical\
+	    Older     		    1865	buildmacros.sce
+	    New File  		   14587	Capacitor.bin
+	    Older     		    3432	Capacitor.sci
+	    New File  		   11462	CCS.bin
+	    Older     		    2696	CCS.sci
+	    New File  		   12411	ConstantVoltage.bin
+	    Older     		    3030	ConstantVoltage.sci
+	    New File  		    5442	CurrentSensor.bin
+	    Older     		    1524	CurrentSensor.sci
+	    New File  		   11462	CVS.bin
+	    Older     		    2694	CVS.sci
+	    New File  		   10248	Diode.bin
+	    Older     		    2523	Diode.sci
+	    Older     		   14132	Electrical.mo
+	    New File  		    5367	Ground.bin
+	    Older     		    1687	Ground.sci
+	    New File  		   14075	Gyrator.bin
+	    Older     		    3221	Gyrator.sci
+	    New File  		   13679	IdealTransformer.bin
+	    Older     		    3178	IdealTransformer.sci
+	    New File  		   12538	Inductor.bin
+	    Older     		    3046	Inductor.sci
+	    New File  		    2175	lib
+	    New File  		    4853	MOTOR.bin
+	    Older     		    1605	MOTOR.sci
+	    New File  		   12883	NMOS.bin
+	    Older     		    2985	NMOS.sci
+	    New File  		   19580	NPN.bin
+	    Older     		    4634	NPN.sci
+	    New File  		    9810	OpAmp.bin
+	    Older     		    2532	OpAmp.sci
+	    New File  		   12883	PMOS.bin
+	    Older     		    2981	PMOS.sci
+	    New File  		   19589	PNP.bin
+	    Older     		    4643	PNP.sci
+	    New File  		    5705	PotentialSensor.bin
+	    Older     		    1746	PotentialSensor.sci
+	    New File  		   13179	Resistor.bin
+	    Older     		    3293	Resistor.sci
+	    New File  		   11238	SineVoltage.bin
+	    Older     		    2825	SineVoltage.sci
+	    New File  		    9828	Switch.bin
+	    Older     		    2574	Switch.sci
+	    New File  		    6122	VariableResistor.bin
+	    Older     		    1800	VariableResistor.sci
+	    New File  		    5442	VoltageSensor.bin
+	    Older     		    1524	VoltageSensor.sci
+	    New File  		    9482	VsourceAC.bin
+	    Older     		    2467	VsourceAC.sci
+	    New File  		    9150	VVsourceAC.bin
+	    Older     		    2425	VVsourceAC.sci
+	                  36	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Events\
+	    New File  		   22516	ANDBLK.bin
+	    Older     		    3613	ANDBLK.sci
+	    New File  		    3952	ANDLOG_f.bin
+	    Older     		    1290	ANDLOG_f.sci
+	    Older     		    1157	buildmacros.sce
+	    New File  		    4149	CLKSOMV_f.bin
+	    Older     		    1324	CLKSOMV_f.sci
+	    New File  		    4209	CLKSOM_f.bin
+	    Older     		    1325	CLKSOM_f.sci
+	    New File  		    6028	CLKSPLIT_f.bin
+	    Older     		    2325	CLKSPLIT_f.sci
+	    New File  		    6326	END_c.bin
+	    Older     		    1883	END_c.sci
+	    New File  		    8166	EVTDLY_c.bin
+	    Older     		    2564	EVTDLY_c.sci
+	    New File  		    7786	EVTDLY_f.bin
+	    Older     		    2462	EVTDLY_f.sci
+	    New File  		    6172	EVTGEN_f.bin
+	    Older     		    1821	EVTGEN_f.sci
+	    New File  		    6506	EVTVARDLY.bin
+	    Older     		    1905	EVTVARDLY.sci
+	    New File  		   40249	freq_div.bin
+	    Older     		    8218	freq_div.sci
+	    New File  		    6311	HALT_f.bin
+	    Older     		    1879	HALT_f.sci
+	    New File  		   10386	IFTHEL_f.bin
+	    Older     		    2654	IFTHEL_f.sci
+	    New File  		    1555	lib
+	    New File  		   27746	MCLOCK_f.bin
+	    Older     		    4601	MCLOCK_f.sci
+	    New File  		    7827	MFCLCK_f.bin
+	    Older     		    2015	MFCLCK_f.sci
+	    New File  		   16069	M_freq.bin
+	    Older     		    3596	M_freq.sci
+	    New File  		    4087	VirtualCLK0.bin
+	    Older     		    1344	VirtualCLK0.sci
+	                  15	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Hydraulics\
+	    New File  		   16275	Bache.bin
+	    Older     		    3618	Bache.sci
+	    Older     		    1588	buildmacros.sce
+	    New File  		   13334	Flowmeter.bin
+	    Older     		    3100	Flowmeter.sci
+	    Older     		    8784	Hydraulics.mo
+	    New File  		     615	lib
+	    New File  		   13101	PerteDP.bin
+	    Older     		    3036	PerteDP.sci
+	    New File  		   10828	PuitsP.bin
+	    Older     		    2922	PuitsP.sci
+	    New File  		   11252	SourceP.bin
+	    Older     		    2897	SourceP.sci
+	    New File  		   10449	VanneReglante.bin
+	    Older     		    2646	VanneReglante.sci
+	                  24	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\IntegerOp\
+	    New File  		   17746	BITCLEAR.bin
+	    Older     		    4764	BITCLEAR.sci
+	    New File  		   16956	BITSET.bin
+	    Older     		    4530	BITSET.sci
+	    Older     		    1161	buildmacros.sce
+	    New File  		   60987	CONVERT.bin
+	    Older     		   17005	CONVERT.sci
+	    New File  		  225176	DFLIPFLOP.bin
+	    Older     		   43365	DFLIPFLOP.sci
+	    New File  		   67377	DLATCH.bin
+	    Older     		   13609	DLATCH.sci
+	    New File  		   36577	EXTRACTBITS.bin
+	    Older     		   12440	EXTRACTBITS.sci
+	    New File  		   19842	INTMUL.bin
+	    Older     		    5043	INTMUL.sci
+	    New File  		  106253	JKFLIPFLOP.bin
+	    Older     		   21211	JKFLIPFLOP.sci
+	    New File  		    1036	lib
+	    New File  		   15165	LOGIC.bin
+	    Older     		    3899	LOGIC.sci
+	    New File  		   19117	SHIFT.bin
+	    Older     		    5736	SHIFT.sci
+	    New File  		   57946	SRFLIPFLOP.bin
+	    Older     		   11753	SRFLIPFLOP.sci
+	                  74	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Linear\
+	    New File  		    7462	BIGSOM_f.bin
+	    Older     		    2093	BIGSOM_f.sci
+	    Older     		    1155	buildmacros.sce
+	    New File  		    3885	CLINDUMMY_f.bin
+	    Older     		    1291	CLINDUMMY_f.sci
+	    New File  		   14305	CLR.bin
+	    Older     		    3755	CLR.sci
+	    New File  		   12502	CLR_f.bin
+	    Older     		    3146	CLR_f.sci
+	    New File  		   15956	CLSS.bin
+	    Older     		    3971	CLSS.sci
+	    New File  		   13927	CLSS_f.bin
+	    Older     		    3551	CLSS_f.sci
+	    New File  		   11847	DELAYV_f.bin
+	    Older     		    2779	DELAYV_f.sci
+	    New File  		   31831	DELAY_f.bin
+	    Older     		    6105	DELAY_f.sci
+	    New File  		    3882	DERIV.bin
+	    Older     		    1290	DERIV.sci
+	    New File  		    9747	DIFF_c.bin
+	    Older     		    2734	DIFF_c.sci
+	    New File  		   14193	DLR.bin
+	    Older     		    3772	DLR.sci
+	    New File  		   12294	DLR_f.bin
+	    Older     		    3120	DLR_f.sci
+	    New File  		   15929	DLSS.bin
+	    Older     		    3951	DLSS.sci
+	    New File  		   13961	DLSS_f.bin
+	    Older     		    3502	DLSS_f.sci
+	    New File  		   14338	DOLLAR.bin
+	    Older     		    3585	DOLLAR.sci
+	    New File  		    8839	DOLLAR_f.bin
+	    Older     		    2392	DOLLAR_f.sci
+	    New File  		   14340	DOLLAR_m.bin
+	    Older     		    3585	DOLLAR_m.sci
+	    New File  		   24827	GAINBLK.bin
+	    Older     		    7063	GAINBLK.sci
+	    New File  		    7834	GAINBLK_f.bin
+	    Older     		    2206	GAINBLK_f.sci
+	    New File  		    8202	GAIN_f.bin
+	    Older     		    2231	GAIN_f.sci
+	    New File  		   14416	INTEGRAL.bin
+	    Older     		    3675	INTEGRAL.sci
+	    New File  		    6500	INTEGRAL_f.bin
+	    Older     		    1883	INTEGRAL_f.sci
+	    New File  		   24799	INTEGRAL_m.bin
+	    Older     		    5814	INTEGRAL_m.sci
+	    New File  		    3135	lib
+	    New File  		   83610	PID.bin
+	    Older     		   16373	PID.sci
+	    New File  		   13774	REGISTER.bin
+	    Older     		    3481	REGISTER.sci
+	    New File  		    7187	REGISTER_f.bin
+	    Older     		    2099	REGISTER_f.sci
+	    New File  		    4295	SAMPHOLD.bin
+	    Older     		    1353	SAMPHOLD.sci
+	    New File  		    8769	SAMPHOLD_m.bin
+	    Older     		    2404	SAMPHOLD_m.sci
+	    New File  		    4200	SAMPLEHOLD_f.bin
+	    Older     		    1348	SAMPLEHOLD_f.sci
+	    New File  		    8367	SOM_f.bin
+	    Older     		    2266	SOM_f.sci
+	    New File  		   24361	SUMMATION.bin
+	    Older     		    6048	SUMMATION.sci
+	    New File  		    4180	SUM_f.bin
+	    Older     		    1324	SUM_f.sci
+	    New File  		   15161	TCLSS.bin
+	    Older     		    3738	TCLSS.sci
+	    New File  		   15160	TCLSS_f.bin
+	    Older     		    3737	TCLSS_f.sci
+	    New File  		    9852	TIME_DELAY.bin
+	    Older     		    2734	TIME_DELAY.sci
+	    New File  		    9572	VARIABLE_DELAY.bin
+	    Older     		    2521	VARIABLE_DELAY.sci
+	                  54	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\MatrixOp\
+	    Older     		    1159	buildmacros.sce
+	    New File  		   14476	CUMSUM.bin
+	    Older     		    3929	CUMSUM.sci
+	    New File  		   15178	EXTRACT.bin
+	    Older     		    3666	EXTRACT.sci
+	    New File  		   13910	EXTTRI.bin
+	    Older     		    3801	EXTTRI.sci
+	    New File  		    2259	lib
+	    New File  		   11887	MATBKSL.bin
+	    Older     		    2960	MATBKSL.sci
+	    New File  		   11147	MATCATH.bin
+	    Older     		    2631	MATCATH.sci
+	    New File  		   11343	MATCATV.bin
+	    Older     		    2646	MATCATV.sci
+	    New File  		   11422	MATDET.bin
+	    Older     		    2931	MATDET.sci
+	    New File  		   11427	MATDIAG.bin
+	    Older     		    2937	MATDIAG.sci
+	    New File  		   11882	MATDIV.bin
+	    Older     		    2974	MATDIV.sci
+	    New File  		   14161	MATEIG.bin
+	    Older     		    3785	MATEIG.sci
+	    New File  		   11427	MATEXPM.bin
+	    Older     		    2920	MATEXPM.sci
+	    New File  		   11422	MATINV.bin
+	    Older     		    2933	MATINV.sci
+	    New File  		   11652	MATLU.bin
+	    Older     		    2989	MATLU.sci
+	    New File  		   12542	MATMAGPHI.bin
+	    Older     		    3165	MATMAGPHI.sci
+	    New File  		   27502	MATMUL.bin
+	    Older     		    6612	MATMUL.sci
+	    New File  		   11427	MATPINV.bin
+	    Older     		    2962	MATPINV.sci
+	    New File  		   15220	MATRESH.bin
+	    Older     		    3988	MATRESH.sci
+	    New File  		   14944	MATSING.bin
+	    Older     		    3916	MATSING.sci
+	    New File  		   14676	MATSUM.bin
+	    Older     		    3956	MATSUM.sci
+	    New File  		   10260	MATTRAN.bin
+	    Older     		    2911	MATTRAN.sci
+	    New File  		    5816	MATZCONJ.bin
+	    Older     		    1623	MATZCONJ.sci
+	    New File  		   12506	MATZREIM.bin
+	    Older     		    3161	MATZREIM.sci
+	    New File  		   11252	RICC.bin
+	    Older     		    2696	RICC.sci
+	    New File  		   11657	ROOTCOEF.bin
+	    Older     		    3001	ROOTCOEF.sci
+	    New File  		    9357	SQRT.bin
+	    Older     		    2527	SQRT.sci
+	    New File  		   16288	SUBMAT.bin
+	    Older     		    4072	SUBMAT.sci
+	                  92	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Misc\
+	    New File  		   17168	anim_pen.bin
+	    Older     		    2718	anim_pen.sci
+	    New File  		   26950	AUTOMAT.bin
+	    Older     		    6820	AUTOMAT.sci
+	    New File  		    7974	BACKLASH.bin
+	    Older     		    2269	BACKLASH.sci
+	    New File  		   21636	BOUNCE.bin
+	    Older     		    4410	BOUNCE.sci
+	    New File  		   20875	BOUNCEXY.bin
+	    Older     		    4305	BOUNCEXY.sci
+	    New File  		   11472	BPLATFORM.bin
+	    Older     		    2882	BPLATFORM.sci
+	    New File  		   15963	bplatform2.bin
+	    Older     		    2697	bplatform2.sci
+	    Older     		    1151	buildmacros.sce
+	    New File  		   22881	CBLOCK.bin
+	    Older     		    5788	CBLOCK.sci
+	    New File  		   23722	CBLOCK4.bin
+	    Older     		    6224	CBLOCK4.sci
+	    New File  		   12743	CONSTRAINT2_c.bin
+	    Older     		    3578	CONSTRAINT2_c.sci
+	    New File  		    8466	CONSTRAINT_c.bin
+	    Older     		    2352	CONSTRAINT_c.sci
+	    New File  		   13535	c_block.bin
+	    Older     		    3450	c_block.sci
+	    New File  		    9017	DEADBAND.bin
+	    Older     		    2509	DEADBAND.sci
+	    New File  		    6965	DEBUG.bin
+	    Older     		    2271	DEBUG.sci
+	    New File  		    2331	DEBUG_SCICOS.bin
+	    Older     		     844	DEBUG_SCICOS.sci
+	    New File  		    7403	DIFF_f.bin
+	    Older     		    1966	DIFF_f.sci
+	    New File  		   10377	DSUPER.bin
+	    Older     		    2780	DSUPER.sci
+	    New File  		    6854	EDGETRIGGER.bin
+	    Older     		    1935	EDGETRIGGER.sci
+	    New File  		   32466	EDGE_TRIGGER.bin
+	    Older     		    6894	EDGE_TRIGGER.sci
+	    New File  		   30962	ENDBLK.bin
+	    Older     		    6906	ENDBLK.sci
+	    New File  		    8949	expr2LaTeX.bin
+	    Older     		    3508	expr2LaTeX.sci
+	    New File  		   19742	Extract_Activation.bin
+	    Older     		    3934	Extract_Activation.sci
+	    New File  		   12479	fortran_block.bin
+	    Older     		    2994	fortran_block.sci
+	    New File  		    9115	func_block.bin
+	    Older     		    4217	func_block.sci
+	    New File  		   18601	generic_block.bin
+	    Older     		    4869	generic_block.sci
+	    New File  		   19629	generic_block2.bin
+	    Older     		    5105	generic_block2.sci
+	    New File  		   21938	generic_block3.bin
+	    Older     		    5666	generic_block3.sci
+	    New File  		    9138	HYSTHERESIS.bin
+	    Older     		    2545	HYSTHERESIS.sci
+	    New File  		    5203	IMPSPLIT_f.bin
+	    Older     		    1468	IMPSPLIT_f.sci
+	    New File  		    4125	lib
+	    New File  		   19869	LOGICAL_OP.bin
+	    Older     		    5242	LOGICAL_OP.sci
+	    New File  		   56301	MBLOCK.bin
+	    Older     		   17499	MBLOCK.sci
+	    New File  		    8825	MEMORY_f.bin
+	    Older     		    2444	MEMORY_f.sci
+	    New File  		   53867	MPBLOCK.bin
+	    Older     		   16839	MPBLOCK.sci
+	    New File  		    7653	m_sin.bin
+	    Older     		    2079	m_sin.sci
+	    New File  		    5961	PAL_f.bin
+	    Older     		    1628	PAL_f.sci
+	    New File  		   11629	PENDULUM_ANIM.bin
+	    Older     		    2959	PENDULUM_ANIM.sci
+	    New File  		    7805	RATELIMITER.bin
+	    Older     		    2188	RATELIMITER.sci
+	    New File  		   16748	RELATIONALOP.bin
+	    Older     		    4329	RELATIONALOP.sci
+	    New File  		   20596	scifunc_block.bin
+	    Older     		    6056	scifunc_block.sci
+	    New File  		   19900	scifunc_block_m.bin
+	    Older     		    4879	scifunc_block_m.sci
+	    New File  		    3892	SPLIT_f.bin
+	    Older     		    1368	SPLIT_f.sci
+	    New File  		   11941	SSPInputConnector.bin
+	    Older     		    2512	SSPInputConnector.sci
+	    New File  		   14396	SSPOutputConnector.bin
+	    Older     		    3053	SSPOutputConnector.sci
+	    New File  		    6572	SUPER_f.bin
+	    Older     		    1869	SUPER_f.sci
+	    New File  		   12457	TEXT_f.bin
+	    Older     		    3701	TEXT_f.sci
+	                  60	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\NonLinear\
+	    New File  		    3845	ABSBLK_f.bin
+	    Older     		    1299	ABSBLK_f.sci
+	    New File  		    7346	ABS_VALUE.bin
+	    Older     		    2158	ABS_VALUE.sci
+	    Older     		    1161	buildmacros.sce
+	    New File  		    3784	COSBLK_f.bin
+	    Older     		    1274	COSBLK_f.sci
+	    New File  		   14627	DLRADAPT_f.bin
+	    Older     		    3298	DLRADAPT_f.sci
+	    New File  		    6921	EXPBLK_f.bin
+	    Older     		    2022	EXPBLK_f.sci
+	    New File  		    8489	EXPBLK_m.bin
+	    Older     		    2391	EXPBLK_m.sci
+	    New File  		   56349	EXPRESSION.bin
+	    Older     		   15037	EXPRESSION.sci
+	    New File  		    4101	FSV_f.bin
+	    Older     		    1381	FSV_f.sci
+	    New File  		   11436	INTRP2BLK_f.bin
+	    Older     		    2489	INTRP2BLK_f.sci
+	    New File  		    8687	INTRPLBLK_f.bin
+	    Older     		    2243	INTRPLBLK_f.sci
+	    New File  		    7149	INVBLK.bin
+	    Older     		    2273	INVBLK.sci
+	    New File  		    3877	INVBLK_f.bin
+	    Older     		    1297	INVBLK_f.sci
+	    New File  		    2574	lib
+	    New File  		    7080	LOGBLK_f.bin
+	    Older     		    2115	LOGBLK_f.sci
+	    New File  		   21760	LOOKUP2D.bin
+	    Older     		    5626	LOOKUP2D.sci
+	    New File  		  217139	LOOKUP_c.bin
+	    Older     		   43630	LOOKUP_c.sci
+	    New File  		    8905	LOOKUP_f.bin
+	    Older     		    2207	LOOKUP_f.sci
+	    New File  		   10935	MAXMIN.bin
+	    Older     		    3159	MAXMIN.sci
+	    New File  		    4137	MAX_f.bin
+	    Older     		    1321	MAX_f.sci
+	    New File  		    4205	MIN_f.bin
+	    Older     		    1329	MIN_f.sci
+	    New File  		    8283	POWBLK_f.bin
+	    Older     		    2390	POWBLK_f.sci
+	    New File  		   11793	PRODUCT.bin
+	    Older     		    3335	PRODUCT.sci
+	    New File  		    3934	PROD_f.bin
+	    Older     		    1279	PROD_f.sci
+	    New File  		    8409	QUANT_f.bin
+	    Older     		    2430	QUANT_f.sci
+	    New File  		    9018	SATURATION.bin
+	    Older     		    2510	SATURATION.sci
+	    New File  		    8861	SAT_f.bin
+	    Older     		    2304	SAT_f.sci
+	    New File  		    7338	SIGNUM.bin
+	    Older     		    2149	SIGNUM.sci
+	    New File  		    3789	SINBLK_f.bin
+	    Older     		    1282	SINBLK_f.sci
+	    New File  		    4155	TANBLK_f.bin
+	    Older     		    1332	TANBLK_f.sci
+	    New File  		    9029	TrigFun.bin
+	    Older     		    2784	TrigFun.sci
+	                  87	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\PDE\
+	  *EXTRA File 		    1093	meth.xml
+	    New File  		    2330	addfv.bin
+	    Older     		    1004	addfv.sci
+	    New File  		    3964	addf_mat.bin
+	    Older     		    1582	addf_mat.sci
+	    New File  		    3814	arbre_decision.bin
+	    Older     		    1780	arbre_decision.sci
+	    New File  		    5032	assemb.bin
+	    Older     		    2433	assemb.sci
+	    Older     		   12455	assemblage_FE1D.sce
+	    Older     		    1191	buildmacros.sce
+	    New File  		   50942	cb_IHM_EDP.bin
+	    Older     		   12718	cb_IHM_EDP.sci
+	    New File  		    8874	cformatlinedp.bin
+	    Older     		    2041	cformatlinedp.sci
+	    New File  		    2371	CFORTREDP.bin
+	    Older     		    1157	CFORTREDP.sci
+	    New File  		   28599	code_generation.bin
+	    Older     		    7336	code_generation.sci
+	    New File  		   11215	coef_FEM1d.bin
+	    Older     		    3960	coef_FEM1d.sci
+	    New File  		   21405	Disc2_5_FVM1d.bin
+	    Older     		    4867	Disc2_5_FVM1d.sci
+	    New File  		    5342	Disc_diff_oper2.bin
+	    Older     		    1898	Disc_diff_oper2.sci
+	    New File  		    7738	Disc_diff_oper45.bin
+	    Older     		    2365	Disc_diff_oper45.sci
+	    New File  		   15967	elemoper.bin
+	    Older     		    4699	elemoper.sci
+	    New File  		    5786	eval_pts_df.bin
+	    Older     		    2193	eval_pts_df.sci
+	    New File  		    8893	eval_pts_EF.bin
+	    Older     		    3014	eval_pts_EF.sci
+	    New File  		    5786	eval_pts_vf.bin
+	    Older     		    2194	eval_pts_vf.sci
+	    New File  		   28679	extraction_infos.bin
+	    Older     		    9835	extraction_infos.sci
+	    New File  		    8142	formkf.bin
+	    Older     		    3328	formkf.sci
+	    New File  		   62417	gen_code_FDM.bin
+	    Older     		   12326	gen_code_FDM.sci
+	    New File  		   33175	gen_code_FEM.bin
+	    Older     		    7718	gen_code_FEM.sci
+	    New File  		   54138	gen_code_FVM.bin
+	    Older     		   10038	gen_code_FVM.sci
+	    New File  		  181451	IHM_EDP.bin
+	    Older     		   38996	IHM_EDP.sci
+	    New File  		   20981	lecture_xml.bin
+	    Older     		    6524	lecture_xml.sci
+	    New File  		    3876	lib
+	    New File  		   13387	maillage_FE1D.bin
+	    Older     		    5545	maillage_FE1D.sci
+	    New File  		    2020	msprintfv.bin
+	    Older     		     967	msprintfv.sci
+	    New File  		    2345	mulf3.bin
+	    Older     		     984	mulf3.sci
+	    New File  		    2341	mulf3v.bin
+	    Older     		     992	mulf3v.sci
+	    New File  		    4775	mulfstring.bin
+	    Older     		    1480	mulfstring.sci
+	    New File  		    2530	mulfv.bin
+	    Older     		    1008	mulfv.sci
+	    New File  		    4351	mulf_string.bin
+	    Older     		    1607	mulf_string.sci
+	    New File  		    5636	multMatVect.bin
+	    Older     		    1800	multMatVect.sci
+	    New File  		    4226	multVectStr.bin
+	    Older     		    1553	multVectStr.sci
+	    New File  		   15136	nombre_etats.bin
+	    Older     		    4554	nombre_etats.sci
+	    New File  		   30027	PDE.bin
+	    Older     		    8006	PDE.sci
+	    New File  		    8040	setint.bin
+	    Older     		    2300	setint.sci
+	    New File  		   24216	setvalue_IHM_EDP.bin
+	    Older     		    7839	setvalue_IHM_EDP.sci
+	    New File  		   24116	setvalue_IHM_PDE.bin
+	    Older     		    7783	setvalue_IHM_PDE.sci
+	    New File  		   10847	shape.bin
+	    Older     		    2820	shape.sci
+	    New File  		    2388	subfv.bin
+	    Older     		    1004	subfv.sci
+	    New File  		    4039	subf_mat.bin
+	    Older     		    1600	subf_mat.sci
+	    New File  		   18224	translate.bin
+	    Older     		    6684	translate.sci
+	    New File  		    3625	unimesh1D.bin
+	    Older     		    1643	unimesh1D.sci
+	                  48	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Sinks\
+	    New File  		   18094	AFFICH_m.bin
+	    Older     		    4519	AFFICH_m.sci
+	    New File  		   10596	BARXY.bin
+	    Older     		    2500	BARXY.sci
+	    New File  		    5843	BARXY_sim.bin
+	    Older     		    1486	BARXY_sim.sci
+	    Older     		    1155	buildmacros.sce
+	    New File  		   20855	CANIMXY.bin
+	    Older     		    4873	CANIMXY.sci
+	    New File  		   26368	CANIMXY3D.bin
+	    Older     		    5769	CANIMXY3D.sci
+	    New File  		   17058	CEVENTSCOPE.bin
+	    Older     		    4272	CEVENTSCOPE.sci
+	    New File  		   19649	CFSCOPE.bin
+	    Older     		    4802	CFSCOPE.sci
+	    New File  		   22062	CLKOUTV_f.bin
+	    Older     		    4266	CLKOUTV_f.sci
+	    New File  		    7077	CLKOUT_f.bin
+	    Older     		    2106	CLKOUT_f.sci
+	    New File  		   12905	CMAT3D.bin
+	    Older     		    3233	CMAT3D.sci
+	    New File  		   11503	CMATVIEW.bin
+	    Older     		    2948	CMATVIEW.sci
+	    New File  		   27764	CMSCOPE.bin
+	    Older     		    6294	CMSCOPE.sci
+	    New File  		   20284	CSCOPE.bin
+	    Older     		    4825	CSCOPE.sci
+	    New File  		   20764	CSCOPXY.bin
+	    Older     		    4808	CSCOPXY.sci
+	    New File  		   26028	CSCOPXY3D.bin
+	    Older     		    5716	CSCOPXY3D.sci
+	    New File  		    2076	lib
+	    New File  		    9197	OUTIMPL_f.bin
+	    Older     		    2688	OUTIMPL_f.sci
+	    New File  		    8012	OUT_f.bin
+	    Older     		    2401	OUT_f.sci
+	    New File  		   29787	SCALE_CMSCOPE.bin
+	    Older     		    6909	SCALE_CMSCOPE.sci
+	    New File  		   21539	SCALE_CSCOPE.bin
+	    Older     		    5295	SCALE_CSCOPE.sci
+	    New File  		   13032	TOWS_c.bin
+	    Older     		    3847	TOWS_c.sci
+	    New File  		    3879	TRASH_f.bin
+	    Older     		    1298	TRASH_f.sci
+	    New File  		   14379	WRITEAU_f.bin
+	    Older     		    3637	WRITEAU_f.sci
+	    New File  		   21790	WRITEC_f.bin
+	    Older     		    5656	WRITEC_f.sci
+	                  70	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Sources\
+	    Older     		    1157	buildmacros.sce
+	    New File  		    7877	CLKINV_f.bin
+	    Older     		    2378	CLKINV_f.sci
+	    New File  		    7088	CLKIN_f.bin
+	    Older     		    2106	CLKIN_f.sci
+	    New File  		   21861	CLOCK_c.bin
+	    Older     		    4432	CLOCK_c.sci
+	    New File  		   20738	CLOCK_f.bin
+	    Older     		    4048	CLOCK_f.sci
+	    New File  		    7630	CONST.bin
+	    Older     		    2208	CONST.sci
+	    New File  		    7014	CONST_f.bin
+	    Older     		    2043	CONST_f.sci
+	    New File  		   12794	CONST_m.bin
+	    Older     		    3586	CONST_m.sci
+	    New File  		   10413	Counter.bin
+	    Older     		    2908	Counter.sci
+	    New File  		  206858	CURVE_c.bin
+	    Older     		   42369	CURVE_c.sci
+	    New File  		   12830	CURV_f.bin
+	    Older     		    2780	CURV_f.sci
+	    New File  		   37350	FROMWSB.bin
+	    Older     		    8208	FROMWSB.sci
+	    New File  		   13160	FROMWS_c.bin
+	    Older     		    3461	FROMWS_c.sci
+	    New File  		    9986	GENSIN_f.bin
+	    Older     		    2728	GENSIN_f.sci
+	    New File  		    7429	GENSQR_f.bin
+	    Older     		    2190	GENSQR_f.sci
+	    New File  		   59983	GEN_SQR.bin
+	    Older     		   12368	GEN_SQR.sci
+	    New File  		    4901	Ground_g.bin
+	    Older     		    1449	Ground_g.sci
+	    New File  		    9243	INIMPL_f.bin
+	    Older     		    2682	INIMPL_f.sci
+	    New File  		   10909	IN_f.bin
+	    Older     		    3006	IN_f.sci
+	    New File  		    2984	lib
+	    New File  		    9164	Modulo_Count.bin
+	    Older     		    2800	Modulo_Count.sci
+	    New File  		   52110	PULSE_SC.bin
+	    Older     		   10766	PULSE_SC.sci
+	    New File  		    8761	RAMP.bin
+	    Older     		    2509	RAMP.sci
+	    New File  		   11754	RAND_f.bin
+	    Older     		    2864	RAND_f.sci
+	    New File  		   17118	RAND_m.bin
+	    Older     		    3865	RAND_m.sci
+	    New File  		   19054	READAU_f.bin
+	    Older     		    5036	READAU_f.sci
+	    New File  		   32218	READC_f.bin
+	    Older     		    8715	READC_f.sci
+	    New File  		   27196	RFILE_f.bin
+	    Older     		    7562	RFILE_f.sci
+	    New File  		    9110	SampleCLK.bin
+	    Older     		    2793	SampleCLK.sci
+	    New File  		    3951	SAWTOOTH_f.bin
+	    Older     		    1309	SAWTOOTH_f.sci
+	    New File  		   77610	Sigbuilder.bin
+	    Older     		   14832	Sigbuilder.sci
+	    New File  		   11828	STEP.bin
+	    Older     		    3051	STEP.sci
+	    New File  		   25742	STEP_FUNCTION.bin
+	    Older     		    5945	STEP_FUNCTION.sci
+	    New File  		    3537	TIME_f.bin
+	    Older     		    1237	TIME_f.sci
+	    New File  		    7513	TKSCALE.bin
+	    Older     		    2064	TKSCALE.sci
+	    New File  		   13104	tkscaleblk.bin
+	    Older     		    3728	tkscaleblk.sci
+	                  10	C:\Program Files\scilab-2026.0.1\modules\scicos_blocks\macros\Threshold\
+	    Older     		    1161	buildmacros.sce
+	    New File  		   12680	GENERAL_f.bin
+	    Older     		    2818	GENERAL_f.sci
+	    New File  		     454	lib
+	    New File  		    4734	NEGTOPOS_f.bin
+	    Older     		    1397	NEGTOPOS_f.sci
+	    New File  		    5140	POSTONEG_f.bin
+	    Older     		    1426	POSTONEG_f.sci
+	    New File  		    9313	ZCROSS_f.bin
+	    Older     		    2383	ZCROSS_f.sci
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :        14         0        14         0         0         1
+   Files :       678       678         0         0         0         1
+   Bytes :    6.56 m    6.56 m         0         0         0     1.0 k
+   Times :   0:00:02   0:00:02                       0:00:00   0:00:00
+
+
+   Speed :           2,810,721 Bytes/sec.
+   Speed :             160.831 MegaBytes/min.
+   Ended : Monday, March 23, 2026 9:34:02 PM
+
