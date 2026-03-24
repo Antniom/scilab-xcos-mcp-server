@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1 \
     XCOS_VALIDATION_MODE=subprocess
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends scilab xvfb libgl1-mesa-glx libxtst6 libxi6 && \
+    apt-get install -y --no-install-recommends scilab xvfb xauth libgl1-mesa-glx libxtst6 libxi6 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -u 1000 user

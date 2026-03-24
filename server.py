@@ -540,9 +540,10 @@ os.makedirs(SESSION_OUTPUT_DIR, exist_ok=True)
 
 XCOS_BLOCK_XPATH = (
     "//BasicBlock | //BigSom | //SplitBlock | //TextBlock | "
-    "//EventInBlock | //EventOutBlock | //ExplicitInBlock | //ExplicitOutBlock"
+    "//EventInBlock | //EventOutBlock | //ExplicitInBlock | //ExplicitOutBlock | "
+    "//ImplicitInBlock | //ImplicitOutBlock"
 )
-XCOS_LINK_XPATH = "//BasicLink | //ExplicitLink | //CommandControlLink"
+XCOS_LINK_XPATH = "//BasicLink | //ExplicitLink | //CommandControlLink | //ImplicitLink"
 
 
 def make_text_response(text: str):
@@ -1219,7 +1220,7 @@ async def xcos_get_block_catalogue_widget(category: str = None):
         with open(index_path, "r", encoding="utf-8") as f:
             try:
                 data = json.load(f)
-                blocks = data.get("blocks", [])
+                blocks = data.get("block_files", [])
             except Exception:
                 pass
                 
@@ -1277,7 +1278,7 @@ async def xcos_get_topology_widget(session_id: str):
         
     ports_map = {}
     for bid, bdata in block_map.items():
-        block_nodes = tree.xpath(f"//*[@id='{{bid}}']")
+        block_nodes = tree.xpath(f"//*[@id='{bid}']")
         if not block_nodes: continue
         block = block_nodes[0]
         for p in block.xpath(".//ExplicitInputPort | .//EventInPort | .//ImplicitInputPort"):
@@ -1306,8 +1307,8 @@ async def xcos_get_topology_widget(session_id: str):
     
     for idx, (bid, bdata) in enumerate(block_map.items()):
         b_coords[bid] = (curr_x, curr_y)
-        svg_nodes.append(f'<rect x="{{curr_x}}" y="{{curr_y}}" width="{{node_w}}" height="{{node_h}}" fill="#f8f9fa" stroke="#343a40" rx="4" />')
-        svg_nodes.append(f'<text x="{{curr_x + 6}}" y="{{curr_y + 24}}" font-family="sans-serif" font-size="12" fill="#000">{{bdata["name"]}}</text>')
+        svg_nodes.append(f'<rect x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" fill="#f8f9fa" stroke="#343a40" rx="4" />')
+        svg_nodes.append(f'<text x="{curr_x + 6}" y="{curr_y + 24}" font-family="sans-serif" font-size="12" fill="#000">{bdata["name"]}</text>')
         curr_y += pad_y
         if idx > 0 and idx % 10 == 0:
             curr_y = 20
@@ -1328,7 +1329,7 @@ async def xcos_get_topology_widget(session_id: str):
             src_name = block_map[src_info["block_id"]]["name"] if src_info else "?"
             dst_name = block_map[dst_info["block_id"]]["name"] if dst_info else "?"
             
-            link_strings.append(f"{{src_name}} &rarr; {{dst_name}}")
+            link_strings.append(f"{src_name} &rarr; {dst_name}")
             
             if src_info and dst_info:
                 s_coords = b_coords.get(src_info["block_id"])
@@ -1338,9 +1339,9 @@ async def xcos_get_topology_widget(session_id: str):
                     sy = s_coords[1] + (node_h/2)
                     dx = d_coords[0]
                     dy = d_coords[1] + (node_h/2)
-                    svg_edges.append(f'<path d="M {{sx}} {{sy}} L {{dx}} {{dy}}" stroke="#007bff" stroke-width="2" fill="none" marker-end="url(#arrow)" />')
+                    svg_edges.append(f'<path d="M {sx} {sy} L {dx} {dy}" stroke="#007bff" stroke-width="2" fill="none" marker-end="url(#arrow)" />')
             
-    html += "<strong>Blocks:</strong>\\n"
+    html += "<strong>Blocks:</strong>\n"
     for bid, bdata in block_map.items():
         unconnected = False
         for p in bdata["in_ports"] + bdata["out_ports"]:
@@ -1348,13 +1349,13 @@ async def xcos_get_topology_widget(session_id: str):
                 unconnected = True
         
         err_badge = '<span class="xcos-topo-err">[!] Unconnected ports</span> ' if unconnected else ''
-        html += f" &bull; {{err_badge}}{{bdata['name']}} (ID: {{bid}})\\n"
+        html += f" &bull; {err_badge}{bdata['name']} (ID: {bid})\n"
         
-    html += "\\n<strong>Links:</strong>\\n"
+    html += "\n<strong>Links:</strong>\n"
     if not link_strings:
-        html += " (No links)\\n"
+        html += " (No links)\n"
     for ls in link_strings:
-        html += f"  {{ls}}\\n"
+        html += f"  {ls}\n"
         
     max_x = curr_x + node_w + 20
     max_y = curr_y + 20
@@ -1364,14 +1365,14 @@ async def xcos_get_topology_widget(session_id: str):
     
     html += f'''
     <div class="xcos-svg-container">
-    <svg width="100%" height="{{max_y}}" viewBox="0 0 {{max_x}} {{max_y}}" xmlns="http://www.w3.org/2000/svg">
+    <svg width="100%" height="{max_y}" viewBox="0 0 {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#007bff" />
         </marker>
       </defs>
-      {{edges_str}}
-      {{nodes_str}}
+      {edges_str}
+      {nodes_str}
     </svg>
     </div>
     </div>
