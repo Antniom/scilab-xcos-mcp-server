@@ -1096,7 +1096,7 @@ async def xcos_get_status_widget():
         </div>
     </div>
     """
-    return make_json_response({{"html": html.strip()}})
+    return make_json_response({"html": html.strip()})
 
 async def xcos_get_workflow_widget(workflow_id: str = None):
     html = """
@@ -1365,7 +1365,7 @@ async def xcos_get_topology_widget(session_id: str):
     </div>
     </div>
     '''
-    return make_json_response({{"html": html.strip()}})
+    return make_json_response({"html": html.strip()})
 
 
 async def xcos_submit_phase(
