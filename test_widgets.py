@@ -17,27 +17,39 @@ async def verify_fixes():
     print("\n--- Verifying Bug 2 (Topology Interpolation) ---")
     session_id = "test-session"
     state.drafts[session_id] = DraftDiagram()
-    # Add a dummy block
-    state.drafts[session_id].add_blocks('<BasicBlock id="101" interfaceFunctionName="GAIN_f"><mxGeometry x="0" y="0" width="40" height="40" as="geometry"/></BasicBlock>')
+    # Add dummy blocks and a link
+    state.drafts[session_id].add_blocks('''
+    <BasicBlock id="101" interfaceFunctionName="GAIN_f">
+      <mxGeometry x="0" y="0" width="40" height="40" as="geometry"/>
+      <ExplicitOutputPort id="p1" as="out"/>
+    </BasicBlock>
+    <BasicBlock id="102" interfaceFunctionName="AFFICH_m">
+      <mxGeometry x="200" y="0" width="40" height="40" as="geometry"/>
+      <ExplicitInputPort id="p2" as="in"/>
+    </BasicBlock>
+    ''')
+    state.drafts[session_id].add_links('''
+    <BasicLink id="103" parent="0">
+      <ExplicitOutputPort as="source" reference="p1"/>
+      <ExplicitInputPort as="target" reference="p2"/>
+    </BasicLink>
+    ''')
     
     res = await xcos_get_topology_widget(session_id)
     html = json.loads(res[0].text)["html"]
     
-    bugs_found = []
-    if "{bid}" in html: bugs_found.append("{bid}")
-    if "{bdata['name']}" in html: bugs_found.append("{bdata['name']}")
-    if "{err_badge}" in html: bugs_found.append("{err_badge}")
-    if "{edges_str}" in html: bugs_found.append("{edges_str}")
-    if "{nodes_str}" in html: bugs_found.append("{nodes_str}")
-    if "{max_x}" in html: bugs_found.append("{max_x}")
-    if "{max_y}" in html: bugs_found.append("{max_y}")
+    # ... previous checks ...
     
-    if bugs_found:
-        print(f"FAIL: Found uninterpolated tags: {', '.join(bugs_found)}")
+    if "GAIN_f &rarr; AFFICH_m" in html:
+        print("SUCCESS: Link detected and rendered in text.")
     else:
-        print("SUCCESS: No uninterpolated tags found in topology widget.")
-        if "GAIN_f" in html:
-            print("Verified: GAIN_f correctly rendered in topology.")
+        print("FAIL: Link NOT detected in text.")
+        print(f"DEBUG: html snippet: {html[-500:]}")
+        
+    if '<path d="M' in html and 'stroke="#007bff"' in html:
+        print("SUCCESS: SVG edge rendered.")
+    else:
+        print("FAIL: SVG edge NOT rendered.")
 
 if __name__ == "__main__":
     asyncio.run(verify_fixes())

@@ -773,7 +773,11 @@ async def run_subprocess_verification(xml_content: str, auto_fixed: bool):
         # Standard Scilab binary: ensure -nb -f are present
         if "-f" not in command:
             if os.name != "nt":
-                command.extend(["-nw", "-nb", "-f", verify_script_path])
+                # Ensure we don't use -nw with scilab-cli
+                if "scilab-cli" in lower_bin:
+                    command.extend(["-nb", "-f", verify_script_path])
+                else:
+                    command.extend(["-nw", "-nb", "-f", verify_script_path])
             else:
                 command.extend(["-nb", "-f", verify_script_path])
 
@@ -1064,7 +1068,11 @@ async def xcos_get_status_widget():
         lower_bin = scilab_bin.lower()
         if not lower_bin.endswith(".bat") and "-f" not in command:
             if os.name != "nt":
-                command.extend(["-nw", "-nb", "-f", script_path])
+                # Ensure we don't use -nw with scilab-cli
+                if "scilab-cli" in lower_bin:
+                    command.extend(["-nb", "-f", script_path])
+                else:
+                    command.extend(["-nw", "-nb", "-f", script_path])
             else:
                 command.extend(["-nb", "-f", script_path])
         elif lower_bin.endswith(".bat"):
@@ -1281,14 +1289,18 @@ async def xcos_get_topology_widget(session_id: str):
         block_nodes = tree.xpath(f"//*[@id='{bid}']")
         if not block_nodes: continue
         block = block_nodes[0]
-        for p in block.xpath(".//ExplicitInputPort | .//EventInPort | .//ImplicitInputPort"):
+        # Harvest all port types: Explicit/Implicit/Event, Input/Output
+        # We look for children with 'id' that might be endpoints for links
+        for p in block.xpath(".//*[contains(local-name(), 'Port')]"):
             pid = p.get("id")
-            ports_map[pid] = {"block_id": bid, "kind": "in"}
-            bdata["in_ports"].append(pid)
-        for p in block.xpath(".//ExplicitOutputPort | .//EventOutPort | .//ImplicitOutputPort"):
-            pid = p.get("id")
-            ports_map[pid] = {"block_id": bid, "kind": "out"}
-            bdata["out_ports"].append(pid)
+            if pid:
+                tag = p.tag
+                p_type = "in" if "InputPort" in tag or "InPort" in tag else "out"
+                ports_map[pid] = {"block_id": bid, "type": p_type}
+                if p_type == "in":
+                    bdata["in_ports"].append(pid)
+                else:
+                    bdata["out_ports"].append(pid)
             
     connected_ports = set()
     link_strings = []
@@ -1315,8 +1327,9 @@ async def xcos_get_topology_widget(session_id: str):
             curr_x += pad_x
 
     for l in links:
-        src_ref = l.xpath("./SourcePort/@reference")
-        dst_ref = l.xpath("./DestinationPort/@reference")
+        # Xcos XML uses as="source" and as="target" for link endpoints
+        src_ref = l.xpath("./*[@as='source']/@reference")
+        dst_ref = l.xpath("./*[@as='target']/@reference")
         if src_ref and dst_ref:
             src_id = src_ref[0]
             dst_id = dst_ref[0]
