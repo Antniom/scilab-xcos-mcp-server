@@ -617,9 +617,7 @@ def write_session_snapshot(session_id: str):
 
 
 def load_ui_html() -> str:
-    ui_path = os.path.join(UI_DIR, "workflow-dashboard.html")
-    with open(ui_path, "r", encoding="utf-8") as f:
-        return f.read()
+    return "<html><body><h1>Scilab Xcos MCP Server</h1><p>Server is running. Please connect via MCP at /mcp or check /healthz.</p></body></html>"
 
 
 def detect_validation_mode() -> str:
