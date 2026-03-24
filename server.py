@@ -1739,6 +1739,7 @@ async def http_healthz(_: Request) -> Response:
     return http_json(
         {
             "status": "ok",
+            "version": "1.0.1",
             "validator_mode": detect_validation_mode(),
             "workflow_count": len(state.workflows),
             "draft_count": len(state.drafts),
