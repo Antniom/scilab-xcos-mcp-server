@@ -12,7 +12,7 @@
     "Larger than standard: 60x60 to accommodate AND symbol"
   ],
   "name": "ANDLOG_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/ANDLOG_f.sci",
+  "sourceFile": "data/macros/Events/ANDLOG_f.sci",
   "commonUses": [
     "Combining two event conditions",
     "SuperBlock internal logic",

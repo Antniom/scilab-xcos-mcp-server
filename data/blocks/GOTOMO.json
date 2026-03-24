@@ -12,5 +12,5 @@
   ],
   "name": "GOTOMO",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/GOTOMO.sci"
+  "sourceFile": "data/macros/Branching/GOTOMO.sci"
 }

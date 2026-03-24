@@ -13,5 +13,5 @@
   ],
   "name": "OUT_f",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/OUT_f.sci"
+  "sourceFile": "data/macros/Sinks/OUT_f.sci"
 }

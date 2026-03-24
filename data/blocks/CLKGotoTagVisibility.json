@@ -21,7 +21,7 @@
     "blockType='c' (continuous) despite dealing with event tags"
   ],
   "name": "CLKGotoTagVisibility",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/CLKGotoTagVisibility.sci",
+  "sourceFile": "data/macros/Branching/CLKGotoTagVisibility.sci",
   "commonUses": [
     "Limiting goto tag scope to specific subsystems",
     "Resolving tag name conflicts between subsystems",

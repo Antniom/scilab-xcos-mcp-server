@@ -11,5 +11,5 @@
   ],
   "name": "HYSTHERESIS",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/HYSTHERESIS.sci"
+  "sourceFile": "data/macros/Misc/HYSTHERESIS.sci"
 }

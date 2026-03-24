@@ -13,5 +13,5 @@
     "Matrix signal delay",
     "Modern unit delay implementation"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DOLLAR_m.sci"
+  "sourceFile": "data/macros/Linear/DOLLAR_m.sci"
 }

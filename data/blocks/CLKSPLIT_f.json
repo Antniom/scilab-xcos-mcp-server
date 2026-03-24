@@ -12,7 +12,7 @@
     "Splits event/clock signals (no explicit data ports)"
   ],
   "name": "CLKSPLIT_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/CLKSPLIT_f.sci",
+  "sourceFile": "data/macros/Events/CLKSPLIT_f.sci",
   "commonUses": [
     "Forking clock signals to multiple blocks",
     "Creating feedback loops in event-driven systems"

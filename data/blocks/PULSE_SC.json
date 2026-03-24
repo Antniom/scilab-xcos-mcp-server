@@ -12,5 +12,5 @@
   ],
   "name": "PULSE_SC",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/PULSE_SC.sci"
+  "sourceFile": "data/macros/Sources/PULSE_SC.sci"
 }

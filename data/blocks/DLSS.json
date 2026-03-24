@@ -15,5 +15,5 @@
     "Discrete-time linear controller",
     "Digital filter implementation"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DLSS.sci"
+  "sourceFile": "data/macros/Linear/DLSS.sci"
 }

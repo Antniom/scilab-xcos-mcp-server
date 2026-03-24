@@ -29,5 +29,5 @@
     "Scientific data 3D plotting",
     "Real-time 3D data monitoring"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CMAT3D.sci"
+  "sourceFile": "data/macros/Sinks/CMAT3D.sci"
 }

@@ -11,5 +11,5 @@
   ],
   "name": "MAX_f",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/MAX_f.sci"
+  "sourceFile": "data/macros/NonLinear/MAX_f.sci"
 }

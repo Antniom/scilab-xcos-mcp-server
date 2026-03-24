@@ -16,5 +16,5 @@
   "commonUses": [
     "Fixed time delay for continuous signals"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DELAY_f.sci"
+  "sourceFile": "data/macros/Linear/DELAY_f.sci"
 }

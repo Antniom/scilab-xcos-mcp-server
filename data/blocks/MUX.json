@@ -26,5 +26,5 @@
     "Preparing data for matrix operations",
     "Connecting to blocks expecting vector inputs"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/MUX.sci"
+  "sourceFile": "data/macros/Branching/MUX.sci"
 }

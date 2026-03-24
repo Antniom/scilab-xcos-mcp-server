@@ -12,5 +12,5 @@
   ],
   "name": "SELF_SWITCH",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/SELF_SWITCH.sci"
+  "sourceFile": "data/macros/Branching/SELF_SWITCH.sci"
 }

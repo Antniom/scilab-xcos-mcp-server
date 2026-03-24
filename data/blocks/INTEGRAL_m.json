@@ -25,5 +25,5 @@
     "Controller integrators (PID)",
     "Cumulative sums"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/INTEGRAL_m.sci"
+  "sourceFile": "data/macros/Linear/INTEGRAL_m.sci"
 }

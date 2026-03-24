@@ -19,7 +19,7 @@
     "9 parameters vs CSCOPE's 10"
   ],
   "name": "CFSCOPE",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CFSCOPE.sci",
+  "sourceFile": "data/macros/Sinks/CFSCOPE.sci",
   "commonUses": [
     "Event data logging",
     "Floating signal monitor",

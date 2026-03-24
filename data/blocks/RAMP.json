@@ -11,5 +11,5 @@
   ],
   "name": "RAMP",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/RAMP.sci"
+  "sourceFile": "data/macros/Sources/RAMP.sci"
 }

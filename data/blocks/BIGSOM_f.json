@@ -19,7 +19,7 @@
     "Single-input negation reuses the same block family with a 1x1 sign vector"
   ],
   "name": "BIGSOM_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/BIGSOM_f.sci",
+  "sourceFile": "data/macros/Linear/BIGSOM_f.sci",
   "commonUses": [
     "Summing multiple signals",
     "Single-input negation in ODE feedback loops",

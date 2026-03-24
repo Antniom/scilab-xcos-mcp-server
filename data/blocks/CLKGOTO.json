@@ -23,7 +23,7 @@
     "Control port has initialState=0.0 (standard for control ports)"
   ],
   "name": "CLKGOTO",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/CLKGOTO.sci",
+  "sourceFile": "data/macros/Branching/CLKGOTO.sci",
   "commonUses": [
     "Sending event signals across long distances in diagram",
     "Event signal distribution from central source",

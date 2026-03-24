@@ -17,7 +17,7 @@
     "Source macro defines one input and multiple outputs rather than a standard rectangular block body"
   ],
   "name": "SPLIT_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/SPLIT_f.sci",
+  "sourceFile": "data/macros/Misc/SPLIT_f.sci",
   "commonUses": [
     "Forking one signal to multiple consumers",
     "Breaking illegal direct fan-out before verification",

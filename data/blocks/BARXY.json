@@ -18,7 +18,7 @@
     "dataLines=-1 allows variable-size inputs"
   ],
   "name": "BARXY",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/BARXY.sci",
+  "sourceFile": "data/macros/Sinks/BARXY.sci",
   "commonUses": [
     "XY bar chart visualization",
     "2D histogram display",

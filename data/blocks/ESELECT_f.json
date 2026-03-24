@@ -16,5 +16,5 @@
     "Conditional event routing",
     "Finite State Machine control"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/ESELECT_f.sci"
+  "sourceFile": "data/macros/Branching/ESELECT_f.sci"
 }

@@ -16,7 +16,7 @@
     "Simple 1-element dState for position tracking"
   ],
   "name": "BPLATFORM",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BPLATFORM.sci",
+  "sourceFile": "data/macros/Misc/BPLATFORM.sci",
   "commonUses": [
     "Pong-style game displays",
     "Platform visualization",

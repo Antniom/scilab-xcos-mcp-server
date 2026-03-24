@@ -16,5 +16,5 @@
   "commonUses": [
     "De-multiplexing in older diagrams"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/DEMUX_f.sci"
+  "sourceFile": "data/macros/Branching/DEMUX_f.sci"
 }

@@ -11,5 +11,5 @@
   ],
   "name": "VARIABLE_DELAY",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/VARIABLE_DELAY.sci"
+  "sourceFile": "data/macros/Linear/VARIABLE_DELAY.sci"
 }

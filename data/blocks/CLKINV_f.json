@@ -18,7 +18,7 @@
     "exprs value '1' is stored as string in ScilabString"
   ],
   "name": "CLKINV_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/CLKINV_f.sci",
+  "sourceFile": "data/macros/Sources/CLKINV_f.sci",
   "commonUses": [
     "Receiving clock signals from external sources",
     "Synchronizing multiple event-driven blocks",

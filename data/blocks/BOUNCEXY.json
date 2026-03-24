@@ -18,7 +18,7 @@
     "blockType='d' - discrete event-driven visualization"
   ],
   "name": "BOUNCEXY",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BOUNCEXY.sci",
+  "sourceFile": "data/macros/Misc/BOUNCEXY.sci",
   "commonUses": [
     "Visualizing BOUNCE block output",
     "XY scatter animation",

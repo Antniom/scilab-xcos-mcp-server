@@ -11,6 +11,6 @@
     "Non-standard width: 60.0"
   ],
   "name": "c_block",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/c_block.sci",
+  "sourceFile": "data/macros/Misc/c_block.sci",
   "commonUses": []
 }

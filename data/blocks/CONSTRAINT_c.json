@@ -25,5 +25,5 @@
     "Index reduction in physical models",
     "Algebraic loop resolution"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/CONSTRAINT_c.sci"
+  "sourceFile": "data/macros/Misc/CONSTRAINT_c.sci"
 }

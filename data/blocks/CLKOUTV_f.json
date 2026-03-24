@@ -13,7 +13,7 @@
     "Event output port for SuperBlocks"
   ],
   "name": "CLKOUTV_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CLKOUTV_f.sci",
+  "sourceFile": "data/macros/Sinks/CLKOUTV_f.sci",
   "commonUses": [
     "Exporting clock/event signals from a SuperBlock"
   ]

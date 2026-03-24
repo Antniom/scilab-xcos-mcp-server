@@ -13,7 +13,7 @@
     "Width is 60 (1.5x standard) to accommodate display area"
   ],
   "name": "AFFICH_m",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/AFFICH_m.sci",
+  "sourceFile": "data/macros/Sinks/AFFICH_m.sci",
   "commonUses": [
     "Real-time signal monitoring",
     "Debugging simulation values",

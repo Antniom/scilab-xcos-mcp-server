@@ -26,5 +26,5 @@
     "Loop iteration counting",
     "Event frequency counting"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/Counter.sci"
+  "sourceFile": "data/macros/Sources/Counter.sci"
 }

@@ -12,5 +12,5 @@
   ],
   "name": "WRITEC_f",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/WRITEC_f.sci"
+  "sourceFile": "data/macros/Sinks/WRITEC_f.sci"
 }

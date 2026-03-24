@@ -19,7 +19,7 @@
     "Uses sci_uint32 in objectsParameters (unlike BITCLEAR which uses sci_int32)"
   ],
   "name": "BITSET",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/BITSET.sci",
+  "sourceFile": "data/macros/IntegerOp/BITSET.sci",
   "commonUses": [
     "Setting flag bits in control systems",
     "Integer manipulation",

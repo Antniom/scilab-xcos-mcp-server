@@ -33,5 +33,5 @@
     "Oscilloscope-style display",
     "Signal monitoring with color differentiation"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CMSCOPE.sci"
+  "sourceFile": "data/macros/Sinks/CMSCOPE.sci"
 }

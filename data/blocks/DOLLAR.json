@@ -13,5 +13,5 @@
     "Feedback loops in discrete systems",
     "Simple delay"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DOLLAR.sci"
+  "sourceFile": "data/macros/Linear/DOLLAR.sci"
 }

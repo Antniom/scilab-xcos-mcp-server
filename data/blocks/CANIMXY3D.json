@@ -19,7 +19,7 @@
     "Complex parameter structure with space-delimited matrices in strings"
   ],
   "name": "CANIMXY3D",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CANIMXY3D.sci",
+  "sourceFile": "data/macros/Sinks/CANIMXY3D.sci",
   "commonUses": [
     "3D trajectory visualization",
     "Attractor animations (Lorenz, etc.)",

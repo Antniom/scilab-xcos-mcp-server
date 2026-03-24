@@ -20,7 +20,7 @@
     "Command port with initialState=-1.0 (event port signature)"
   ],
   "name": "CLKFROM",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/CLKFROM.sci",
+  "sourceFile": "data/macros/Branching/CLKFROM.sci",
   "commonUses": [
     "Event signal routing across long distances in diagram",
     "Connecting event signals across subsystem boundaries",

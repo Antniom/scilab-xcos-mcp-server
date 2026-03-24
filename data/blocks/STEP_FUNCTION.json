@@ -25,5 +25,5 @@
     "Control system validation",
     "Bang-bang control signals"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sources/STEP_FUNCTION.sci"
+  "sourceFile": "data/macros/Sources/STEP_FUNCTION.sci"
 }

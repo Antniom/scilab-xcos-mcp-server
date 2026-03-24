@@ -20,7 +20,7 @@
     "dependsOnT=1 but no time-dependent behavior visible"
   ],
   "name": "CLINDUMMY_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/CLINDUMMY_f.sci",
+  "sourceFile": "data/macros/Linear/CLINDUMMY_f.sci",
   "commonUses": [
     "Internal XCOS placeholder for clock synchronization",
     "Maintaining compatibility between continuous and event systems",

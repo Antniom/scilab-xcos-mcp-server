@@ -13,7 +13,7 @@
     "Models mechanical play/backlash phenomenon"
   ],
   "name": "BACKLASH",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BACKLASH.sci",
+  "sourceFile": "data/macros/Misc/BACKLASH.sci",
   "commonUses": [
     "Modeling gear backlash",
     "Mechanical play simulation",

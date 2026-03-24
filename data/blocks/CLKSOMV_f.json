@@ -13,7 +13,7 @@
     "Combines 3 event inputs into 1 output (OR logic)"
   ],
   "name": "CLKSOMV_f",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/CLKSOMV_f.sci",
+  "sourceFile": "data/macros/Events/CLKSOMV_f.sci",
   "commonUses": [
     "Merging multiple event sources to trigger a block"
   ]

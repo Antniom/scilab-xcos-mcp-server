@@ -13,5 +13,5 @@
   ],
   "name": "ISELECT_m",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/ISELECT_m.sci"
+  "sourceFile": "data/macros/Branching/ISELECT_m.sci"
 }

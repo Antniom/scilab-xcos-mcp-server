@@ -12,5 +12,5 @@
   ],
   "name": "SWITCH2_m",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Branching/SWITCH2_m.sci"
+  "sourceFile": "data/macros/Branching/SWITCH2_m.sci"
 }

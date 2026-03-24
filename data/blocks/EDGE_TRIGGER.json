@@ -16,5 +16,5 @@
     "Hybrid systems synchronization",
     "Event generation from continuous signals"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/EDGE_TRIGGER.sci"
+  "sourceFile": "data/macros/Misc/EDGE_TRIGGER.sci"
 }

@@ -28,5 +28,5 @@
     "GUI-based debugging workflows",
     "Development and testing"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/DEBUG.sci"
+  "sourceFile": "data/macros/Misc/DEBUG.sci"
 }

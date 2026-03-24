@@ -12,5 +12,5 @@
   ],
   "name": "TIME_DELAY",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/TIME_DELAY.sci"
+  "sourceFile": "data/macros/Linear/TIME_DELAY.sci"
 }

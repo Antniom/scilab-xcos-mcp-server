@@ -26,5 +26,5 @@
     "3D parametric curves",
     "Orbital mechanics 3D plots"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Sinks/CSCOPXY3D.sci"
+  "sourceFile": "data/macros/Sinks/CSCOPXY3D.sci"
 }

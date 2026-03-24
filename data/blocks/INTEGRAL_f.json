@@ -22,5 +22,5 @@
     "Continuous-time accumulators",
     "Cascaded state-space realizations"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/INTEGRAL_f.sci"
+  "sourceFile": "data/macros/Linear/INTEGRAL_f.sci"
 }

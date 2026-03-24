@@ -11,7 +11,7 @@
     "Simple block with exactly 1 input and 1 output"
   ],
   "name": "ABS_VALUE",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/NonLinear/ABS_VALUE.sci",
+  "sourceFile": "data/macros/NonLinear/ABS_VALUE.sci",
   "commonUses": [
     "Converting bipolar signals to unipolar",
     "Computing signal magnitude",

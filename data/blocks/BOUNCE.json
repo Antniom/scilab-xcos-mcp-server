@@ -18,7 +18,7 @@
     "State vector of dimension 8 tracks positions and velocities"
   ],
   "name": "BOUNCE",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/BOUNCE.sci",
+  "sourceFile": "data/macros/Misc/BOUNCE.sci",
   "commonUses": [
     "Physics simulation demonstrations",
     "Ball collision mechanics",

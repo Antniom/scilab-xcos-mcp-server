@@ -15,7 +15,7 @@
     "Most bit operations have width 80 instead of 40"
   ],
   "name": "BITCLEAR",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/IntegerOp/BITCLEAR.sci",
+  "sourceFile": "data/macros/IntegerOp/BITCLEAR.sci",
   "commonUses": [
     "Clearing flag bits in control systems",
     "Integer manipulation",

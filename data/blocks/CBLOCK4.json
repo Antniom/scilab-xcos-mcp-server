@@ -20,7 +20,7 @@
     "Empty realParameters/integerParameters but accepts matrix expressions like [1,1]"
   ],
   "name": "CBLOCK4",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/CBLOCK4.sci",
+  "sourceFile": "data/macros/Misc/CBLOCK4.sci",
   "commonUses": [
     "Complex custom C functions",
     "MIMO system implementations",

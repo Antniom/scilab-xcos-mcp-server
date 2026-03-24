@@ -25,5 +25,5 @@
     "Observer implementations",
     "Modeling physical systems from differential equations"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/CLSS.sci"
+  "sourceFile": "data/macros/Linear/CLSS.sci"
 }

@@ -13,7 +13,7 @@
     "No explicit ports at top level - all connectivity is internal"
   ],
   "name": "ANDBLK",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Events/ANDBLK.sci",
+  "sourceFile": "data/macros/Events/ANDBLK.sci",
   "commonUses": [
     "Event-based logic combining multiple triggers",
     "Conditional execution of subsystems",

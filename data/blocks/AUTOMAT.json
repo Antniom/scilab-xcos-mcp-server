@@ -19,7 +19,7 @@
     "dependsOnU=0 but dependsOnT=1 (time-dependent, not input-dependent)"
   ],
   "name": "AUTOMAT",
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/AUTOMAT.sci",
+  "sourceFile": "data/macros/Misc/AUTOMAT.sci",
   "commonUses": [
     "Modeling hybrid systems with discrete and continuous dynamics",
     "State transition logic",

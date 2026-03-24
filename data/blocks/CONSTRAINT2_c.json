@@ -26,5 +26,5 @@
     "Advanced physical modeling",
     "Index-1 DAE formulations"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/CONSTRAINT2_c.sci"
+  "sourceFile": "data/macros/Misc/CONSTRAINT2_c.sci"
 }

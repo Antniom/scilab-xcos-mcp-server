@@ -26,5 +26,5 @@
     "Valve deadband modeling",
     "Friction modeling"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Misc/DEADBAND.sci"
+  "sourceFile": "data/macros/Misc/DEADBAND.sci"
 }

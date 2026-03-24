@@ -11,5 +11,5 @@
   ],
   "name": "MATCATV",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/MatrixOp/MATCATV.sci"
+  "sourceFile": "data/macros/MatrixOp/MATCATV.sci"
 }

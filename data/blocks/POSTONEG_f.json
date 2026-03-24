@@ -14,5 +14,5 @@
   ],
   "name": "POSTONEG_f",
   "commonUses": [],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Threshold/POSTONEG_f.sci"
+  "sourceFile": "data/macros/Threshold/POSTONEG_f.sci"
 }

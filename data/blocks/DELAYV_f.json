@@ -18,5 +18,5 @@
   "commonUses": [
     "Modeling transport delays with variable velocity"
   ],
-  "sourceFile": "scilab-2026.0.1/scilab-2026.0.1/scilab/modules/scicos_blocks/macros/Linear/DELAYV_f.sci"
+  "sourceFile": "data/macros/Linear/DELAYV_f.sci"
 }
