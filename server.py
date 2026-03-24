@@ -650,7 +650,13 @@ def resolve_windows_scilab_from_registry_file() -> str | None:
     return None
 
 
+_scilab_bin_cache = None
+
 def resolve_scilab_binary() -> str | None:
+    global _scilab_bin_cache
+    if _scilab_bin_cache is not None:
+        return _scilab_bin_cache
+    
     env_bin = os.environ.get("SCILAB_BIN")
     if env_bin:
         return env_bin
@@ -663,6 +669,7 @@ def resolve_scilab_binary() -> str | None:
     for command in ("scilab-cli", "scilab-adv-cli", "scilab"):
         resolved = shutil.which(command)
         if resolved:
+            _scilab_bin_cache = resolved
             return resolved
     return None
 
@@ -1875,7 +1882,7 @@ async def run_http_server():
         app,
         host="0.0.0.0",
         port=SERVER_PORT,
-        log_level="warning",
+        log_level="info",
         access_log=False,
     )
     server = uvicorn.Server(config)
