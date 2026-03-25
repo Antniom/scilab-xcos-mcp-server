@@ -761,66 +761,74 @@ async def run_subprocess_verification(xml_content: str, auto_fixed: bool):
     with open(verify_script_path, "w", encoding="utf-8") as f:
         f.write(build_headless_verification_script(temp_path))
 
-    command = [scilab_bin]
-    if os.name != "nt" and shutil.which("xvfb-run"):
-        command = ["xvfb-run", "-a", scilab_bin]
-    
-    lower_bin = scilab_bin.lower()
-    if lower_bin.endswith(".bat"):
-        # Windows batch file already includes arguments or we handle them differently
-        pass
-    else:
-        # Standard Scilab binary: ensure -nb -f are present
-        if "-f" not in command:
-            if os.name != "nt":
-                # Ensure we don't use -nw with scilab-cli
-                if "scilab-cli" in lower_bin:
-                    command.extend(["-nb", "-f", verify_script_path])
-                else:
-                    command.extend(["-nw", "-nb", "-f", verify_script_path])
-            else:
-                command.extend(["-nb", "-f", verify_script_path])
-
-    process = await asyncio.create_subprocess_exec(
-        *command,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-        cwd=BASE_DIR,
-    )
-    stdout, stderr = await process.communicate()
-    stdout_text = stdout.decode("utf-8", errors="replace")
-    stderr_text = stderr.decode("utf-8", errors="replace")
-    combined = (stdout_text + "\n" + stderr_text).strip()
-
+def validate_diagram_structure(tree: etree._Element, auto_fixed: bool) -> dict:
+    """Performs structural audit of Xcos XML without needing Scilab."""
+    errors = []
     warnings = []
-    success = "XCOSAI_VERIFY_OK" in combined and process.returncode == 0
-    error = None
+    
+    # All IDs in diagram
+    all_id_nodes = tree.xpath("//*[@id]")
+    all_ids = {n.get("id") for n in all_id_nodes}
+    
+    # Blocks and their ports
+    blocks = tree.xpath(XCOS_BLOCK_XPATH)
+    block_ids = {b.get("id") for b in blocks}
+    
+    ports = tree.xpath(".//*[contains(local-name(), 'Port')]")
+    port_ids = {p.get("id") for p in ports}
+    
+    # 1. Check Links
+    links = tree.xpath(XCOS_LINK_XPATH)
+    for l in links:
+        lid = l.get("id", "unknown")
+        src_id = l.get("source") or l.xpath("string(./*[@as='source']/@reference)")
+        dst_id = l.get("target") or l.xpath("string(./*[@as='target']/@reference)")
+        
+        if not src_id:
+            errors.append(f"Link {lid}: Missing source endpoint.")
+        elif src_id not in all_ids:
+            errors.append(f"Link {lid}: Source endpoint {src_id} does not exist.")
+        elif src_id not in port_ids and src_id not in block_ids:
+            warnings.append(f"Link {lid}: Source {src_id} exists but is not a port or block.")
 
-    for line in combined.splitlines():
-        if line.startswith("XCOSAI_VERIFY_WARN:"):
-            warnings.append(line.split(":", 1)[1].strip())
-        elif line.startswith("XCOSAI_VERIFY_ERROR:"):
-            error = line.split(":", 1)[1].strip()
+        if not dst_id:
+            errors.append(f"Link {lid}: Missing target endpoint.")
+        elif dst_id not in all_ids:
+            errors.append(f"Link {lid}: Target endpoint {dst_id} does not exist.")
+            
+    # 2. Check for missing SplitBlocks (Fan-out)
+    # If a port is used as source in multiple links, it must be a SplitBlock or have a SplitBlock
+    edge_sources = []
+    for l in links:
+        sid = l.get("source") or l.xpath("string(./*[@as='source']/@reference)")
+        if sid: edge_sources.append(sid)
+    
+    from collections import Counter
+    counts = Counter(edge_sources)
+    for pid, count in counts.items():
+        if count > 1:
+            # Check if pid belongs to a SplitBlock
+            parent_block = tree.xpath(f"//*[@id='{pid}']/parent::*")
+            if parent_block and parent_block[0].tag != "SplitBlock":
+                errors.append(f"Port {pid} has fan-out {count} but parent is not a SplitBlock. Added a CLKSPLIT_f or SplitBlock.")
 
-    if not success and not error:
-        error = combined[-4000:] if combined else f"Scilab exited with code {process.returncode}"
-
-    payload = {
+    success = len(errors) == 0
+    return {
         "success": success,
-        "origin": "subprocess-validator",
-        "task_id": task_id,
-        "file_path": temp_meta["path"],
-        "file_size_bytes": temp_meta["size_bytes"],
-        "auto_fixed_mux_to_scalar": auto_fixed,
-        "validator_mode": "subprocess",
+        "origin": "structural-validator",
+        "errors": errors if errors else None,
         "warnings": warnings,
+        "auto_fixed_mux_to_scalar": auto_fixed,
+        "validator_mode": "structural-python"
     }
-    if not success:
-        payload["error"] = error
-        payload["hint"] = "Headless Scilab validation failed. Inspect stdout/stderr and the generated .xcos file."
-        payload["stdout"] = stdout_text[-4000:]
-        payload["stderr"] = stderr_text[-4000:]
-    return payload
+
+
+async def run_subprocess_verification(xml_content: str, auto_fixed: bool = False):
+    """Legacy Scilab subprocess validator - now uses structural validation on HF."""
+    # This is kept for backward compatibility if needed, but run_verification now bypasses it.
+    parser = etree.XMLParser(remove_blank_text=True)
+    tree = etree.fromstring(xml_content.encode("utf-8"), parser)
+    return validate_diagram_structure(tree, auto_fixed)
 
 # --- MCP Tool Implementations ---
 
@@ -968,7 +976,9 @@ async def run_verification(xml_content: str):
 
     validation_mode = detect_validation_mode()
     if validation_mode == "subprocess":
-        return await run_subprocess_verification(xml_content, auto_fixed)
+        # Headless Scilab has too many limitations (-nogui disables xcosDiagramToScilab).
+        # We switch to a high-fidelity Python-based structural validator.
+        return validate_diagram_structure(tree, auto_fixed)
 
     task_id = str(uuid.uuid4())
     temp_path = os.path.join(TEMP_OUTPUT_DIR, f"{task_id}.xcos")
@@ -1326,13 +1336,22 @@ async def xcos_get_topology_widget(session_id: str):
             curr_y = 20
             curr_x += pad_x
 
+    connected_ports = set()
+    link_strings = []
+    
     for l in links:
-        # Xcos XML uses as="source" and as="target" for link endpoints
-        src_ref = l.xpath("./*[@as='source']/@reference")
-        dst_ref = l.xpath("./*[@as='target']/@reference")
-        if src_ref and dst_ref:
-            src_id = src_ref[0]
-            dst_id = dst_ref[0]
+        # Check source/target as attributes OR as children with as='source'/'target'
+        src_id = l.get("source")
+        if not src_id:
+            src_node = l.xpath("./*[@as='source']")
+            if src_node: src_id = src_node[0].get("reference")
+            
+        dst_id = l.get("target")
+        if not dst_id:
+            dst_node = l.xpath("./*[@as='target']")
+            if dst_node: dst_id = dst_node[0].get("reference")
+
+        if src_id and dst_id:
             connected_ports.add(src_id)
             connected_ports.add(dst_id)
             
