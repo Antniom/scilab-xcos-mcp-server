@@ -2045,32 +2045,99 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
     return [
         mcp_types.Tool(
             name="xcos_get_status_widget",
-            description="Returns an HTML fragment showing the Scilab instance status, Xcos load status, and temp directory.",
+            description=(
+                "ALWAYS call this first when the user requests an Xcos diagram. If the "
+                "server is not connected, stop and inform the user before doing anything "
+                "else. Returns an HTML status widget — always display it to the user.\n\n"
+                "This tool is Step 1 of the Xcos diagram workflow. After calling this, "
+                "the required sequence is:\n"
+                "  PHASE 1 (visualise & explain):\n"
+                "    xcos_get_block_catalogue_widget → xcos_create_workflow → \n"
+                "    xcos_get_workflow_widget → [draw Visualizer diagram] → \n"
+                "    [explain math step by step] → xcos_submit_phase(phase1_math_model) → \n"
+                "    xcos_get_workflow_widget → [ask user for approval] → \n"
+                "    xcos_review_phase(approve, phase1_math_model)\n\n"
+                "  PHASE 2 (architecture plan):\n"
+                "    get_xcos_block_data (for EVERY block — never skip this) → \n"
+                "    [write block + link plan] → xcos_submit_phase(phase2_architecture) → \n"
+                "    xcos_get_workflow_widget → [ask user for approval] → \n"
+                "    xcos_review_phase(approve, phase2_architecture)\n\n"
+                "  PHASE 3 (build, verify, fix):\n"
+                "    xcos_start_draft(workflow_id) → xcos_add_blocks → \n"
+                "    xcos_get_topology_widget → xcos_add_links → \n"
+                "    xcos_get_topology_widget → xcos_get_draft_xml(pretty_print=true) → \n"
+                "    xcos_verify_draft → xcos_get_validation_widget → \n"
+                "    [if failed: fix XML and retry from xcos_add_blocks until success=true] → \n"
+                "    xcos_get_file_path → xcos_get_workflow_widget\n\n"
+                "RULES:\n"
+                "- Never skip phases or jump straight to file creation.\n"
+                "- Never write block XML from memory — always call get_xcos_block_data first.\n"
+                "- Never stop after a failed verification — iterate until success=true.\n"
+                "- Always display every widget inline as it is returned.\n"
+                "- Never declare a diagram done unless xcos_verify_draft returned success=true."
+            ),
             inputSchema={"type": "object", "properties": {}},
         ),
         mcp_types.Tool(
             name="xcos_get_workflow_widget",
-            description="Returns an HTML fragment summarizing workflow phases or listing all workflows.",
+            description=(
+                "Call this to show the user the live 3-phase workflow progress tracker. "
+                "Always display the returned widget. Call it at these moments:\n"
+                "  - After xcos_create_workflow (show the plan before Phase 1 begins)\n"
+                "  - After xcos_submit_phase for phase1_math_model (show Phase 1 submitted)\n"
+                "  - After xcos_review_phase approves phase1 (show Phase 1 approved)\n"
+                "  - After xcos_submit_phase for phase2_architecture (show Phase 2 submitted)\n"
+                "  - After xcos_review_phase approves phase2 (show Phase 2 approved)\n"
+                "  - At the very end of Phase 3, after the file is verified (show all done)\n"
+                "Always pass the workflow_id parameter so the widget shows the correct session."
+            ),
             inputSchema={"type": "object", "properties": {"workflow_id": {"type": "string"}}},
         ),
         mcp_types.Tool(
             name="xcos_get_validation_widget",
-            description="Returns an HTML fragment with validation results for the provided Xcos XML.",
+            description=(
+                "PHASE 3 — Step 8. Call this immediately after every xcos_verify_draft "
+                "call, passing the current draft XML. Always display the returned widget "
+                "to the user — it shows a clear green tick (success) or red error message "
+                "(failure). Never skip this step, as it gives the user visible confirmation "
+                "of the validation result."
+            ),
             inputSchema={"type": "object", "properties": {"xml_content": {"type": "string"}}, "required": ["xml_content"]},
         ),
         mcp_types.Tool(
             name="xcos_get_block_catalogue_widget",
-            description="Returns an HTML catalogue of Xcos blocks, optionally filtered by category.",
+            description=(
+                "PHASE 1 — Step 2. Call this after xcos_get_status_widget to identify "
+                "which blocks are available for the user's request. Filter by the relevant "
+                "category (e.g. \"Sources\", \"Continuous\", \"Sinks/Visualization\", "
+                "\"Math Operations\"). Always display the returned widget to the user so "
+                "they can see and confirm the blocks being selected before any math is "
+                "explained."
+            ),
             inputSchema={"type": "object", "properties": {"category": {"type": "string"}}},
         ),
         mcp_types.Tool(
             name="xcos_get_topology_widget",
-            description="Returns an HTML connection graph of blocks and links for a given draft session.",
+            description=(
+                "PHASE 3 — Steps 3 and 5. Call this twice during Phase 3 and always "
+                "display the returned widget:\n"
+                "  - First call: immediately after xcos_add_blocks, so the user can \n"
+                "    see the blocks appear in the graph before links are added.\n"
+                "  - Second call: immediately after xcos_add_links, so the user can \n"
+                "    see the fully connected graph with arrows between blocks.\n"
+                "If the second call shows missing links or disconnected blocks, fix the \n"
+                "link XML before proceeding to verification."
+            ),
             inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
         ),
         mcp_types.Tool(
             name="xcos_create_workflow",
-            description="Create a new 3-phase Xcos workflow session from a control-system problem statement.",
+            description=(
+                "PHASE 1 — Step 3. Call this with the user's problem statement to register "
+                "the 3-phase workflow. Store the returned workflow_id — it is required for "
+                "all subsequent xcos_submit_phase, xcos_review_phase, xcos_get_workflow_widget, "
+                "and xcos_start_draft calls. Do not proceed without it."
+            ),
             inputSchema={"type": "object", "properties": {"problem_statement": {"type": "string"}}, "required": ["problem_statement"]},
         ),
         mcp_types.Tool(
@@ -2085,7 +2152,21 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_submit_phase",
-            description="Submit the content for Phase 1, Phase 2, or Phase 3 in a phased Xcos workflow session.",
+            description=(
+                "Submits content for a workflow phase and sets it to \"awaiting_approval\".\n"
+                "Call this at these specific moments:\n"
+                "  - phase1_math_model: after the Visualizer diagram is drawn and the \n"
+                "    full math explanation is written. Content should be the complete \n"
+                "    step-by-step mathematical description of the system.\n"
+                "  - phase2_architecture: after get_xcos_block_data has been called for \n"
+                "    every block and the full architecture plan (blocks + links) is written. \n"
+                "    Content should list every block name, Xcos function name, parameters, \n"
+                "    and every link with source/target port IDs.\n"
+                "  - phase3_implementation: after xcos_verify_draft returns success=true. \n"
+                "    Content should confirm the file path and validation result.\n"
+                "After calling this, always call xcos_get_workflow_widget to show the \n"
+                "updated progress, then ask the user for approval before proceeding."
+            ),
             inputSchema={"type": "object", "properties": {
                 "workflow_id": {"type": "string"},
                 "phase": {"type": "string", "enum": WORKFLOW_PHASE_ORDER},
@@ -2095,7 +2176,14 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_review_phase",
-            description="Approve Phase 1 or Phase 2, or request changes, in a phased Xcos workflow session.",
+            description=(
+                "Call this only after the user has explicitly approved the submitted phase "
+                "content. Use decision=\"approve\" to advance the workflow, or "
+                "decision=\"request_changes\" with feedback if the user wants modifications "
+                "(in which case go back and revise, then re-submit). After approving, "
+                "call xcos_get_workflow_widget to show the updated state, then proceed "
+                "to the next phase."
+            ),
             inputSchema={"type": "object", "properties": {
                 "workflow_id": {"type": "string"},
                 "phase": {"type": "string", "enum": [WORKFLOW_PHASE_ORDER[0], WORKFLOW_PHASE_ORDER[1]]},
@@ -2105,7 +2193,13 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="get_xcos_block_data",
-            description="Returns annotation JSON, reference XML, and parameter help for an Xcos block.",
+            description=(
+                "PHASE 2 — Step 1. Call this for EVERY block before writing any XML. "
+                "Never write block XML from memory or from examples in other tool results — "
+                "always call this first and use the returned XML as the authoritative "
+                "template. Returns the correct port IDs, parameter structure, simulation "
+                "function name, and blockType needed to build valid Xcos XML."
+            ),
             inputSchema={"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]}
         ),
         mcp_types.Tool(
@@ -2120,12 +2214,25 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="verify_xcos_xml",
-            description="Sends generated Xcos XML to an open Scilab instance for validation. Returns JSON with status, temp file path, and any simulation warnings/errors.",
+            description=(
+                "Validates raw Xcos XML directly without a draft session. Use this when \n"
+                "you have XML content in hand but no active session_id — for example, \n"
+                "when re-checking fixed XML during a repair loop. For session-based \n"
+                "validation (the normal workflow), prefer xcos_verify_draft instead. \n"
+                "After calling this, always call xcos_get_validation_widget with the \n"
+                "same XML and display the result widget to the user."
+            ),
             inputSchema={"type": "object", "properties": {"xml_content": {"type": "string"}}, "required": ["xml_content"]}
         ),
         mcp_types.Tool(
             name="xcos_start_draft",
-            description="Core draft workflow: starts a new incremental Xcos diagram draft session. Optionally provisions phase planning.",
+            description=(
+                "PHASE 3 — Step 1. Call this to open a new draft session after Phase 2 "
+                "is approved. Always pass the workflow_id so the draft is linked to the "
+                "workflow. Store the returned session_id — it is required for all "
+                "subsequent xcos_add_blocks, xcos_add_links, xcos_get_topology_widget, "
+                "xcos_get_draft_xml, xcos_verify_draft, and xcos_get_file_path calls."
+            ),
             inputSchema={"type": "object", "properties": {
                 "schema_version": {"type": "string", "default": "1.1"},
                 "workflow_id": {"type": "string"},
@@ -2135,7 +2242,13 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_add_blocks",
-            description="Core draft workflow: adds block XML elements to an active draft session. Returns JSON with success message.",
+            description=(
+                "PHASE 3 — Step 2. Call this to add all blocks to the draft session. "
+                "Only use block XML that was retrieved via get_xcos_block_data — never "
+                "write block XML from memory. After calling this, immediately call "
+                "xcos_get_topology_widget and display the widget so the user can see "
+                "the blocks appear in the graph."
+            ),
             inputSchema={"type": "object", "properties": {
                 "session_id": {"type": "string"},
                 "blocks_xml": {"type": "string"}
@@ -2143,7 +2256,13 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_add_links",
-            description="Core draft workflow: adds link XML elements to an active draft session. Returns JSON with success message.",
+            description=(
+                "PHASE 3 — Step 4. Call this to connect all blocks with links after "
+                "xcos_add_blocks and the first xcos_get_topology_widget call. Use port "
+                "IDs exactly as returned by get_xcos_block_data. After calling this, "
+                "call xcos_get_topology_widget again and display the updated widget so "
+                "the user can see the fully connected graph with arrows between blocks."
+            ),
             inputSchema={"type": "object", "properties": {
                 "session_id": {"type": "string"},
                 "links_xml": {"type": "string"}
@@ -2151,7 +2270,15 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_verify_draft",
-            description="Core draft workflow: assembles the current draft session, validates it in Scilab, and returns JSON containing both the verified temp file path and the saved session snapshot path.",
+            description=(
+                "PHASE 3 — Step 7. Call this after xcos_get_draft_xml to validate the "
+                "diagram. After calling this, always call xcos_get_validation_widget with "
+                "the current draft XML and display the result widget to the user.\n"
+                "  - If success=true: call xcos_get_file_path and present the file.\n"
+                "  - If success=false: read the error carefully, fix the block or link XML, \n"
+                "    go back to xcos_add_blocks and rebuild. NEVER stop after one failure — \n"
+                "    keep iterating until success=true is returned."
+            ),
             inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
         ),
 
@@ -2166,7 +2293,13 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_get_draft_xml",
-            description="Core draft workflow: returns the full accumulated XML of the current draft session, with optional pretty-printing, comment stripping, and XML validation.",
+            description=(
+                "PHASE 3 — Step 6. Call this with pretty_print=true after xcos_add_links "
+                "and before xcos_verify_draft. Show a brief summary of the XML to the user "
+                "so they can see what is about to be validated. Also call this to retrieve "
+                "the current XML whenever a verification fails and you need to inspect or "
+                "fix the diagram before retrying."
+            ),
             inputSchema={"type": "object", "properties": {
                 "session_id": {"type": "string"},
                 "pretty_print": {"type": "boolean", "default": False},
@@ -2176,7 +2309,13 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_get_file_path",
-            description="Returns the saved draft session file path plus the latest verified file path/size metadata for download or export workflows.",
+            description=(
+                "PHASE 3 — Step 9. Call this only after xcos_verify_draft has returned "
+                "success=true. Retrieve the verified file path and present the .xcos file "
+                "to the user for download. After this, call xcos_get_workflow_widget one "
+                "final time to show the completed 3-phase workflow summary and confirm "
+                "the file is ready to open in Scilab Xcos."
+            ),
             inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
         ),
         mcp_types.Tool(
