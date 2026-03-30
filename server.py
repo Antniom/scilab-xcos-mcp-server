@@ -1477,39 +1477,69 @@ async def xcos_get_topology_widget(session_id: str):
         name = b.get("interfaceFunctionName", b.tag)
         block_map[bid] = {"name": name, "in_ports": [], "out_ports": []}
         
+    # Build ports_map: map every port id -> {block_id, type}
+    #
+    # In Xcos XML, ports are NOT nested inside their block element — they are
+    # siblings under <root> that declare ownership via a @parent="blockId"
+    # attribute. The per-block child-XPath approach therefore finds nothing.
+    # The correct strategy: scan every Port-like element in the whole tree and
+    # use the @parent attribute to associate it with the owning block.
+    #
+    # Two-stage to handle both the sibling-with-@parent style (standard Xcos)
+    # and the rare nested-child style:
     ports_map = {}
+
+    # Stage 1 — sibling style: @parent attribute points to the block id
+    for p in tree.iter():
+        if not isinstance(p.tag, str):
+            continue
+        if "Port" not in p.tag:
+            continue
+        pid = p.get("id")
+        if not pid:
+            continue
+        owner_id = p.get("parent")  # the Xcos @parent attribute
+        if owner_id and owner_id in block_map and pid not in ports_map:
+            tag = p.tag
+            p_type = "in" if any(k in tag for k in ("Input", "InPort", "Control")) else "out"
+            ports_map[pid] = {"block_id": owner_id, "type": p_type}
+            bdata = block_map[owner_id]
+            if p_type == "in":
+                bdata["in_ports"].append(pid)
+            else:
+                bdata["out_ports"].append(pid)
+
+    # Stage 2 — nested-child style: port is a descendant of the block element
     for bid, bdata in block_map.items():
         block_nodes = tree.xpath(f"//*[@id='{bid}']")
-        if not block_nodes: continue
+        if not block_nodes:
+            continue
         block = block_nodes[0]
-        # Harvest all port types: Explicit/Implicit/Event, Input/Output
-        # We look for children with 'id' that might be endpoints for links
-        for p in block.xpath(".//*[contains(local-name(), 'Port')]"):
+        for p in block.iter():
+            if not isinstance(p.tag, str) or "Port" not in p.tag:
+                continue
             pid = p.get("id")
-            if pid:
+            if pid and pid not in ports_map:
                 tag = p.tag
-                p_type = "in" if "InputPort" in tag or "InPort" in tag else "out"
+                p_type = "in" if any(k in tag for k in ("Input", "InPort", "Control")) else "out"
                 ports_map[pid] = {"block_id": bid, "type": p_type}
                 if p_type == "in":
                     bdata["in_ports"].append(pid)
                 else:
                     bdata["out_ports"].append(pid)
-            
-    connected_ports = set()
-    link_strings = []
-    
+
     svg_nodes = []
     svg_edges = []
-    
+
     node_w = 100
     node_h = 40
     pad_y = 60
     pad_x = 150
     curr_y = 20
     curr_x = 20
-    
+
     b_coords = {}
-    
+
     for idx, (bid, bdata) in enumerate(block_map.items()):
         b_coords[bid] = (curr_x, curr_y)
         svg_nodes.append(f'<rect x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" fill="#f8f9fa" stroke="#343a40" rx="4" />')
@@ -1518,24 +1548,6 @@ async def xcos_get_topology_widget(session_id: str):
         if idx > 0 and idx % 10 == 0:
             curr_y = 20
             curr_x += pad_x
-
-    # Global fallback: index ALL port elements in the tree by id.
-    # Fixes '? -> ?' link labels when port IDs use custom prefixes (e.g. 'SIN_f:out1')
-    # that weren't resolved during the per-block XPath loop above.
-    for p in tree.xpath(".//*[contains(local-name(), 'Port') and @id]"):
-        pid = p.get("id")
-        if pid and pid not in ports_map:
-            parent = p.getparent()
-            if parent is not None:
-                parent_id = parent.get("id")
-                if parent_id and parent_id in block_map:
-                    tag = p.tag
-                    p_type = "in" if any(k in tag for k in ("Input", "InPort", "Control")) else "out"
-                    ports_map[pid] = {"block_id": parent_id, "type": p_type}
-                    if p_type == "in":
-                        block_map[parent_id]["in_ports"].append(pid)
-                    else:
-                        block_map[parent_id]["out_ports"].append(pid)
 
     connected_ports = set()
     link_strings = []
