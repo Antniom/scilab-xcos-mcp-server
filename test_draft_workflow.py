@@ -66,8 +66,10 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("<BasicBlock", text)
 
     async def test_file_path_and_file_content_tools(self):
-        session_id = await self.start_session()
-        await server.xcos_plan_phases(session_id, ["phase-1"])
+        response = await server.xcos_start_draft(phases=["phase-1"])
+        payload = json.loads(response[0].text)
+        session_id = payload["session_id"]
+        self.created_sessions.append(session_id)
         await server.xcos_commit_phase(session_id, "phase-1", CONST_BLOCK_XML)
 
         path_response = await server.xcos_get_file_path(session_id)
@@ -122,6 +124,39 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         cmscope_payload = json.loads(cmscope_response[0].text)
         self.assertIn("1 input", cmscope_payload["extra_examples"])
         self.assertIn('realParameters" height="1" width="5"', cmscope_payload["extra_examples"]["1 input"])
+
+    async def test_build_xcos_diagram_prompt_is_listed_with_required_argument(self):
+        prompts = await server.handle_list_prompts()
+        build_prompt = next(item for item in prompts if item.name == server.BUILD_XCOS_DIAGRAM_PROMPT_NAME)
+
+        self.assertEqual(build_prompt.title, server.BUILD_XCOS_DIAGRAM_PROMPT_TITLE)
+        self.assertEqual(build_prompt.description, server.BUILD_XCOS_DIAGRAM_PROMPT_DESCRIPTION)
+        self.assertEqual(len(build_prompt.arguments), 1)
+        self.assertEqual(build_prompt.arguments[0].name, "problem_statement")
+        self.assertTrue(build_prompt.arguments[0].required)
+
+    async def test_build_xcos_diagram_prompt_substitutes_problem_statement(self):
+        result = await server.handle_get_prompt(
+            server.BUILD_XCOS_DIAGRAM_PROMPT_NAME,
+            {"problem_statement": "simple pendulum with g=9.8, L=2m"},
+        )
+        prompt_text = result.messages[0].content.text
+
+        self.assertEqual(result.description, server.BUILD_XCOS_DIAGRAM_PROMPT_RESULT_DESCRIPTION)
+        self.assertIn("simple pendulum with g=9.8, L=2m", prompt_text)
+        self.assertNotIn("{{problem_statement}}", prompt_text)
+        self.assertIn("If validation still fails after 3 repair attempts", prompt_text)
+        self.assertIn("Step 30a.", prompt_text)
+
+    async def test_build_xcos_diagram_prompt_requires_problem_statement(self):
+        with self.assertRaises(ValueError):
+            await server.handle_get_prompt(server.BUILD_XCOS_DIAGRAM_PROMPT_NAME, {})
+
+    async def test_initialization_options_include_prompts_capability(self):
+        options = server.create_server_initialization_options()
+
+        self.assertIsNotNone(options.capabilities.prompts)
+        self.assertFalse(options.capabilities.prompts.listChanged)
 
 
 if __name__ == "__main__":

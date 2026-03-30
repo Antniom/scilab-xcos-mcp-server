@@ -65,6 +65,141 @@ WORKFLOW_PHASE_LABELS = {
 }
 REVIEWABLE_PHASES = {"phase1_math_model", "phase2_architecture"}
 
+BUILD_XCOS_DIAGRAM_PROMPT_NAME = "build_xcos_diagram"
+BUILD_XCOS_DIAGRAM_PROMPT_TITLE = "Build Xcos Diagram"
+BUILD_XCOS_DIAGRAM_PROMPT_DESCRIPTION = (
+    "Guides Claude through a 3-phase gated workflow to model, plan, and build "
+    "a Scilab Xcos diagram. Each phase requires explicit user approval before proceeding."
+)
+BUILD_XCOS_DIAGRAM_PROMPT_RESULT_DESCRIPTION = (
+    "3-phase gated Xcos diagram builder with user approval gates"
+)
+BUILD_XCOS_DIAGRAM_PROMPT_ARGUMENT = mcp_types.PromptArgument(
+    name="problem_statement",
+    description=(
+        "Description of the physical or mathematical system to model "
+        "(e.g. 'simple pendulum with g=9.8, L=2m')"
+    ),
+    required=True,
+)
+BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
+    """\
+    Build an Xcos diagram for the following system:
+
+    {{problem_statement}}
+
+    Follow this exact process. Never skip a step. Never proceed past an approval gate without the user explicitly typing 'approve'.
+
+    ---
+
+    ## PHASE 1 — Math model
+
+    **Step 1.** Call `xcos_get_status_widget`. Display the widget. If the server is not connected, stop and tell the user before doing anything else.
+
+    **Step 2.** Call `xcos_get_block_catalogue_widget` with a relevant category (e.g. 'Continuous', 'Sources', 'Sinks'). Display the widget so the user can see which blocks are available.
+
+    **Step 3.** Call `xcos_create_workflow` with the problem statement. Store the returned `workflow_id` — you will need it for every subsequent phase call.
+
+    **Step 4.** Derive the governing equations step by step in plain text. Show all algebra. Define every variable and parameter with units and numeric values.
+
+    **Step 5.** Draw an inline SVG diagram using the Visualizer tool showing the signal flow: boxes for each operation (e.g. sin, gain, integral), arrows showing how signals connect, labels with actual numeric values. This must be a proper Claude SVG diagram — no ASCII art.
+
+    **Step 6.** Call `xcos_submit_phase` with `phase='phase1_math_model'`, `workflow_id`, and the full math derivation as content.
+
+    **Step 7.** Call `xcos_get_workflow_widget` with the `workflow_id`. Display the widget.
+
+    **Step 8.** STOP. Ask: 'Does the math and signal flow look correct? Reply **approve** or describe what to change.'
+
+    **Step 9.** If the user requests changes: revise steps 4–5, call `xcos_submit_phase` again, display the widget again, ask again. Repeat until approved. Only call `xcos_review_phase` with `phase='phase1_math_model'` and `decision='approve'` after the user explicitly approves. Then call `xcos_get_workflow_widget` and display it.
+
+    ---
+
+    ## PHASE 2 — Architecture plan
+
+    **Step 10.** Call `get_xcos_block_data` for every single block you plan to use. Never write block XML from memory or examples — always use the returned XML as the authoritative template. This gives you the correct port IDs, parameter structure, simulation function name, and blockType.
+
+    **Step 11.** If you need to understand a block's internal behaviour or parameters more deeply, call `get_xcos_block_source` for that block. Use `search_related_xcos_files` to find any related configuration files if the block has complex dependencies.
+
+    **Step 12.** Write out the full architecture plan: every block (Xcos name, simulation function, parameters with values), and every link (source block + port ID → target block + port ID). Be explicit about clock/activation links vs data links.
+
+    **Step 11.** Draw an inline diagram using the Visualizer tool showing the actual Xcos block diagram — this is a preview of the real diagram the user will get, not an illustration of the physical system. Draw each block as a labelled rectangle showing its exact Xcos name and key parameter value (e.g. "GAIN_f  k=−5"), solid arrows for data/signal links with the signal name and port number labelled on each arrow, dashed arrows for clock/activation links visually distinct from data links, and feedback loops routed clearly so arrows do not cross other blocks. Use the exact blocks and port connections from the `get_xcos_block_data` calls in steps 9 and 10 — the diagram must match the architecture plan in step 12 exactly.
+
+    **Step 14.** Call `xcos_submit_phase` with `phase='phase2_architecture'`, `workflow_id`, and the full block + link plan as content.
+
+    **Step 15.** Call `xcos_get_workflow_widget` with the `workflow_id`. Display the widget.
+
+    **Step 16.** STOP. Ask: 'Does this block layout look right? Reply **approve** or describe what to change.'
+
+    **Step 17.** If the user requests changes: revise steps 10–14, resubmit, display widget, ask again. Repeat until approved. Only call `xcos_review_phase` with `phase='phase2_architecture'` and `decision='approve'` after the user explicitly approves. Then call `xcos_get_workflow_widget` and display it.
+
+    ---
+
+    ## PHASE 3 — Build and verify
+
+    **Step 18.** Call `xcos_start_draft` with the `workflow_id`. Store the returned `session_id` — you will need it for all remaining steps.
+
+    **Step 19.** Call `xcos_add_blocks` with `session_id`. Use only XML retrieved from `get_xcos_block_data` — never from memory.
+
+    **Step 20.** Call `xcos_get_topology_widget` with `session_id`. Display the widget. The user should see all blocks appear in the graph before any links are added.
+
+    **Step 21.** Call `xcos_add_links` with `session_id`. Use port IDs exactly as returned by `get_xcos_block_data`.
+
+    **Step 22.** Call `xcos_get_topology_widget` with `session_id` again. Display the widget. Check for missing links or disconnected ports — fix before continuing.
+
+    **Step 23.** Call `xcos_get_draft_xml` with `session_id` and `pretty_print=true`. Show a brief summary of the XML structure to the user.
+
+    **Step 24.** STOP. Ask: 'Ready to validate? Reply **approve** to run verification.'
+
+    **Step 25.** After approval: call `xcos_verify_draft` with `session_id`.
+
+    **Step 26.** Call `xcos_get_validation_widget` with the current draft XML. Display the widget.
+    - If `success=true`: proceed to step 27.
+    - If `success=false`: read the error carefully. Call `xcos_get_draft_xml` to inspect the current XML. Fix the specific block or link causing the error. Call `xcos_add_blocks` or `xcos_add_links` to rebuild, then repeat from step 25. Use `verify_xcos_xml` directly on fixed XML snippets if you want to spot-check a repair before rebuilding the full session. Never stop after one failure — keep iterating until `success=true`.
+
+    If validation still fails after 3 repair attempts: stop the repair loop. Call xcos_get_draft_xml with pretty_print=true and show the full XML to the user. Call xcos_get_validation_widget and display it. Ask: "I was unable to fix this automatically after 3 attempts. Here is the current XML and the error. Would you like to guide the fix, or should I start phase 3 over?"
+
+    **Step 27.** Call `xcos_commit_phase` with `session_id` and `phase_label='phase3_implementation'` to commit the verified XML to file.
+
+    **Step 28.** Call `xcos_submit_phase` with `phase='phase3_implementation'`, `workflow_id`, and a summary confirming the file path and validation result as content.
+
+    **Step 29.** Call `xcos_get_file_path` with `session_id`. Present the .xcos file to the user for download.
+
+    **Step 30a.** If the user asks to inspect the final file content, call `xcos_get_file_content` with `session_id` and `source='last_verified'`. If the user asks to recover content from a previous session, call `xcos_list_sessions` to find it first.
+
+    **Step 30.** Call `xcos_get_workflow_widget` with the `workflow_id` one final time. Display the completed 3-phase summary so the user can confirm everything is done.
+
+    ---
+
+    ## Rules that apply throughout all phases
+
+    - Never proceed past a STOP gate without the user explicitly typing 'approve'.
+    - Never write block XML from memory — always call `get_xcos_block_data` first.
+    - Never skip `get_xcos_block_source` or `search_related_xcos_files` if a block's parameters or dependencies are unclear.
+    - Every Visualizer diagram must be a proper SVG with labelled boxes and arrows — no ASCII art, no text sketches.
+    - Always call `xcos_get_workflow_widget` after every `xcos_submit_phase` call.
+    - Always display every widget inline immediately after it is returned.
+    - If the user requests changes at any approval gate, go back and revise — never push forward.
+    - A diagram is only done when `xcos_verify_draft` returns `success=true`. Never declare it done before that.
+    - Use `xcos_list_sessions` and `xcos_list_workflows` at any point if you lose track of active sessions or workflows.
+    - Use `xcos_get_file_content` with `source='last_verified'` if the user asks to inspect or download the final file content after verification.
+    - If you ever lose track of the active session_id or workflow_id, call `xcos_list_sessions` and `xcos_list_workflows` to recover them before doing anything else.
+    - After phases 1 and 2 approval, check if `xcos_commit_phase` needs to be called — consult the tool description for the current phase label convention.
+    - `verify_xcos_xml` is for spot-checking raw XML snippets during repair. `xcos_verify_draft` is for full session validation. Never confuse the two.
+    """
+)
+
+
+def build_xcos_prompt_text(problem_statement: str) -> str:
+    cleaned_problem_statement = problem_statement.strip()
+    if not cleaned_problem_statement:
+        raise ValueError(
+            f"Prompt '{BUILD_XCOS_DIAGRAM_PROMPT_NAME}' requires a non-empty 'problem_statement' argument."
+        )
+    return BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE.replace(
+        "{{problem_statement}}",
+        cleaned_problem_statement,
+    )
+
 
 def icon_data_uri(filename: str, mime_type: str) -> str | None:
     path = os.path.join(ICONS_DIR, filename)
@@ -1981,9 +2116,21 @@ streamable_http_manager = StreamableHTTPSessionManager(
 )
 
 
+def create_server_initialization_options():
+    options = mcp_server.create_initialization_options()
+    options.capabilities.prompts = mcp_types.PromptsCapability(listChanged=False)
+    return options
+
+
 @mcp_server.list_prompts()
 async def handle_list_prompts() -> list[mcp_types.Prompt]:
     return [
+        mcp_types.Prompt(
+            name=BUILD_XCOS_DIAGRAM_PROMPT_NAME,
+            title=BUILD_XCOS_DIAGRAM_PROMPT_TITLE,
+            description=BUILD_XCOS_DIAGRAM_PROMPT_DESCRIPTION,
+            arguments=[BUILD_XCOS_DIAGRAM_PROMPT_ARGUMENT],
+        ),
         mcp_types.Prompt(
             name="xcos-phased-workflow",
             description="Guides an agent through the 3-phase Xcos workflow with explicit approval gates.",
@@ -2000,6 +2147,18 @@ async def handle_list_prompts() -> list[mcp_types.Prompt]:
 
 @mcp_server.get_prompt()
 async def handle_get_prompt(name: str, arguments: dict[str, str] | None) -> mcp_types.GetPromptResult:
+    if name == BUILD_XCOS_DIAGRAM_PROMPT_NAME:
+        prompt_text = build_xcos_prompt_text((arguments or {}).get("problem_statement", ""))
+        return mcp_types.GetPromptResult(
+            description=BUILD_XCOS_DIAGRAM_PROMPT_RESULT_DESCRIPTION,
+            messages=[
+                mcp_types.PromptMessage(
+                    role="user",
+                    content=mcp_types.TextContent(type="text", text=prompt_text),
+                )
+            ],
+        )
+
     if name != "xcos-phased-workflow":
         raise ValueError(f"Unknown prompt: {name}")
 
@@ -2467,7 +2626,7 @@ async def main():
     if mode == "stdio":
         async with stdio_server() as (read_stream, write_stream):
             await asyncio.gather(
-                mcp_server.run(read_stream, write_stream, mcp_server.create_initialization_options()),
+                mcp_server.run(read_stream, write_stream, create_server_initialization_options()),
                 telemetry_loop(),
             )
         return
@@ -2478,7 +2637,7 @@ async def main():
 
     async with stdio_server() as (read_stream, write_stream):
         await asyncio.gather(
-            mcp_server.run(read_stream, write_stream, mcp_server.create_initialization_options()),
+            mcp_server.run(read_stream, write_stream, create_server_initialization_options()),
             run_http_server(),
             telemetry_loop(),
         )
