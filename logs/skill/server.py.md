@@ -13,3 +13,6 @@
 - Registered the prompt in `prompts/list` with `title`, required `problem_statement`, and the full gated workflow instructions. `prompts/get` now validates the argument, replaces `{{problem_statement}}` before returning the messages array, and stdio initialization explicitly preserves `capabilities.prompts.listChanged=false`.
 - **Files:** scilab-xcos-mcp-server/server.py, scilab-xcos-mcp-server/test_draft_workflow.py
 
+### 2026-03-30 02:02:47 UTC — Note
+- **Summary:** Push-on-write enabled: log_writer now commits and pushes to origin + huggingface after every entry
+

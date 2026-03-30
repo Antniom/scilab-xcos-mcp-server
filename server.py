@@ -122,7 +122,7 @@ BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
 
     **Step 12.** Write out the full architecture plan: every block (Xcos name, simulation function, parameters with values), and every link (source block + port ID → target block + port ID). Be explicit about clock/activation links vs data links.
 
-    **Step 11.** Draw an inline diagram using the Visualizer tool showing the actual Xcos block diagram — this is a preview of the real diagram the user will get, not an illustration of the physical system. Draw each block as a labelled rectangle showing its exact Xcos name and key parameter value (e.g. "GAIN_f  k=−5"), solid arrows for data/signal links with the signal name and port number labelled on each arrow, dashed arrows for clock/activation links visually distinct from data links, and feedback loops routed clearly so arrows do not cross other blocks. Use the exact blocks and port connections from the `get_xcos_block_data` calls in steps 9 and 10 — the diagram must match the architecture plan in step 12 exactly.
+    **Step 13.** Draw an inline diagram using the Visualizer tool showing the actual Xcos block diagram — this is a preview of the real diagram the user will get, not an illustration of the physical system. Draw each block as a labelled rectangle showing its exact Xcos name and key parameter value (e.g. 'GAIN_f  k=−5'), solid arrows for data/signal links with the signal name and port number labelled on each arrow, dashed arrows for clock/activation links visually distinct from data links, and feedback loops routed clearly so arrows do not cross other blocks. Use the exact blocks and port connections from the get_xcos_block_data calls — the diagram must match the architecture plan exactly.
 
     **Step 14.** Call `xcos_submit_phase` with `phase='phase2_architecture'`, `workflow_id`, and the full block + link plan as content.
 
@@ -404,12 +404,17 @@ def review_workflow_phase(
         return None, f"Only Phase 1 and Phase 2 can be reviewed. Received '{phase_key}'."
 
     phase = workflow.phases[phase_key]
-    if phase.status != "awaiting_approval":
-        return None, f"{WORKFLOW_PHASE_LABELS[phase_key]} is not awaiting approval. Current status: {phase.status}."
-
     normalized_decision = decision.strip().lower()
     if normalized_decision not in {"approve", "request_changes"}:
         return None, "Decision must be either 'approve' or 'request_changes'."
+
+    # Idempotent: if phase is already approved and caller sends 'approve', succeed gracefully.
+    # Guards against race conditions where the server auto-approves before the manual call.
+    if phase.status == "approved" and normalized_decision == "approve":
+        return workflow.to_dict(), None
+
+    if phase.status != "awaiting_approval":
+        return None, f"{WORKFLOW_PHASE_LABELS[phase_key]} is not awaiting approval. Current status: {phase.status}."
 
     phase.reviewed_at = now_iso()
     phase.feedback = feedback.strip()
@@ -1200,50 +1205,74 @@ async def xcos_get_status_widget():
     status_color = "#28a745" if connection_status == "Connected" else "#dc3545"
     
     if scilab_bin:
-        script = 'mode(-1);\\nlines(0);\\nmprintf("XCOS_STATUS_START\\\\n");\\nmprintf("%s\\\\n", getversion());\\nmprintf("%s\\\\n", string(with_module(\\"xcos\\")));\\nmprintf("%s\\\\n", TMPDIR);\\nmprintf("XCOS_STATUS_END\\\\n");\\nexit(0);\\n'
-        task_id = str(uuid.uuid4())
-        script_path = os.path.join(TEMP_OUTPUT_DIR, f"status_{task_id}.sce")
-        with open(script_path, "w", encoding="utf-8") as f:
-            f.write(script.replace('\\\\n', '\\n'))
-            
-        command = [scilab_bin]
-        if os.name != "nt" and shutil.which("xvfb-run"):
-            command = ["xvfb-run", "-a", scilab_bin]
-            
-        lower_bin = scilab_bin.lower()
-        if not lower_bin.endswith(".bat") and "-f" not in command:
-            if os.name != "nt":
-                # Ensure we don't use -nw with scilab-cli
-                if "scilab-cli" in lower_bin:
-                    command.extend(["-nb", "-f", script_path])
-                else:
-                    command.extend(["-nw", "-nb", "-f", script_path])
-            else:
-                command.extend(["-nb", "-f", script_path])
-        elif lower_bin.endswith(".bat"):
-            pass
+        # On Windows, WScilex-cli.exe requires full GUI initialisation and hangs
+        # when spawned as a short-lived subprocess. Read version metadata from
+        # the install directory instead.
+        if os.name == "nt":
+            scilab_root = os.path.dirname(os.path.dirname(os.path.abspath(scilab_bin)))
+            version_incl = os.path.join(scilab_root, "Version.incl")
+            if os.path.exists(version_incl):
+                try:
+                    with open(version_incl, "r", encoding="utf-8") as vf:
+                        for vline in vf:
+                            if "SCIVERSION=" in vline:
+                                version = vline.split("=", 1)[1].strip()
+                                break
+                except Exception:
+                    pass
+            xcos_dir = os.path.join(scilab_root, "modules", "xcos")
+            xcos_loaded = "T" if os.path.isdir(xcos_dir) else "F"
+            tmp_dir = os.environ.get("TEMP", "Unknown")
+        else:
+            # Linux / remote: spawn Scilab with a correctly formatted script.
+            # Statements are separated by real newlines; \n inside mprintf strings
+            # is the two-char Scilab escape that produces a newline in output.
+            import textwrap as _tw
+            status_script = _tw.dedent("""\
+                mode(-1);
+                lines(0);
+                mprintf("XCOS_STATUS_START\\n");
+                mprintf("%s\\n", getversion());
+                mprintf("%s\\n", string(with_module("xcos")));
+                mprintf("%s\\n", TMPDIR);
+                mprintf("XCOS_STATUS_END\\n");
+                exit(0);
+            """)
+            task_id = str(uuid.uuid4())
+            script_path = os.path.join(TEMP_OUTPUT_DIR, f"status_{task_id}.sce")
+            with open(script_path, "w", encoding="utf-8") as f:
+                f.write(status_script)
 
-        try:
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=BASE_DIR,
-            )
-            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=10.0)
-            out_str = stdout.decode("utf-8", errors="replace")
-            if "XCOS_STATUS_START" in out_str and "XCOS_STATUS_END" in out_str:
-                parts = out_str.split("XCOS_STATUS_START")[1].split("XCOS_STATUS_END")[0].strip().replace('\\r\\n', '\\n').split('\\n')
-                parts = [p.strip() for p in parts if p.strip()]
-                if len(parts) >= 3:
-                    version = parts[0]
-                    xcos_loaded = parts[1]
-                    tmp_dir = parts[2]
-        except Exception:
+            command = [scilab_bin]
+            if shutil.which("xvfb-run"):
+                command = ["xvfb-run", "-a", scilab_bin]
+            lower_bin = scilab_bin.lower()
+            if "scilab-cli" in lower_bin:
+                command.extend(["-nb", "-f", script_path])
+            else:
+                command.extend(["-nw", "-nb", "-f", script_path])
+
             try:
-                process.kill()
-            except:
-                pass
+                process = await asyncio.create_subprocess_exec(
+                    *command,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    cwd=BASE_DIR,
+                )
+                stdout, _ = await asyncio.wait_for(process.communicate(), timeout=20.0)
+                out_str = stdout.decode("utf-8", errors="replace")
+                if "XCOS_STATUS_START" in out_str and "XCOS_STATUS_END" in out_str:
+                    raw = out_str.split("XCOS_STATUS_START")[1].split("XCOS_STATUS_END")[0]
+                    parts = [p.strip() for p in raw.splitlines() if p.strip()]
+                    if len(parts) >= 3:
+                        version = parts[0]
+                        xcos_loaded = parts[1]
+                        tmp_dir = parts[2]
+            except Exception:
+                try:
+                    process.kill()
+                except Exception:
+                    pass
 
     html = f"""
     <style>
@@ -1264,56 +1293,75 @@ async def xcos_get_status_widget():
     return make_json_response({"html": html.strip()})
 
 async def xcos_get_workflow_widget(workflow_id: str = None):
+    try:
+        if workflow_id:
+            payload = parse_mcp_text_json_response(await xcos_get_workflow(workflow_id))
+            workflows = [payload["workflow"]]
+        else:
+            payload = parse_mcp_text_json_response(await xcos_list_workflows())
+            workflows = payload["workflows"]
+    except ValueError as exc:
+        return make_json_response({"html": f"<div>Error: {str(exc)}</div>"})
+
     html = """
     <style>
         .xcos-workflow-widget { font-family: sans-serif; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: inherit; color: inherit; }
         .xcos-phase-done { border-left: 4px solid #28a745; padding-left: 10px; margin-bottom: 5px; }
         .xcos-phase-active { border-left: 4px solid #007bff; padding-left: 10px; margin-bottom: 5px; font-weight: bold; }
         .xcos-phase-waiting { border-left: 4px solid #6c757d; padding-left: 10px; margin-bottom: 5px; color: #6c757d; }
+        .xcos-workflow-list { margin: 0; padding-left: 20px; }
+        .xcos-workflow-section { margin-bottom: 12px; }
     </style>
     <div class="xcos-workflow-widget">
     """
     
     if workflow_id:
-        workflow = get_workflow(workflow_id)
-        if not workflow:
-            return make_json_response({"html": f"<div>Error: Workflow {workflow_id} not found</div>"})
-        html += f"<h3>Workflow: {workflow_id}</h3>"
+        workflow = workflows[0]
+        html += f"<h3>Workflow: {workflow['workflow_id']}</h3>"
         for phase_key in WORKFLOW_PHASE_ORDER:
-            phase = workflow.phases[phase_key]
+            phase = workflow["phases"][phase_key]
             
-            if phase.status in ("approved", "completed"):
+            if phase["status"] in ("approved", "completed"):
                 css_class = "xcos-phase-done"
-            elif phase.status in ("in_progress", "awaiting_approval", "changes_requested", "failed"):
+            elif phase["status"] in ("in_progress", "awaiting_approval", "changes_requested", "failed"):
                 css_class = "xcos-phase-active"
             else:
                 css_class = "xcos-phase-waiting"
                 
             html += f'<div class="{css_class}">'
-            html += f'<div><strong>{phase.label}</strong> - <em>{phase.status}</em></div>'
-            if phase.submitted_at:
-                html += f'<div><small>Submitted: {phase.submitted_at}</small></div>'
-            if phase.reviewed_at:
-                html += f'<div><small>Reviewed: {phase.reviewed_at}</small></div>'
-                if phase.feedback:
-                    clean_fb = str(phase.feedback).replace("<", "&lt;").replace(">", "&gt;")
+            html += f'<div><strong>{phase["label"]}</strong> - <em>{phase["status"]}</em></div>'
+            if phase["submitted_at"]:
+                html += f'<div><small>Submitted: {phase["submitted_at"]}</small></div>'
+            if phase["reviewed_at"]:
+                html += f'<div><small>Reviewed: {phase["reviewed_at"]}</small></div>'
+                if phase["feedback"]:
+                    clean_fb = str(phase["feedback"]).replace("<", "&lt;").replace(">", "&gt;")
                     html += f'<div><small>Feedback: {clean_fb}</small></div>'
             html += '</div>'
     else:
-        workflows = list_workflow_payloads()
         if not workflows:
             html += "<div>No workflows found.</div>"
         else:
-            html += "<h3>Workflows</h3><ul>"
+            html += "<h3>Workflows</h3><ul class=\"xcos-workflow-list\">"
             for w in workflows:
-                html += f"<li><strong>{w['workflow_id']}</strong>: {w['current_phase_label']}</li>"
+                html += (
+                    f"<li class=\"xcos-workflow-section\"><strong>{w['workflow_id']}</strong>: "
+                    f"{w['current_phase_label']}</li>"
+                )
             html += "</ul>"
             
     html += "</div>"
     return make_json_response({"html": html.strip()})
 
 async def xcos_get_validation_widget(xml_content: str):
-    result = await run_verification(xml_content)
+    try:
+        result = await run_verification(xml_content)
+    except Exception as e:
+        result = {
+            "success": False,
+            "error": f"Validator internal error: {str(e)}",
+            "origin": "internal-error",
+        }
     
     html = """
     <style>
@@ -1470,6 +1518,24 @@ async def xcos_get_topology_widget(session_id: str):
         if idx > 0 and idx % 10 == 0:
             curr_y = 20
             curr_x += pad_x
+
+    # Global fallback: index ALL port elements in the tree by id.
+    # Fixes '? -> ?' link labels when port IDs use custom prefixes (e.g. 'SIN_f:out1')
+    # that weren't resolved during the per-block XPath loop above.
+    for p in tree.xpath(".//*[contains(local-name(), 'Port') and @id]"):
+        pid = p.get("id")
+        if pid and pid not in ports_map:
+            parent = p.getparent()
+            if parent is not None:
+                parent_id = parent.get("id")
+                if parent_id and parent_id in block_map:
+                    tag = p.tag
+                    p_type = "in" if any(k in tag for k in ("Input", "InPort", "Control")) else "out"
+                    ports_map[pid] = {"block_id": parent_id, "type": p_type}
+                    if p_type == "in":
+                        block_map[parent_id]["in_ports"].append(pid)
+                    else:
+                        block_map[parent_id]["out_ports"].append(pid)
 
     connected_ports = set()
     link_strings = []
@@ -1730,8 +1796,14 @@ async def xcos_verify_draft(session_id: str):
     draft.last_verified_at = datetime.now().isoformat()
     draft.last_verified_success = result.get("success")
     draft.last_verified_task_id = result.get("task_id")
-    draft.last_verified_file_path = result.get("file_path")
-    draft.last_verified_file_size = result.get("file_size_bytes")
+    # Point last_verified to the session snapshot (not the temp validator file)
+    # so xcos_get_file_content(source='last_verified') always returns the final file.
+    if result.get("success"):
+        draft.last_verified_file_path = session_meta["path"]
+        draft.last_verified_file_size = session_meta["size_bytes"]
+    else:
+        draft.last_verified_file_path = result.get("file_path")
+        draft.last_verified_file_size = result.get("file_size_bytes")
     draft.last_verified_error = result.get("error")
     draft.last_verified_origin = result.get("origin", "scilab-validator")
 
@@ -1760,47 +1832,69 @@ async def xcos_verify_draft(session_id: str):
 
 
 
-async def xcos_commit_phase(session_id: str, phase_label: str, blocks_xml: str):
+async def xcos_commit_phase(session_id: str, phase_label: str, blocks_xml: str = ""):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
-    
+
     if session_id not in state.phase_plans:
-        return make_text_response(f"Error: No phase plan found for session {session_id}. Please start the draft with phases array.")
-    
+        return make_text_response(
+            f"Error: No phase plan found for session {session_id}. "
+            "Call xcos_start_draft with phases=['phase3_implementation'] first."
+        )
+
     plan = state.phase_plans[session_id]
     if phase_label not in plan["phases"]:
-        return make_text_response(f"Error: Phase '{phase_label}' not found in the plan.")
-    
-    # Pre-validate XML string
-    try:
-        parser = etree.XMLParser(remove_blank_text=True)
-        root = etree.fromstring(f"<root>{blocks_xml}</root>".encode("utf-8"), parser)
-        for block in root.xpath("//BasicBlock | //BigSom | //SplitBlock | //TextBlock | //EventInBlock | //EventOutBlock | //ExplicitInBlock | //ExplicitOutBlock"):
-            if not block.xpath(".//mxGeometry"):
-                return make_text_response("Error: Invalid XML - block is missing required <mxGeometry> element.")
-    except Exception as e:
-        return make_text_response(f"Error: Invalid XML fragment syntax: {str(e)}")
-    
-    # Append blocks
-    state.drafts[session_id].add_blocks(blocks_xml)
-    
-    # Mark as complete (avoid duplicates if re-committed)
+        return make_text_response(
+            f"Error: Phase '{phase_label}' not in plan. Registered phases: {plan['phases']}"
+        )
+
+    # Only append blocks when explicitly provided — prevents duplication when blocks
+    # were already added via xcos_add_blocks (the normal workflow).
+    if blocks_xml and blocks_xml.strip():
+        try:
+            parser = etree.XMLParser(remove_blank_text=True)
+            root = etree.fromstring(f"<root>{blocks_xml}</root>".encode("utf-8"), parser)
+            for block in root.xpath(
+                "//BasicBlock | //BigSom | //SplitBlock | //TextBlock "
+                "| //EventInBlock | //EventOutBlock "
+                "| //ExplicitInBlock | //ExplicitOutBlock"
+            ):
+                if not block.xpath(".//mxGeometry"):
+                    return make_text_response(
+                        "Error: Invalid XML - block missing required <mxGeometry> element."
+                    )
+        except Exception as e:
+            return make_text_response(f"Error: Invalid XML fragment syntax: {str(e)}")
+        state.drafts[session_id].add_blocks(blocks_xml)
+
+    # Mark phase complete (idempotent)
     if phase_label not in plan["completed"]:
         plan["completed"].append(phase_label)
-    
+
     session_meta = write_session_snapshot(session_id)
-    
+
     completed_count = len(plan["completed"])
     total_count = len(plan["phases"])
     remaining = [p for p in plan["phases"] if p not in plan["completed"]]
-    
+    file_path = session_meta["path"]
+    file_size = session_meta["size_bytes"]
+
     return make_json_response({
         "status": "success",
         "completed_count": completed_count,
         "total_count": total_count,
         "remaining_phases": remaining,
-        "written_to": session_meta["path"],
-        "file_size_bytes": session_meta["size_bytes"]
+        "written_to": file_path,
+        "file_size_bytes": file_size,
+        "MUST_PRESENT_TO_USER": (
+            f"The verified .xcos file is ready at: {file_path} ({file_size} bytes). "
+            "You MUST immediately: "
+            "(1) call xcos_get_file_path to confirm the path, "
+            "(2) call xcos_get_file_content(session_id=..., source='session') to read the XML, "
+            "(3) write the file content to your output directory so the user can download it, "
+            "(4) present the file path and a download link in your reply. "
+            "Do NOT skip these steps or wait for the user to ask."
+        ),
     })
 
 
@@ -2210,24 +2304,38 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "else. Returns an HTML status widget — always display it to the user.\n\n"
                 "This tool is Step 1 of the Xcos diagram workflow. After calling this, "
                 "the required sequence is:\n"
-                "  PHASE 1 (visualise & explain):\n"
-                "    xcos_get_block_catalogue_widget → xcos_create_workflow → \n"
-                "    xcos_get_workflow_widget → [draw Visualizer diagram] → \n"
-                "    [explain math step by step] → xcos_submit_phase(phase1_math_model) → \n"
-                "    xcos_get_workflow_widget → [ask user for approval] → \n"
-                "    xcos_review_phase(approve, phase1_math_model)\n\n"
-                "  PHASE 2 (architecture plan):\n"
-                "    get_xcos_block_data (for EVERY block — never skip this) → \n"
-                "    [write block + link plan] → xcos_submit_phase(phase2_architecture) → \n"
-                "    xcos_get_workflow_widget → [ask user for approval] → \n"
-                "    xcos_review_phase(approve, phase2_architecture)\n\n"
-                "  PHASE 3 (build, verify, fix):\n"
-                "    xcos_start_draft(workflow_id) → xcos_add_blocks → \n"
-                "    xcos_get_topology_widget → xcos_add_links → \n"
-                "    xcos_get_topology_widget → xcos_get_draft_xml(pretty_print=true) → \n"
-                "    xcos_verify_draft → xcos_get_validation_widget → \n"
-                "    [if failed: fix XML and retry from xcos_add_blocks until success=true] → \n"
-                "    xcos_get_file_path → xcos_get_workflow_widget\n\n"
+                "PHASE 1 (math derivation):\n"
+                "  xcos_get_block_catalogue_widget → xcos_create_workflow →\n"
+                "  [derive equations step by step in plain text] →\n"
+                "  xcos_submit_phase(phase1_math_model) →\n"
+                "  xcos_get_workflow_widget → [ask user for approval] →\n"
+                "  xcos_review_phase(approve, phase1_math_model) →\n"
+                "  xcos_get_workflow_widget\n\n"
+                "PHASE 2 (block diagram preview):\n"
+                "  get_xcos_block_data (for EVERY block) →\n"
+                "  get_xcos_block_source (for any block whose parameters are unclear) →\n"
+                "  search_related_xcos_files (for any block with complex dependencies) →\n"
+                "  [draw Visualizer diagram: exact Xcos blocks as labelled rectangles,\n"
+                "   solid arrows for data links with port numbers and signal names,\n"
+                "   dashed arrows for clock/event links, feedback loops routed without\n"
+                "   crossing other blocks — this is a preview of the real Xcos diagram,\n"
+                "   not an illustration of the physical system] →\n"
+                "  [write full architecture plan: every block name, function, parameters,\n"
+                "   every link with source/target port IDs] →\n"
+                "  xcos_submit_phase(phase2_architecture) →\n"
+                "  xcos_get_workflow_widget → [ask user for approval] →\n"
+                "  xcos_review_phase(approve, phase2_architecture) →\n"
+                "  xcos_get_workflow_widget\n\n"
+                "PHASE 3 (build, verify, fix):\n"
+                "  xcos_start_draft(workflow_id) → xcos_add_blocks →\n"
+                "  xcos_get_topology_widget → xcos_add_links →\n"
+                "  xcos_get_topology_widget → xcos_get_draft_xml(pretty_print=true) →\n"
+                "  xcos_verify_draft → xcos_get_validation_widget →\n"
+                "  [if failed: fix XML and retry from xcos_add_blocks, max 3 attempts,\n"
+                "   then ask user for guidance] →\n"
+                "  xcos_commit_phase(phase3_implementation) →\n"
+                "  xcos_submit_phase(phase3_implementation) →\n"
+                "  xcos_get_file_path → xcos_get_workflow_widget\n\n"
                 "RULES:\n"
                 "- Never skip phases or jump straight to file creation.\n"
                 "- Never write block XML from memory — always call get_xcos_block_data first.\n"
@@ -2239,17 +2347,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         ),
         mcp_types.Tool(
             name="xcos_get_workflow_widget",
-            description=(
-                "Call this to show the user the live 3-phase workflow progress tracker. "
-                "Always display the returned widget. Call it at these moments:\n"
-                "  - After xcos_create_workflow (show the plan before Phase 1 begins)\n"
-                "  - After xcos_submit_phase for phase1_math_model (show Phase 1 submitted)\n"
-                "  - After xcos_review_phase approves phase1 (show Phase 1 approved)\n"
-                "  - After xcos_submit_phase for phase2_architecture (show Phase 2 submitted)\n"
-                "  - After xcos_review_phase approves phase2 (show Phase 2 approved)\n"
-                "  - At the very end of Phase 3, after the file is verified (show all done)\n"
-                "Always pass the workflow_id parameter so the widget shows the correct session."
-            ),
+            description="Call this after every xcos_submit_phase and xcos_review_phase call. Always display the returned widget — it shows the user their current phase progress. Pass workflow_id to show a specific workflow, or omit it to list all active workflows.",
             inputSchema={"type": "object", "properties": {"workflow_id": {"type": "string"}}},
         ),
         mcp_types.Tool(
@@ -2390,7 +2488,10 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "is approved. Always pass the workflow_id so the draft is linked to the "
                 "workflow. Store the returned session_id — it is required for all "
                 "subsequent xcos_add_blocks, xcos_add_links, xcos_get_topology_widget, "
-                "xcos_get_draft_xml, xcos_verify_draft, and xcos_get_file_path calls."
+                "xcos_get_draft_xml, xcos_verify_draft, and xcos_get_file_path calls.\n"
+                "IMPORTANT: To use xcos_commit_phase later, you MUST pass "
+                "phases=['phase3_implementation'] here. Omitting the phases array will "
+                "cause xcos_commit_phase to fail with 'No phase plan found'."
             ),
             inputSchema={"type": "object", "properties": {
                 "schema_version": {"type": "string", "default": "1.1"},
@@ -2433,7 +2534,11 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "PHASE 3 — Step 7. Call this after xcos_get_draft_xml to validate the "
                 "diagram. After calling this, always call xcos_get_validation_widget with "
                 "the current draft XML and display the result widget to the user.\n"
-                "  - If success=true: call xcos_get_file_path and present the file.\n"
+                "  - If success=true: IMMEDIATELY call xcos_commit_phase with "
+                "    phase_label='phase3_implementation' and blocks_xml='', then call "
+                "    xcos_get_file_path, read the file with xcos_get_file_content, write "
+                "    it to your output folder, and present the path to the user. "
+                "    Do NOT wait for the user to ask.\n"
                 "  - If success=false: read the error carefully, fix the block or link XML, \n"
                 "    go back to xcos_add_blocks and rebuild. NEVER stop after one failure — \n"
                 "    keep iterating until success=true is returned."
@@ -2443,12 +2548,24 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
 
         mcp_types.Tool(
             name="xcos_commit_phase",
-            description="Call this after finishing each phase. Commits the generated XML to the file and signals that the next phase can begin. Do not start the next phase until this returns successfully.",
+            description=(
+                "PHASE 3 — Step 9. Call this after xcos_verify_draft returns success=true, "
+                "with session_id and phase_label='phase3_implementation'.\n"
+                "blocks_xml is OPTIONAL — pass an empty string '' (the default). Blocks "
+                "were already added via xcos_add_blocks; passing blocks_xml again duplicates them.\n"
+                "After calling this:\n"
+                "  1. Call xcos_submit_phase(phase3_implementation).\n"
+                "  2. Call xcos_get_file_path to get the file path.\n"
+                "  3. Call xcos_get_file_content(source='session') to read the XML.\n"
+                "  4. Write the XML to your output folder using your file tools.\n"
+                "  5. IMMEDIATELY present the file path and download link to the user.\n"
+                "Do NOT wait for the user to ask — presenting the file is MANDATORY."
+            ),
             inputSchema={"type": "object", "properties": {
                 "session_id": {"type": "string"},
                 "phase_label": {"type": "string"},
-                "blocks_xml": {"type": "string"}
-            }, "required": ["session_id", "phase_label", "blocks_xml"]},
+                "blocks_xml": {"type": "string", "default": ""}
+            }, "required": ["session_id", "phase_label"]},
         ),
         mcp_types.Tool(
             name="xcos_get_draft_xml",
@@ -2470,10 +2587,11 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             name="xcos_get_file_path",
             description=(
                 "PHASE 3 — Step 9. Call this only after xcos_verify_draft has returned "
-                "success=true. Retrieve the verified file path and present the .xcos file "
-                "to the user for download. After this, call xcos_get_workflow_widget one "
-                "final time to show the completed 3-phase workflow summary and confirm "
-                "the file is ready to open in Scilab Xcos."
+                "success=true. Retrieve the verified file path. After getting the path, "
+                "call xcos_get_file_content(source='session') to read the XML content, "
+                "then write it to your output directory so the user can download it. "
+                "Present the file path and download link to the user IMMEDIATELY. "
+                "Then call xcos_get_workflow_widget to show the completed workflow summary."
             ),
             inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
         ),

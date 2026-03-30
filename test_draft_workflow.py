@@ -36,11 +36,15 @@ CONST_BLOCK_XML = """
 class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.created_sessions = []
+        self.created_workflows = []
 
     def tearDown(self):
         for session_id in self.created_sessions:
             server.state.drafts.pop(session_id, None)
             server.state.phase_plans.pop(session_id, None)
+            server.state.draft_to_workflow.pop(session_id, None)
+        for workflow_id in self.created_workflows:
+            server.state.workflows.pop(workflow_id, None)
 
     async def start_session(self):
         response = await server.xcos_start_draft()
@@ -147,6 +151,11 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("{{problem_statement}}", prompt_text)
         self.assertIn("If validation still fails after 3 repair attempts", prompt_text)
         self.assertIn("Step 30a.", prompt_text)
+        self.assertIn(
+            "Use the exact blocks and port connections from the get_xcos_block_data calls — the diagram must match the architecture plan exactly.",
+            prompt_text,
+        )
+        self.assertNotIn("calls in steps 9 and 10", prompt_text)
 
     async def test_build_xcos_diagram_prompt_requires_problem_statement(self):
         with self.assertRaises(ValueError):
@@ -157,6 +166,33 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsNotNone(options.capabilities.prompts)
         self.assertFalse(options.capabilities.prompts.listChanged)
+
+    async def test_workflow_widget_uses_existing_workflow_state(self):
+        workflow = server.create_workflow_session("test system")
+        self.created_workflows.append(workflow.workflow_id)
+        workflow.phases["phase1_math_model"].status = "awaiting_approval"
+        workflow.phases["phase1_math_model"].submitted_at = "2026-03-30T00:00:00"
+
+        response = await server.xcos_get_workflow_widget(workflow.workflow_id)
+        payload = json.loads(response[0].text)
+
+        self.assertIn(workflow.workflow_id, payload["html"])
+        self.assertIn("Phase 1: Mathematical Analysis & Calculus", payload["html"])
+        self.assertIn("awaiting_approval", payload["html"])
+
+    async def test_tool_descriptions_reflect_updated_workflow_guidance(self):
+        tools = await server.handle_list_tools()
+        by_name = {tool.name: tool for tool in tools}
+
+        self.assertIn("PHASE 2 (block diagram preview):", by_name["xcos_get_status_widget"].description)
+        self.assertIn(
+            "Call this after every xcos_submit_phase and xcos_review_phase call.",
+            by_name["xcos_get_workflow_widget"].description,
+        )
+        self.assertIn(
+            "phase_label='phase3_implementation'",
+            by_name["xcos_commit_phase"].description,
+        )
 
 
 if __name__ == "__main__":
