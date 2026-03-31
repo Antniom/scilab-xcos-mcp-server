@@ -1280,7 +1280,7 @@ async def xcos_get_status_widget():
             "scilab_success": connection_status == "Connected",
             "scilab_output": version,
             "env_context": mode,
-            "active_drafts": len(state.sessions)
+            "active_drafts": len(state.drafts)
         }
     }
     return make_json_response(payload)
