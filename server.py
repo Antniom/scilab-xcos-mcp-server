@@ -102,7 +102,7 @@ BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
 
     **Step 4.** Derive the governing equations step by step in plain text. Show all algebra. Define every variable and parameter with units and numeric values.
 
-    **Step 5.** Draw an inline SVG diagram using the Visualizer tool showing the signal flow: boxes for each operation (e.g. sin, gain, integral), arrows showing how signals connect, labels with actual numeric values. This must be a proper Claude SVG diagram — no ASCII art.
+    **Step 5.** Draw an inline Mermaid diagram (using `graph LR`) showing the signal flow: blocks for each operation with their Xcos name and numeric parameters (e.g. `GAIN[-4.9]`), arrows showing how signals connect. Do NOT use raw SVG coords to avoid messy overlapping.
 
     **Step 6.** Call `xcos_submit_phase` with `phase='phase1_math_model'`, `workflow_id`, and the full math derivation as content.
 
@@ -122,7 +122,7 @@ BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
 
     **Step 12.** Write out the full architecture plan: every block (Xcos name, simulation function, parameters with values), and every link (source block + port ID → target block + port ID). Be explicit about clock/activation links vs data links.
 
-    **Step 13.** Draw an inline diagram using the Visualizer tool showing the actual Xcos block diagram — this is a preview of the real diagram the user will get, not an illustration of the physical system. Draw each block as a labelled rectangle showing its exact Xcos name and key parameter value (e.g. 'GAIN_f  k=−5'), solid arrows for data/signal links with the signal name and port number labelled on each arrow, dashed arrows for clock/activation links visually distinct from data links, and feedback loops routed clearly so arrows do not cross other blocks. Use the exact blocks and port connections from the get_xcos_block_data calls — the diagram must match the architecture plan exactly.
+    **Step 13.** Draw an inline Mermaid diagram (using `graph LR`) showing the actual Xcos block architecture. Use simple block shapes with the exact Xcos name and key parameter (e.g. `GAIN[GAIN_f k=-5]`). Use solid arrows (`-->`) for data/signal links and dashed arrows (`-.->`) for clock/activation links. Label edges lightly (e.g. `-- out1 to in1 -->`) rather than making separate ports, and rely entirely on Mermaid's auto-rendering so lines do not overlap. The diagram must match the architecture plan perfectly.
 
     **Step 14.** Call `xcos_submit_phase` with `phase='phase2_architecture'`, `workflow_id`, and the full block + link plan as content.
 
@@ -175,7 +175,7 @@ BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
     - Never proceed past a STOP gate without the user explicitly typing 'approve'.
     - Never write block XML from memory — always call `get_xcos_block_data` first.
     - Never skip `get_xcos_block_source` or `search_related_xcos_files` if a block's parameters or dependencies are unclear.
-    - Every Visualizer diagram must be a proper SVG with labelled boxes and arrows — no ASCII art, no text sketches.
+    - Every diagram must be a proper Mermaid diagram (`graph LR`) — do NOT use raw SVG generation, and do NOT use ASCII art.
     - Always call `xcos_get_workflow_widget` after every `xcos_submit_phase` call.
     - Always display every widget inline immediately after it is returned.
     - If the user requests changes at any approval gate, go back and revise — never push forward.
@@ -2281,11 +2281,10 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "  get_xcos_block_data (for EVERY block) →\n"
                 "  get_xcos_block_source (for any block whose parameters are unclear) →\n"
                 "  search_related_xcos_files (for any block with complex dependencies) →\n"
-                "  [draw Visualizer diagram: exact Xcos blocks as labelled rectangles,\n"
-                "   solid arrows for data links with port numbers and signal names,\n"
-                "   dashed arrows for clock/event links, feedback loops routed without\n"
-                "   crossing other blocks — this is a preview of the real Xcos diagram,\n"
-                "   not an illustration of the physical system] →\n"
+                "  [draw Mermaid diagram (graph LR): exact Xcos blocks with simple names, \n"
+                "   solid arrows for data links, dashed arrows for clock/event links, \n"
+                "   feedback loops routed without crossing other blocks — this is a preview \n"
+                "   of the real Xcos diagram, not an illustration of the physical system] →\n"
                 "  [write full architecture plan: every block name, function, parameters,\n"
                 "   every link with source/target port IDs] →\n"
                 "  xcos_submit_phase(phase2_architecture) →\n"
@@ -2383,7 +2382,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             description=(
                 "Submits content for a workflow phase and sets it to \"awaiting_approval\".\n"
                 "Call this at these specific moments:\n"
-                "  - phase1_math_model: after the Visualizer diagram is drawn and the \n"
+                "  - phase1_math_model: after the Mermaid diagram is drawn and the \n"
                 "    full math explanation is written. Content should be the complete \n"
                 "    step-by-step mathematical description of the system.\n"
                 "  - phase2_architecture: after get_xcos_block_data has been called for \n"
