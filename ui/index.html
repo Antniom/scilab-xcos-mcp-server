@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scilab Xcos MCP Server</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Main Container -->
+    <div id="app">
+
+        <!-- Initial/Loading State -->
+        <div id="widget-waiting" class="widget-container active">
+            <div class="empty-state">
+                <div class="spinner"></div>
+                <h2>Waiting for Xcos Data...</h2>
+                <p>Execute an Xcos MCP tool to view results here.</p>
+            </div>
+        </div>
+
+        <!-- 1. Status Widget -->
+        <div id="widget-status" class="widget-container">
+            <div class="hero-header">
+                <div>
+                    <h1 class="hero-title">Xcos Server Status</h1>
+                    <p class="hero-subtitle" id="status-time">Fetched at: --:--</p>
+                </div>
+                <div class="badge" id="status-badge">Unknown</div>
+            </div>
+            
+            <div class="status-grid">
+                <div class="card">
+                    <h3 class="flex-row"><span class="pulse-dot" id="scilab-pulse"></span> Scilab Engine</h3>
+                    <p id="scilab-version" class="text-secondary" style="margin: 0; padding-left: 24px;">Checking...</p>
+                </div>
+                <div class="card">
+                    <h3 class="flex-row"><span class="pulse-dot" id="env-pulse"></span> Environment</h3>
+                    <p id="env-status" class="text-secondary" style="margin: 0; padding-left: 24px;">Checking...</p>
+                </div>
+                <div class="card">
+                    <h3 class="flex-row">Active Drafts</h3>
+                    <p id="draft-count" class="text-secondary" style="margin: 0; font-size: 1.5rem; font-weight: bold;">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Workflow Widget -->
+        <div id="widget-workflow" class="widget-container">
+            <div class="hero-header space-between">
+                <div>
+                    <h1 class="hero-title">Xcos Model Generation</h1>
+                    <p class="hero-subtitle">Workflow ID: <span id="workflow-id">---</span></p>
+                </div>
+            </div>
+            <div class="card">
+                <div id="workflow-phases" class="flex-col" style="gap: 24px;">
+                    <!-- Phases rendered dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Catalogue Widget -->
+        <div id="widget-catalogue" class="widget-container">
+            <div class="hero-header">
+                <h1 class="hero-title">Block Catalogue</h1>
+            </div>
+            <div class="card">
+                <h3 id="catalogue-category">Category: All</h3>
+                <div id="catalogue-list" class="grid-3" style="margin-top: 16px;">
+                    <!-- Blocks rendered dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Topology Widget -->
+        <div id="widget-topology" class="widget-container">
+            <div class="hero-header">
+                <div>
+                    <h1 class="hero-title">Draft Topology Preview</h1>
+                    <p class="hero-subtitle" id="topology-stats">0 blocks, 0 links</p>
+                </div>
+            </div>
+            <div class="card" style="padding: 12px; background: #fff; text-align: center; overflow-x: auto;">
+                <div id="topology-svg">
+                    <!-- Mermaid / DOT SVG will go here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Validation Widget -->
+        <div id="widget-validation" class="widget-container">
+            <div class="hero-header space-between">
+                <h1 class="hero-title">Validation Results</h1>
+                <div class="badge" id="validation-badge">Pending</div>
+            </div>
+            <div class="card" id="validation-details">
+                <!-- Validation messages go here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- The ext-apps logic to connect to the MCP host -->
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>

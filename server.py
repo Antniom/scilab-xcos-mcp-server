@@ -1274,23 +1274,16 @@ async def xcos_get_status_widget():
                 except Exception:
                     pass
 
-    html = f"""
-    <style>
-        .xcos-status-widget {{ font-family: sans-serif; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: inherit; color: inherit; }}
-        .xcos-badge {{ display: inline-block; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.9em; }}
-        .xcos-badge-status {{ background-color: {status_color}; color: #fff; }}
-        .xcos-meta {{ margin-top: 10px; font-size: 0.9em; }}
-    </style>
-    <div class="xcos-status-widget">
-        <div><strong>Scilab Status:</strong> <span class="xcos-badge xcos-badge-status">{connection_status}</span> ({mode} mode)</div>
-        <div class="xcos-meta">
-            <div><strong>Version:</strong> {version}</div>
-            <div><strong>Xcos Loaded:</strong> {xcos_loaded}</div>
-            <div><strong>Temp Dir:</strong> {tmp_dir}</div>
-        </div>
-    </div>
-    """
-    return make_json_response({"html": html.strip()})
+    payload = {
+        "widget_type": "status",
+        "payload": {
+            "scilab_success": connection_status == "Connected",
+            "scilab_output": version,
+            "env_context": mode,
+            "active_drafts": len(state.sessions)
+        }
+    }
+    return make_json_response(payload)
 
 async def xcos_get_workflow_widget(workflow_id: str = None):
     try:
@@ -1301,57 +1294,35 @@ async def xcos_get_workflow_widget(workflow_id: str = None):
             payload = parse_mcp_text_json_response(await xcos_list_workflows())
             workflows = payload["workflows"]
     except ValueError as exc:
-        return make_json_response({"html": f"<div>Error: {str(exc)}</div>"})
+        return make_json_response({
+            "widget_type": "workflow",
+            "payload": {
+                "error": str(exc)
+            }
+        })
 
-    html = """
-    <style>
-        .xcos-workflow-widget { font-family: sans-serif; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: inherit; color: inherit; }
-        .xcos-phase-done { border-left: 4px solid #28a745; padding-left: 10px; margin-bottom: 5px; }
-        .xcos-phase-active { border-left: 4px solid #007bff; padding-left: 10px; margin-bottom: 5px; font-weight: bold; }
-        .xcos-phase-waiting { border-left: 4px solid #6c757d; padding-left: 10px; margin-bottom: 5px; color: #6c757d; }
-        .xcos-workflow-list { margin: 0; padding-left: 20px; }
-        .xcos-workflow-section { margin-bottom: 12px; }
-    </style>
-    <div class="xcos-workflow-widget">
-    """
-    
-    if workflow_id:
+    phases = []
+    if workflow_id and workflows:
         workflow = workflows[0]
-        html += f"<h3>Workflow: {workflow['workflow_id']}</h3>"
+        # Build phases array for frontend
         for phase_key in WORKFLOW_PHASE_ORDER:
             phase = workflow["phases"][phase_key]
+            phases.append({
+                "label": phase["label"],
+                "status": phase["status"],
+                "submitted_at": phase["submitted_at"],
+                "reviewed_at": phase["reviewed_at"],
+                "feedback": getattr(phase, 'feedback', phase.get("feedback", ""))
+            })
             
-            if phase["status"] in ("approved", "completed"):
-                css_class = "xcos-phase-done"
-            elif phase["status"] in ("in_progress", "awaiting_approval", "changes_requested", "failed"):
-                css_class = "xcos-phase-active"
-            else:
-                css_class = "xcos-phase-waiting"
-                
-            html += f'<div class="{css_class}">'
-            html += f'<div><strong>{phase["label"]}</strong> - <em>{phase["status"]}</em></div>'
-            if phase["submitted_at"]:
-                html += f'<div><small>Submitted: {phase["submitted_at"]}</small></div>'
-            if phase["reviewed_at"]:
-                html += f'<div><small>Reviewed: {phase["reviewed_at"]}</small></div>'
-                if phase["feedback"]:
-                    clean_fb = str(phase["feedback"]).replace("<", "&lt;").replace(">", "&gt;")
-                    html += f'<div><small>Feedback: {clean_fb}</small></div>'
-            html += '</div>'
-    else:
-        if not workflows:
-            html += "<div>No workflows found.</div>"
-        else:
-            html += "<h3>Workflows</h3><ul class=\"xcos-workflow-list\">"
-            for w in workflows:
-                html += (
-                    f"<li class=\"xcos-workflow-section\"><strong>{w['workflow_id']}</strong>: "
-                    f"{w['current_phase_label']}</li>"
-                )
-            html += "</ul>"
-            
-    html += "</div>"
-    return make_json_response({"html": html.strip()})
+    return make_json_response({
+        "widget_type": "workflow",
+        "payload": {
+            "workflow_id": workflow_id or "All",
+            "phases": phases if workflow_id else [],
+            "all_workflows": workflows if not workflow_id else []
+        }
+    })
 
 async def xcos_get_validation_widget(xml_content: str):
     try:
@@ -1363,58 +1334,38 @@ async def xcos_get_validation_widget(xml_content: str):
             "origin": "internal-error",
         }
     
-    html = """
-    <style>
-        .xcos-val-widget { font-family: sans-serif; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: inherit; color: inherit; }
-        .xcos-val-ok { color: #28a745; margin-bottom: 4px; font-weight: bold; }
-        .xcos-val-warn { color: #ffc107; margin-bottom: 4px; font-weight: bold; }
-        .xcos-val-err { color: #dc3545; margin-bottom: 4px; font-weight: bold; }
-        .xcos-val-item { margin-left: 20px; font-size: 0.9em; color: inherit; }
-    </style>
-    <div class="xcos-val-widget">
-    """
+    error_msgs = []
     
-    if result.get("success"):
-        html += '<div class="xcos-val-ok">✔ Verification Successful</div>'
-    else:
-        html += '<div class="xcos-val-err">✖ Verification Failed</div>'
-        
     if result.get("auto_fixed_mux_to_scalar"):
-        html += '<div class="xcos-val-warn">⚠ Auto-fixed MUX to scalar connections</div>'
+        error_msgs.append("⚠ Auto-fixed MUX to scalar connections")
         
     if "errors" in result and result["errors"]:
         for e in result["errors"]:
             if e["type"] == "REGISTRY_SIZE_MISMATCH":
-                html += f'<div class="xcos-val-err xcos-val-item">Block {e.get("blockId")} ({e.get("block")}): expected {e.get("expectedSize")}, got {e.get("actualSize")} on port {e.get("portIndex")}</div>'
+                error_msgs.append(f"Block {e.get('blockId')} ({e.get('block')}): expected {e.get('expectedSize')}, got {e.get('actualSize')} on port {e.get('portIndex')}")
             elif e["type"] == "PORT_SIZE_MISMATCH":
-                html += f'<div class="xcos-val-err xcos-val-item">Link {e.get("linkId")}: size mismatch between {e.get("srcBlock")} {e.get("srcSize")} and {e.get("dstBlock")} {e.get("dstSize")}</div>'
+                error_msgs.append(f"Link {e.get('linkId')}: size mismatch between {e.get('srcBlock')} {e.get('srcSize')} and {e.get('dstBlock')} {e.get('dstSize')}")
             elif e["type"] == "FANOUT_WITHOUT_SPLIT":
-                html += f'<div class="xcos-val-err xcos-val-item">Block {e.get("blockId")}: {e.get("message", "fanout without SplitBlock")}</div>'
+                error_msgs.append(f"Block {e.get('blockId')}: {e.get('message', 'fanout without SplitBlock')}")
             else:
-                html += f'<div class="xcos-val-err xcos-val-item">{e.get("type")}: {e.get("message", "")}</div>'
+                error_msgs.append(f"{e.get('type')}: {e.get('message', '')}")
                 
     if result.get("error"):
-        err_msg = str(result["error"]).replace("<", "&lt;").replace(">", "&gt;").replace('\\n', '<br>')
-        html += f'<div class="xcos-val-err xcos-val-item"><pre style="margin: 0; white-space: pre-wrap;">{err_msg}</pre></div>'
+        error_msgs.append(str(result["error"]))
         
     if result.get("warnings"):
         for w in result["warnings"]:
-            clean_w = str(w).replace("<", "&lt;").replace(">", "&gt;")
-            html += f'<div class="xcos-val-warn xcos-val-item">{clean_w}</div>'
+            error_msgs.append(str(w))
             
-    html += "</div>"
-    return make_json_response({"html": html.strip()})
+    return make_json_response({
+        "widget_type": "validation",
+        "payload": {
+            "success": result.get("success", False),
+            "error": "\n".join(error_msgs) if error_msgs else None
+        }
+    })
 
 async def xcos_get_block_catalogue_widget(category: str = None):
-    html = f'''
-    <style>
-        .xcos-cat-widget {{ font-family: sans-serif; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: inherit; color: inherit; max-height: 400px; overflow-y: auto; }}
-        .xcos-cat-table {{ width: 100%; border-collapse: collapse; font-size: 0.9em; }}
-        .xcos-cat-table th, .xcos-cat-table td {{ border: 1px solid #eee; padding: 4px 8px; text-align: left; }}
-    </style>
-    <div class="xcos-cat-widget">
-    '''
-    
     index_path = os.path.join(DATA_DIR, "blocks", "_index.json")
     blocks = []
     if os.path.exists(index_path):
@@ -1428,26 +1379,31 @@ async def xcos_get_block_catalogue_widget(category: str = None):
     if category:
         cat_lower = category.lower()
         blocks = [b for b in blocks if cat_lower in b.get("category", "").lower()]
-        html += f"<h3>Block Catalogue (Category: {category})</h3>"
-    else:
-        html += f"<h3>Block Catalogue</h3>"
         
-    if not blocks:
-        html += "<div>No blocks found.</div></div>"
-        return make_json_response({"html": html.strip()})
-        
-    html += '<table class="xcos-cat-table"><tr><th>Name</th><th>Category</th><th>Description</th></tr>'
+    formatted_blocks = []
     for b in blocks:
-        name = b.get("name", "")
-        cat = b.get("category", "")
-        desc = b.get("description", "").replace("<", "&lt;").replace(">", "&gt;")
-        html += f"<tr><td><strong>{name}</strong></td><td>{cat}</td><td>{desc}</td></tr>"
-    html += "</table></div>"
-    return make_json_response({"html": html.strip()})
+        formatted_blocks.append({
+            "name": b.get("name", ""),
+            "type": b.get("category", ""),
+            "description": b.get("description", "")
+        })
+        
+    return make_json_response({
+        "widget_type": "catalogue",
+        "payload": {
+            "category": category,
+            "blocks": formatted_blocks
+        }
+    })
 
 async def xcos_get_topology_widget(session_id: str):
     if session_id not in state.drafts:
-        return make_json_response({"html": f"<div>Error: Session {session_id} not found</div>"})
+        return make_json_response({
+            "widget_type": "topology",
+            "payload": {
+                "error": f"Session {session_id} not found"
+            }
+        })
         
     draft = state.drafts[session_id]
     xml_content = draft.to_xml()
@@ -1456,20 +1412,15 @@ async def xcos_get_topology_widget(session_id: str):
         parser = etree.XMLParser(remove_blank_text=True)
         tree = etree.fromstring(xml_content.encode("utf-8"), parser)
     except Exception as e:
-        return make_json_response({"html": f"<div>Error parsing XML: {str(e)}</div>"})
+        return make_json_response({
+            "widget_type": "topology",
+            "payload": {
+                "error": f"Error parsing XML: {str(e)}"
+            }
+        })
         
     blocks = tree.xpath(XCOS_BLOCK_XPATH)
     links = tree.xpath(XCOS_LINK_XPATH)
-    
-    html = f'''
-    <style>
-        .xcos-topo-widget {{ font-family: monospace; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: inherit; color: inherit; white-space: pre; }}
-        .xcos-topo-err {{ color: #dc3545; font-weight: bold; background: #ffe6e6; padding: 0 4px; border-radius: 2px; }}
-        .xcos-svg-container {{ margin-top: 15px; border: 1px dotted #ccc; padding: 10px; background: #fff; }}
-    </style>
-    <div class="xcos-topo-widget">
-    <h3>Topology: {session_id}</h3>
-    '''
     
     block_map = {}
     for b in blocks:
@@ -1586,31 +1537,13 @@ async def xcos_get_topology_widget(session_id: str):
                     dy = d_coords[1] + (node_h/2)
                     svg_edges.append(f'<path d="M {sx} {sy} L {dx} {dy}" stroke="#007bff" stroke-width="2" fill="none" marker-end="url(#arrow)" />')
             
-    html += "<strong>Blocks:</strong>\n"
-    for bid, bdata in block_map.items():
-        unconnected = False
-        for p in bdata["in_ports"] + bdata["out_ports"]:
-            if p not in connected_ports:
-                unconnected = True
-        
-        err_badge = '<span class="xcos-topo-err">[!] Unconnected ports</span> ' if unconnected else ''
-        html += f" &bull; {err_badge}{bdata['name']} (ID: {bid})\n"
-        
-    html += "\n<strong>Links:</strong>\n"
-    if not link_strings:
-        html += " (No links)\n"
-    for ls in link_strings:
-        html += f"  {ls}\n"
-        
     max_x = curr_x + node_w + 20
     max_y = curr_y + 20
     
     nodes_str = ''.join(svg_nodes)
     edges_str = ''.join(svg_edges)
     
-    html += f'''
-    <div class="xcos-svg-container">
-    <svg width="100%" height="{max_y}" viewBox="0 0 {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg">
+    svg_out = f'''<svg width="100%" height="{max_y}" viewBox="0 0 {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#007bff" />
@@ -1618,11 +1551,17 @@ async def xcos_get_topology_widget(session_id: str):
       </defs>
       {edges_str}
       {nodes_str}
-    </svg>
-    </div>
-    </div>
-    '''
-    return make_json_response({"html": html.strip()})
+    </svg>'''
+    
+    return make_json_response({
+        "widget_type": "topology",
+        "payload": {
+            "session_id": session_id,
+            "block_count": len(block_map),
+            "link_count": len(links),
+            "svg": svg_out
+        }
+    })
 
 
 async def xcos_submit_phase(
@@ -2299,11 +2238,26 @@ async def handle_list_resources() -> list[mcp_types.Resource]:
 
 @mcp_server.read_resource()
 async def handle_read_resource(uri):
-    if str(uri) == "ui://xcos/ext-apps.js":
-        ui_path = os.path.join(UI_DIR, "ext-apps.js")
-        with open(ui_path, "r", encoding="utf-8") as f:
-            return [ReadResourceContents(content=f.read(), mime_type="text/javascript")]
-    raise ValueError(f"Unknown resource URI: {uri}")
+    uri_str = str(uri)
+    if not uri_str.startswith("ui://xcos/"):
+        raise ValueError(f"Unknown resource URI: {uri}")
+    
+    filename = uri_str.split("/")[-1]
+    ui_path = os.path.join(UI_DIR, filename)
+    
+    if not os.path.exists(ui_path):
+        raise ValueError(f"UI Resource not found: {filename}")
+        
+    mime_type = "text/plain"
+    if filename.endswith(".html"):
+        mime_type = MCP_APP_MIME_TYPE
+    elif filename.endswith(".css"):
+        mime_type = "text/css"
+    elif filename.endswith(".js") or filename.endswith(".mjs"):
+        mime_type = "text/javascript"
+        
+    with open(ui_path, "r", encoding="utf-8") as f:
+        return [ReadResourceContents(content=f.read(), mime_type=mime_type)]
 
 @mcp_server.list_tools()
 async def handle_list_tools() -> list[mcp_types.Tool]:
@@ -2356,11 +2310,13 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "- Never declare a diagram done unless xcos_verify_draft returned success=true."
             ),
             inputSchema={"type": "object", "properties": {}},
+            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_workflow_widget",
             description="Call this after every xcos_submit_phase and xcos_review_phase call. Always display the returned widget — it shows the user their current phase progress. Pass workflow_id to show a specific workflow, or omit it to list all active workflows.",
             inputSchema={"type": "object", "properties": {"workflow_id": {"type": "string"}}},
+            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_validation_widget",
@@ -2372,6 +2328,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "of the validation result."
             ),
             inputSchema={"type": "object", "properties": {"xml_content": {"type": "string"}}, "required": ["xml_content"]},
+            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_block_catalogue_widget",
@@ -2384,6 +2341,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "explained."
             ),
             inputSchema={"type": "object", "properties": {"category": {"type": "string"}}},
+            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_topology_widget",
@@ -2398,6 +2356,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "link XML before proceeding to verification."
             ),
             inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
+            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_create_workflow",
