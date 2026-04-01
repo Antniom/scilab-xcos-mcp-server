@@ -912,11 +912,21 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
     with open(verify_script_path, "w", encoding="utf-8") as f:
         f.write(build_headless_verification_script(temp_path))
 
-    # Build the command: xvfb-run wraps on Linux; run bare on Windows/other.
-    if os.name != "nt" and shutil.which("xvfb-run"):
-        cmd = ["xvfb-run", "-a", scilab_bin, "-nb", "-nw", "-f", verify_script_path]
+    # Flags depend on which Scilab binary is available:
+    #   - scilab-adv-cli / scilab-cli : already headless, no -nw/-nb supported
+    #   - scilab (GUI)                : needs -nw (no window) and -nb (no banner)
+    bin_name = os.path.basename(scilab_bin).lower()
+    is_cli_binary = any(k in bin_name for k in ("adv-cli", "scilab-cli", "-cli"))
+    if is_cli_binary:
+        scilab_args = ["-f", verify_script_path]
     else:
-        cmd = [scilab_bin, "-nb", "-nw", "-f", verify_script_path]
+        scilab_args = ["-nb", "-nw", "-f", verify_script_path]
+
+    # On Linux, wrap with xvfb-run so the Java/Swing GUI init doesn't fail
+    if os.name != "nt" and shutil.which("xvfb-run"):
+        cmd = ["xvfb-run", "-a", scilab_bin] + scilab_args
+    else:
+        cmd = [scilab_bin] + scilab_args
 
     try:
         proc = await asyncio.create_subprocess_exec(
