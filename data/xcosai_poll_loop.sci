@@ -87,6 +87,12 @@ function xcosai_poll_loop()
                     
                         success = %f;
                         err_msg = '';
+                        import_passed = %f;
+                        simulation_passed = %f;
+                        block_validation_passed = %f;
+                        link_validation_passed = %f;
+                        graphical_blocks_substituted = %f;
+                        substituted_blocks = '';
                         
                         diary_path = zcos_path + '.log';
                         diary(diary_path);
@@ -104,6 +110,7 @@ function xcosai_poll_loop()
                             
                             disp('[XcosAI][' + string(LoopID) + '] Importing diagram...');
                             importXcosDiagram(zcos_path);
+                            import_passed = %t;
                             
                             // Shorten simulation time for rapid parameter validation
                             scs_m.props.tf = 0.1;
@@ -132,6 +139,8 @@ function xcosai_poll_loop()
                                 end
                             end
                             if n_replaced > 0 then
+                                graphical_blocks_substituted = %t;
+                                substituted_blocks = replaced_list;
                                 warning_msg = '[WARN] Graphical blocks substituted for validation: ' + replaced_list;
                                 if err_msg == '' then err_msg = warning_msg; else err_msg = warning_msg + ascii(10) + err_msg; end
                             end
@@ -209,6 +218,7 @@ function xcosai_poll_loop()
                                 // (e.g. connecting to output port 2 of a block that only
                                 // has 1 output port). Walk every link and cross-check
                                 // against actual block port counts to get specific errors.
+                                block_validation_passed = %t;
                                 disp('[XcosAI][' + string(LoopID) + '] Validating link connectivity...');
                                 link_errors = '';
                                 
@@ -305,9 +315,11 @@ function xcosai_poll_loop()
                                     // Only run if blocks and links both passed validation.
                                     // Signature: scicos_simulate(scs_m, Info [,context] [,flag])
                                     // Source: help.scilab.org/docs/2026.0.1/en_US/scicos_simulate.html
+                                    link_validation_passed = %t;
                                     disp('[XcosAI][' + string(LoopID) + '] Starting simulation (nw mode)...');
                                     scicos_simulate(scs_m, list(), 'nw');
                                     success = %t;
+                                    simulation_passed = %t;
                                     disp('[XcosAI][' + string(LoopID) + '] Simulation COMPLETED.');
                                 end
                             end
@@ -353,7 +365,18 @@ function xcosai_poll_loop()
                         // http_post auto-converts a Scilab struct to JSON.
                         // Source: help.scilab.org/docs/2026.0.1/en_US/http_post.html
                         disp('[XcosAI][' + string(LoopID) + '] Posting results...');
-                        res_payload = struct('task_id', task_id, 'success', success, 'error', err_msg);
+                        res_payload = struct( ..
+                            'task_id', task_id, ..
+                            'success', success, ..
+                            'error', err_msg, ..
+                            'scilab_import_passed', import_passed, ..
+                            'scilab_block_validation_passed', block_validation_passed, ..
+                            'scilab_link_validation_passed', link_validation_passed, ..
+                            'scilab_simulation_passed', simulation_passed, ..
+                            'graphical_blocks_substituted', graphical_blocks_substituted, ..
+                            'substituted_blocks', substituted_blocks, ..
+                            'diary_path', diary_path ..
+                        );
                         [r, s] = http_post(url_base + '/result', res_payload);
                         disp('[XcosAI][' + string(LoopID) + '] Result posted (Status: ' + string(s) + ')');
                     end

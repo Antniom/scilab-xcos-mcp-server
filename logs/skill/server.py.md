@@ -29,3 +29,9 @@
 - The server also starts the poll worker in the HTTP app lifespan so fallback validation is ready on the remote Spaces deployment.
 - **Files:** server.py
 
+### 2026-04-01 16:40:34 UTC — Note
+- **Summary:** Poll fallback now returns explicit Scilab verdict fields
+- The Scilab poll worker now posts scilab_import_passed, scilab_block_validation_passed, scilab_link_validation_passed, scilab_simulation_passed, substitution metadata, and diary_path.
+- run_poll_validation now exposes those fields directly and adds a scilab_verdict message so clients do not have to infer that success=true means import+simulate passed.
+- **Files:** server.py, data/xcosai_poll_loop.sci
+

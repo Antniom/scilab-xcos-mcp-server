@@ -28,7 +28,7 @@ import uvicorn
 # Initialize colorama
 init(autoreset=True)
 
-SERVER_VERSION = "1.0.2"
+SERVER_VERSION = "1.0.3"
 POLL_WORKER_IDLE_SECONDS = 5.0
 POLL_WORKER_STARTUP_TIMEOUT_SECONDS = 20.0
 
@@ -1324,7 +1324,7 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
     temp_meta = get_file_metadata(temp_path)
 
     event = asyncio.Event()
-    state.results[task_id] = {"success": False, "error": "", "event": event}
+    state.results[task_id] = {"success": False, "error": "", "details": {}, "event": event}
 
     await state.task_queue.put({"task_id": task_id, "zcos_path": temp_path})
 
@@ -1341,6 +1341,12 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
             "origin": "scilab-poll-fallback",
             "poll_worker": worker_state,
         }
+        details = res.get("details") or {}
+        result_payload.update(details)
+        if res["success"]:
+            result_payload["scilab_verdict"] = "Scilab import and simulation passed via long-lived poll worker."
+        else:
+            result_payload["scilab_verdict"] = "Scilab poll fallback reported a validation failure."
         if not res["success"]:
             result_payload["error"] = res["error"]
             result_payload["hint"] = "Use xcos_get_draft_xml(session_id) to inspect the final XML. Scilab errors often relate to parameter size mismatches or missing SplitBlocks."
@@ -2398,6 +2404,15 @@ async def http_handle_post_result(request: Request) -> Response:
     if task_id in state.results:
         state.results[task_id]["success"] = success
         state.results[task_id]["error"] = error
+        state.results[task_id]["details"] = {
+            "scilab_import_passed": data.get("scilab_import_passed"),
+            "scilab_block_validation_passed": data.get("scilab_block_validation_passed"),
+            "scilab_link_validation_passed": data.get("scilab_link_validation_passed"),
+            "scilab_simulation_passed": data.get("scilab_simulation_passed"),
+            "graphical_blocks_substituted": data.get("graphical_blocks_substituted"),
+            "substituted_blocks": data.get("substituted_blocks"),
+            "diary_path": data.get("diary_path"),
+        }
         state.results[task_id]["event"].set()
         return http_json({"status": "received"})
     return http_json({"status": "error", "message": "Task ID not found"}, status_code=404)
