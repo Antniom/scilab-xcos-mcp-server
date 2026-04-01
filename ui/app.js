@@ -17,13 +17,70 @@ const showWidget = (widgetId) => {
     if (el) el.classList.add('active');
 };
 
+const escapeHtml = (value) => String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+const extractJsonPayload = (text) => {
+    if (!text) return null;
+
+    try {
+        return JSON.parse(text);
+    } catch (_) {
+        const start = text.indexOf("{");
+        const end = text.lastIndexOf("}");
+        if (start === -1 || end === -1 || end <= start) {
+            return null;
+        }
+        return JSON.parse(text.slice(start, end + 1));
+    }
+};
+
+const getToolPayload = (result) => {
+    if (result?.structuredContent?.widget_type) {
+        return result.structuredContent;
+    }
+
+    const textChunks = result?.content
+        ?.filter(chunk => chunk.type === "text")
+        ?.map(chunk => chunk.text)
+        ?.filter(Boolean) || [];
+
+    for (const chunk of textChunks) {
+        const parsed = extractJsonPayload(chunk);
+        if (parsed?.widget_type) {
+            return parsed;
+        }
+    }
+
+    return null;
+};
+
+const showAppError = (message, detail = "") => {
+    showWidget("waiting");
+    const waiting = document.getElementById("widget-waiting");
+    if (!waiting) return;
+
+    waiting.innerHTML = `
+        <div class="empty-state">
+            <h2>Widget Error</h2>
+            <p>${escapeHtml(message)}</p>
+            ${detail ? `<pre style="text-align:left; max-width:100%; overflow:auto;">${escapeHtml(detail)}</pre>` : ""}
+        </div>
+    `;
+};
+
 app.ontoolresult = (result) => {
     try {
-        // The Python tool returns JSON as the first text content chunk.
-        const textContent = result.content?.find(c => c.type === "text")?.text;
-        if (!textContent) return;
+        const data = getToolPayload(result);
+        if (!data) {
+            showAppError("The tool returned data in an unexpected format.", JSON.stringify(result, null, 2));
+            return;
+        }
 
-        const data = JSON.parse(textContent);
         const widgetType = data.widget_type;
         const payload = data.payload || {};
 
@@ -77,7 +134,7 @@ app.ontoolresult = (result) => {
                     
                     phaseEl.innerHTML = `
                         <div class="flex-row space-between">
-                            <strong>${phase.label}</strong>
+                            <strong>${escapeHtml(phase.label)}</strong>
                             <span class="badge" style="color: ${statusColor}; background: ${statusColor}22">${statusText}</span>
                         </div>
                     `;
@@ -100,8 +157,8 @@ app.ontoolresult = (result) => {
                     blockEl.className = 'card transition-all';
                     blockEl.style.padding = '16px';
                     blockEl.innerHTML = `
-                        <h4 style="margin:0 0 4px 0">${block.name}</h4>
-                        <div class="badge badge-neutral">${block.type}</div>
+                        <h4 style="margin:0 0 4px 0">${escapeHtml(block.name)}</h4>
+                        <div class="badge badge-neutral">${escapeHtml(block.type)}</div>
                     `;
                     list.appendChild(blockEl);
                 });
@@ -139,11 +196,14 @@ app.ontoolresult = (result) => {
                 badge.className = 'badge badge-danger';
                 badge.textContent = 'Failed';
                 details.innerHTML = `<h3 style="color:var(--danger)">Validation Errors</h3>
-                                     <pre style="background:#f9f9f9; padding:12px; border-radius:var(--radius-sm); border:1px solid #eee; overflow-x:auto;">${payload.error || 'Unknown syntactic error'}</pre>`;
+                                     <pre style="background:#f9f9f9; padding:12px; border-radius:var(--radius-sm); border:1px solid #eee; overflow-x:auto;">${escapeHtml(payload.error || 'Unknown syntactic error')}</pre>`;
             }
+        } else {
+            showAppError(`Unsupported widget type: ${widgetType || "unknown"}`);
         }
     } catch (err) {
         console.error("Error processing tool result:", err);
+        showAppError("The widget failed to render.", err?.stack || String(err));
     }
 };
 

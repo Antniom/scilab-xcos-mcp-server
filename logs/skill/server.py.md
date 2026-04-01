@@ -16,3 +16,9 @@
 ### 2026-03-30 02:02:47 UTC — Note
 - **Summary:** Push-on-write enabled: log_writer now commits and pushes to origin + huggingface after every entry
 
+### 2026-04-01 16:06:23 UTC — Note
+- **Summary:** Added XML boundary diagnostics for subprocess validation EOF debugging
+- run_headless_scilab_validation now returns memory and disk XML hashes, lengths, tail excerpts, python re-parse status, and the generated verification script path.
+- The Scilab verification script now prints fileinfo and last-line metadata before importXcosDiagram so premature EOF can be attributed to Python write vs Scilab import.
+- **Files:** server.py, ui/app.js
+

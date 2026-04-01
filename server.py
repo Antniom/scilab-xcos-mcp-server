@@ -8,6 +8,7 @@ import base64
 import shutil
 import tempfile
 import textwrap
+import hashlib
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -734,6 +735,53 @@ def get_file_metadata(path: str | None):
     }
 
 
+def build_xml_text_diagnostics(xml_text: str | None):
+    if xml_text is None:
+        return {
+            "char_length": 0,
+            "byte_length": 0,
+            "sha256": None,
+            "tail_excerpt": "",
+        }
+
+    xml_bytes = xml_text.encode("utf-8")
+    return {
+        "char_length": len(xml_text),
+        "byte_length": len(xml_bytes),
+        "sha256": hashlib.sha256(xml_bytes).hexdigest(),
+        "tail_excerpt": xml_text[-240:],
+    }
+
+
+def build_xml_file_diagnostics(path: str):
+    diagnostics = {
+        **(get_file_metadata(path) or {}),
+        "char_length": None,
+        "byte_length": None,
+        "sha256": None,
+        "tail_excerpt": "",
+        "python_parse_success": False,
+        "python_parse_error": None,
+    }
+
+    try:
+        with open(path, "rb") as f:
+            file_bytes = f.read()
+        diagnostics["byte_length"] = len(file_bytes)
+        diagnostics["sha256"] = hashlib.sha256(file_bytes).hexdigest()
+
+        decoded_text = file_bytes.decode("utf-8")
+        diagnostics["char_length"] = len(decoded_text)
+        diagnostics["tail_excerpt"] = decoded_text[-240:]
+
+        etree.fromstring(file_bytes, etree.XMLParser(remove_blank_text=True))
+        diagnostics["python_parse_success"] = True
+    except Exception as exc:
+        diagnostics["python_parse_error"] = str(exc)
+
+    return diagnostics
+
+
 def summarize_draft(draft: DraftDiagram):
     try:
         tree = etree.fromstring(draft.to_xml().encode("utf-8"))
@@ -839,6 +887,24 @@ def build_headless_verification_script(xcos_path: str) -> str:
         try
             loadXcosLibs();
             loadScicos();
+            mprintf("XCOSAI_VERIFY_INPUT_PATH:%s\\n", "{escaped_xcos_path}");
+            try
+                xcosai_file_info = fileinfo("{escaped_xcos_path}");
+                mprintf("XCOSAI_VERIFY_FILEINFO:%s\\n", sci2exp(xcosai_file_info));
+            catch
+                [xcosai_fileinfo_error, xcosai_fileinfo_id] = lasterror();
+                mprintf("XCOSAI_VERIFY_FILEINFO_ERROR:%s\\n", string(xcosai_fileinfo_error));
+            end
+            try
+                xcosai_lines = mgetl("{escaped_xcos_path}");
+                mprintf("XCOSAI_VERIFY_TEXT_LINE_COUNT:%d\\n", size(xcosai_lines, "*"));
+                if size(xcosai_lines, "*") > 0 then
+                    mprintf("XCOSAI_VERIFY_TEXT_LAST_LINE:%s\\n", xcosai_lines($));
+                end
+            catch
+                [xcosai_text_error, xcosai_text_id] = lasterror();
+                mprintf("XCOSAI_VERIFY_TEXT_READ_ERROR:%s\\n", string(xcosai_text_error));
+            end
             importXcosDiagram("{escaped_xcos_path}");
             scs_m.props.tf = 0.1;
 
@@ -895,6 +961,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
     on failure so the caller can debug without re-running manually.
     """
     scilab_bin = resolve_scilab_binary()
+    memory_diag = build_xml_text_diagnostics(xml_content)
     if not scilab_bin:
         return {
             "success": False,
@@ -902,6 +969,11 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             "error": "Scilab binary not found. Set SCILAB_BIN or install scilab-cli in the runtime image.",
             "auto_fixed_mux_to_scalar": auto_fixed,
             "scilab_log": None,
+            "xml_diagnostics": {
+                "memory": memory_diag,
+                "disk": None,
+                "verification_script_path": None,
+            },
         }
 
     task_id = str(uuid.uuid4())
@@ -909,10 +981,18 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
     with open(temp_path, "w", encoding="utf-8") as f:
         f.write(xml_content)
     temp_meta = get_file_metadata(temp_path)
+    disk_diag = build_xml_file_diagnostics(temp_path)
+    disk_diag["matches_memory_sha256"] = disk_diag.get("sha256") == memory_diag.get("sha256")
+    disk_diag["matches_memory_byte_length"] = disk_diag.get("byte_length") == memory_diag.get("byte_length")
 
     verify_script_path = os.path.join(TEMP_OUTPUT_DIR, f"{task_id}.sce")
     with open(verify_script_path, "w", encoding="utf-8") as f:
         f.write(build_headless_verification_script(temp_path))
+    xml_diagnostics = {
+        "memory": memory_diag,
+        "disk": disk_diag,
+        "verification_script_path": os.path.abspath(verify_script_path),
+    }
 
     # Flags depend on which Scilab binary is available:
     #   - scilab-adv-cli / scilab-cli : already headless, no -nw/-nb supported
@@ -953,6 +1033,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
                 "scilab_log": None,
                 "file_path": temp_meta["path"],
                 "file_size_bytes": temp_meta["size_bytes"],
+                "xml_diagnostics": xml_diagnostics,
             }
 
         scilab_log = stdout_bytes.decode("utf-8", errors="replace").strip()
@@ -973,6 +1054,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
                 "scilab_log": scilab_log,
                 "file_path": temp_meta["path"],
                 "file_size_bytes": temp_meta["size_bytes"],
+                "xml_diagnostics": xml_diagnostics,
             }
 
         # Failure: extract the error sentinel if present
@@ -990,6 +1072,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             "scilab_log": scilab_log,
             "file_path": temp_meta["path"],
             "file_size_bytes": temp_meta["size_bytes"],
+            "xml_diagnostics": xml_diagnostics,
             "hint": (
                 "Full Scilab output is available in 'scilab_log'. "
                 "Common causes: unsupported block GUI in headless mode, "
@@ -1004,6 +1087,11 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             "error": f"Failed to launch Scilab subprocess: {exc}",
             "auto_fixed_mux_to_scalar": auto_fixed,
             "scilab_log": None,
+            "xml_diagnostics": xml_diagnostics if "xml_diagnostics" in locals() else {
+                "memory": memory_diag,
+                "disk": None,
+                "verification_script_path": None,
+            },
         }
 
 def validate_diagram_structure(tree: etree._Element, auto_fixed: bool) -> dict:
