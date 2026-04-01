@@ -914,13 +914,14 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
 
     # Flags depend on which Scilab binary is available:
     #   - scilab-adv-cli / scilab-cli : already headless, no -nw/-nb supported
-    #   - scilab (GUI)                : needs -nw (no window) and -nb (no banner)
+    #   - scilab (GUI)                : needs to load GUI for xcosDiagramToScilab, so NO -nw
     bin_name = os.path.basename(scilab_bin).lower()
     is_cli_binary = any(k in bin_name for k in ("adv-cli", "scilab-cli", "-cli"))
     if is_cli_binary:
         scilab_args = ["-f", verify_script_path]
     else:
-        scilab_args = ["-nb", "-nw", "-f", verify_script_path]
+        # We only pass -nb (no banner). -nw disables Java GUI, which breaks importXcosDiagram.
+        scilab_args = ["-nb", "-f", verify_script_path]
 
     # On Linux, wrap with xvfb-run so the Java/Swing GUI init doesn't fail
     if os.name != "nt" and shutil.which("xvfb-run"):
