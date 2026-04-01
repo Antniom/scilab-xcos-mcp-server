@@ -28,6 +28,10 @@ import uvicorn
 # Initialize colorama
 init(autoreset=True)
 
+SERVER_VERSION = "1.0.2"
+POLL_WORKER_IDLE_SECONDS = 5.0
+POLL_WORKER_STARTUP_TIMEOUT_SECONDS = 20.0
+
 # Shared State
 class SharedState:
     def __init__(self):
@@ -39,6 +43,11 @@ class SharedState:
         self.phase_plans = {} # session_id -> {"phases": list[str], "completed": list[str]}
         self.workflows = {} # workflow_id -> WorkflowSession
         self.draft_to_workflow = {} # session_id -> workflow_id
+        self.poll_worker_process = None
+        self.poll_worker_log_handle = None
+        self.poll_worker_log_path = None
+        self.poll_worker_script_path = None
+        self.poll_worker_lock = asyncio.Lock()
 
 state = SharedState()
 
@@ -806,7 +815,11 @@ def write_session_snapshot(session_id: str):
 
 
 def load_ui_html() -> str:
-    return "<html><body><h1>Scilab Xcos MCP Server</h1><p>Server is running. Please connect via MCP at /mcp or check /healthz.</p></body></html>"
+    ui_path = os.path.join(UI_DIR, "index.html")
+    if not os.path.exists(ui_path):
+        return "<html><body><h1>Scilab Xcos MCP Server</h1><p>Server is running. Please connect via MCP at /mcp or check /healthz.</p></body></html>"
+    with open(ui_path, "r", encoding="utf-8") as f:
+        return f.read()
 
 
 def detect_validation_mode() -> str:
@@ -840,6 +853,7 @@ def resolve_windows_scilab_from_registry_file() -> str | None:
 
 
 _scilab_bin_cache = None
+_scilab_gui_bin_cache = None
 
 def resolve_scilab_binary() -> str | None:
     global _scilab_bin_cache
@@ -865,8 +879,192 @@ def resolve_scilab_binary() -> str | None:
     return None
 
 
+def resolve_scilab_gui_binary() -> str | None:
+    global _scilab_gui_bin_cache
+    if _scilab_gui_bin_cache is not None:
+        return _scilab_gui_bin_cache
+
+    env_gui_bin = os.environ.get("SCILAB_GUI_BIN")
+    if env_gui_bin:
+        _scilab_gui_bin_cache = env_gui_bin
+        return env_gui_bin
+
+    env_bin = os.environ.get("SCILAB_BIN")
+    if env_bin:
+        env_dir = os.path.dirname(env_bin)
+        gui_name = "scilab.exe" if os.name == "nt" else "scilab"
+        sibling_gui = os.path.join(env_dir, gui_name)
+        if os.path.exists(sibling_gui):
+            _scilab_gui_bin_cache = sibling_gui
+            return sibling_gui
+
+    if os.name == "nt":
+        from_registry = resolve_windows_scilab_from_registry_file()
+        if from_registry:
+            env_dir = os.path.dirname(from_registry)
+            sibling_gui = os.path.join(env_dir, "scilab.exe")
+            if os.path.exists(sibling_gui):
+                _scilab_gui_bin_cache = sibling_gui
+                return sibling_gui
+
+    resolved = shutil.which("scilab")
+    if resolved:
+        _scilab_gui_bin_cache = resolved
+        return resolved
+    return None
+
+
 def scilab_string_literal(path: str) -> str:
     return path.replace("\\", "/").replace('"', '""')
+
+
+def poll_worker_is_active(max_idle_seconds: float = POLL_WORKER_IDLE_SECONDS) -> bool:
+    if not state.last_poll_time:
+        return False
+    return (datetime.now() - state.last_poll_time).total_seconds() < max_idle_seconds
+
+
+def read_text_tail(path: str | None, max_chars: int = 4000) -> str | None:
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            text = f.read()
+        return text[-max_chars:]
+    except Exception:
+        return None
+
+
+def build_poll_worker_launcher_script() -> str:
+    script_path = os.path.join(TEMP_OUTPUT_DIR, f"poll_worker_{SERVER_PORT}.sce")
+    poll_loop_path = scilab_string_literal(os.path.join(DATA_DIR, "xcosai_poll_loop.sci"))
+    script = textwrap.dedent(
+        f"""
+        mode(-1);
+        lines(0);
+        global XCOSAI_SERVER_PORT;
+        XCOSAI_SERVER_PORT = {SERVER_PORT};
+        exec("{poll_loop_path}", -1);
+        xcosai_poll_loop();
+        """
+    ).strip() + "\n"
+    with open(script_path, "w", encoding="utf-8") as f:
+        f.write(script)
+    return os.path.abspath(script_path)
+
+
+async def stop_poll_worker():
+    async with state.poll_worker_lock:
+        proc = state.poll_worker_process
+        if proc and proc.returncode is None:
+            try:
+                proc.kill()
+            except ProcessLookupError:
+                pass
+            except Exception:
+                pass
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=10.0)
+            except Exception:
+                pass
+        state.poll_worker_process = None
+
+        if state.poll_worker_log_handle:
+            try:
+                state.poll_worker_log_handle.close()
+            except Exception:
+                pass
+        state.poll_worker_log_handle = None
+
+
+async def ensure_poll_worker_running() -> dict:
+    async with state.poll_worker_lock:
+        proc = state.poll_worker_process
+        if proc and proc.returncode is None:
+            existing_worker = {
+                "pid": proc.pid,
+                "log_path": state.poll_worker_log_path,
+                "script_path": state.poll_worker_script_path,
+            }
+        else:
+            existing_worker = None
+
+            if state.poll_worker_log_handle:
+                try:
+                    state.poll_worker_log_handle.close()
+                except Exception:
+                    pass
+                state.poll_worker_log_handle = None
+
+            scilab_gui_bin = resolve_scilab_gui_binary()
+            if not scilab_gui_bin:
+                return {
+                    "active": False,
+                    "error": "Scilab GUI binary not found for poll fallback.",
+                }
+
+            launcher_script_path = build_poll_worker_launcher_script()
+            log_path = os.path.join(TEMP_OUTPUT_DIR, f"poll_worker_{SERVER_PORT}.log")
+            log_handle = open(log_path, "ab")
+
+            scilab_args = ["-nb", "-f", launcher_script_path]
+            if os.name != "nt" and shutil.which("xvfb-run"):
+                cmd = ["xvfb-run", "-a", scilab_gui_bin] + scilab_args
+            else:
+                cmd = [scilab_gui_bin] + scilab_args
+
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=log_handle,
+                    stderr=log_handle,
+                    env={**os.environ, "HOME": os.environ.get("HOME", "/tmp")},
+                )
+            except Exception as exc:
+                log_handle.close()
+                return {
+                    "active": False,
+                    "error": f"Failed to launch Scilab poll worker: {exc}",
+                    "log_path": log_path,
+                    "script_path": launcher_script_path,
+                }
+
+            state.poll_worker_process = proc
+            state.poll_worker_log_handle = log_handle
+            state.poll_worker_log_path = os.path.abspath(log_path)
+            state.poll_worker_script_path = launcher_script_path
+            existing_worker = {
+                "pid": proc.pid,
+                "log_path": log_path,
+                "script_path": launcher_script_path,
+            }
+
+    deadline = asyncio.get_running_loop().time() + POLL_WORKER_STARTUP_TIMEOUT_SECONDS
+    while asyncio.get_running_loop().time() < deadline:
+        if poll_worker_is_active():
+            return {
+                "active": True,
+                "pid": state.poll_worker_process.pid if state.poll_worker_process else None,
+                "log_path": state.poll_worker_log_path,
+                "script_path": state.poll_worker_script_path,
+            }
+
+        proc = state.poll_worker_process
+        if not proc or proc.returncode is not None:
+            break
+        await asyncio.sleep(1.0)
+
+    proc = state.poll_worker_process
+    return {
+        "active": False,
+        "pid": proc.pid if proc else None,
+        "returncode": proc.returncode if proc else None,
+        "log_path": state.poll_worker_log_path,
+        "script_path": state.poll_worker_script_path,
+        "log_tail": read_text_tail(state.poll_worker_log_path),
+        "error": "Scilab poll worker did not become active within the startup timeout.",
+        "existing_worker": existing_worker,
+    }
 
 
 def build_headless_verification_script(xcos_path: str) -> str:
@@ -1094,6 +1292,72 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             },
         }
 
+
+def should_retry_with_poll_fallback(scilab_result: dict) -> bool:
+    error_text = "\n".join([
+        str(scilab_result.get("error") or ""),
+        str(scilab_result.get("scilab_log") or ""),
+    ])
+    lowered = error_text.lower()
+    return (
+        not scilab_result.get("success")
+        and ("premature end of file" in lowered or "fatal error" in lowered)
+    )
+
+
+async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
+    worker_state = await ensure_poll_worker_running()
+    if not worker_state.get("active"):
+        return {
+            "success": False,
+            "origin": "scilab-poll-fallback",
+            "error": worker_state.get("error", "Scilab poll worker is unavailable."),
+            "auto_fixed_mux_to_scalar": auto_fixed,
+            "poll_worker": worker_state,
+        }
+
+    task_id = str(uuid.uuid4())
+    temp_path = os.path.join(TEMP_OUTPUT_DIR, f"{task_id}.xcos")
+
+    with open(temp_path, "w", encoding="utf-8") as f:
+        f.write(xml_content)
+    temp_meta = get_file_metadata(temp_path)
+
+    event = asyncio.Event()
+    state.results[task_id] = {"success": False, "error": "", "event": event}
+
+    await state.task_queue.put({"task_id": task_id, "zcos_path": temp_path})
+
+    try:
+        await asyncio.wait_for(event.wait(), timeout=120.0)
+        res = state.results.pop(task_id)
+        result_payload = {
+            "success": res["success"],
+            "task_id": task_id,
+            "file_path": temp_meta["path"],
+            "file_size_bytes": temp_meta["size_bytes"],
+            "auto_fixed_mux_to_scalar": auto_fixed,
+            "validator_mode": "poll",
+            "origin": "scilab-poll-fallback",
+            "poll_worker": worker_state,
+        }
+        if not res["success"]:
+            result_payload["error"] = res["error"]
+            result_payload["hint"] = "Use xcos_get_draft_xml(session_id) to inspect the final XML. Scilab errors often relate to parameter size mismatches or missing SplitBlocks."
+        return result_payload
+
+    except asyncio.TimeoutError:
+        state.results.pop(task_id, None)
+        return {
+            "success": False,
+            "task_id": task_id,
+            "file_path": temp_meta["path"],
+            "file_size_bytes": temp_meta["size_bytes"],
+            "error": f"Scilab verification timed out for {task_id}",
+            "origin": "scilab-poll-fallback",
+            "poll_worker": worker_state,
+        }
+
 def validate_diagram_structure(tree: etree._Element, auto_fixed: bool) -> dict:
     """Performs structural audit of Xcos XML without needing Scilab."""
     errors = []
@@ -1307,17 +1571,35 @@ async def run_verification(xml_content: str):
         # Stage 1 — fast Python structural audit (catches broken IDs, fan-outs, etc.)
         python_result = validate_diagram_structure(tree, auto_fixed)
         if not python_result["success"]:
-            # Fail immediately – no point spawning Scilab if the XML is broken.
+            # Fail immediately - no point spawning Scilab if the XML is broken.
             return python_result
 
         # Stage 2 — deep Scilab compilation check (catches parameter mismatches,
         # missing functions, simulation-time type errors, etc.)
         scilab_result = await run_headless_scilab_validation(xml_content, auto_fixed)
+        poll_fallback_result = None
+
+        if should_retry_with_poll_fallback(scilab_result):
+            poll_fallback_result = await run_poll_validation(xml_content, auto_fixed)
+            if poll_fallback_result.get("success"):
+                merged_warnings = (python_result.get("warnings") or []) + (poll_fallback_result.get("warnings") or [])
+                return {
+                    **poll_fallback_result,
+                    "fallback_used": True,
+                    "fallback_reason": "Subprocess validator reported premature EOF; retried with long-lived Scilab poll worker.",
+                    "subprocess_result": scilab_result,
+                    "structural_check": {
+                        "success": python_result["success"],
+                        "warnings": python_result.get("warnings"),
+                    },
+                    "warnings": merged_warnings if merged_warnings else None,
+                    "origin": "hybrid (structural-python + scilab-subprocess + scilab-poll-fallback)",
+                }
 
         # Merge warnings from both stages
         merged_warnings = (python_result.get("warnings") or []) + (scilab_result.get("warnings") or [])
 
-        return {
+        result = {
             **scilab_result,
             # Surface both validator results so the caller has full context
             "structural_check": {
@@ -1327,48 +1609,13 @@ async def run_verification(xml_content: str):
             "warnings": merged_warnings if merged_warnings else None,
             "origin": "hybrid (structural-python + scilab-subprocess)",
         }
+        if poll_fallback_result:
+            result["fallback_used"] = True
+            result["fallback_reason"] = "Subprocess validator reported premature EOF; poll fallback did not clear the failure."
+            result["poll_fallback_result"] = poll_fallback_result
+        return result
 
-    task_id = str(uuid.uuid4())
-    temp_path = os.path.join(TEMP_OUTPUT_DIR, f"{task_id}.xcos")
-    
-    with open(temp_path, 'w', encoding='utf-8') as f:
-        f.write(xml_content)
-    temp_meta = get_file_metadata(temp_path)
-    
-    event = asyncio.Event()
-    state.results[task_id] = {"success": False, "error": "", "event": event}
-    
-    await state.task_queue.put({"task_id": task_id, "zcos_path": temp_path})
-    
-    try:
-        # Wait for 120 seconds
-        await asyncio.wait_for(event.wait(), timeout=120.0)
-        res = state.results.pop(task_id)
-        
-        # Structured result
-        result_payload = {
-            "success": res["success"],
-            "task_id": task_id,
-            "file_path": temp_meta["path"],
-            "file_size_bytes": temp_meta["size_bytes"],
-            "auto_fixed_mux_to_scalar": auto_fixed,
-            "validator_mode": "poll",
-        }
-        if not res["success"]:
-            result_payload["error"] = res["error"]
-            result_payload["hint"] = "Use xcos_get_draft_xml(session_id) to inspect the final XML. Scilab errors often relate to parameter size mismatches or missing SplitBlocks."
-        
-        return result_payload
-        
-    except asyncio.TimeoutError:
-        state.results.pop(task_id, None)
-        return {
-            "success": False,
-            "task_id": task_id,
-            "file_path": temp_meta["path"],
-            "file_size_bytes": temp_meta["size_bytes"],
-            "error": f"Scilab verification timed out for {task_id}"
-        }
+    return await run_poll_validation(xml_content, auto_fixed)
 
 
 async def verify_xcos_xml(xml_content: str):
@@ -2160,21 +2407,41 @@ async def http_healthz(_: Request) -> Response:
     return http_json(
         {
             "status": "ok",
-            "version": "1.0.1",
+            "version": SERVER_VERSION,
             "validator_mode": detect_validation_mode(),
             "workflow_count": len(state.workflows),
             "draft_count": len(state.drafts),
+            "poll_worker_active": poll_worker_is_active(),
             "mcp_http_path": MCP_HTTP_PATH,
         }
     )
 
 
 async def http_root(_: Request) -> Response:
-    return RedirectResponse(url="/workflow-ui")
+    return RedirectResponse(url="/workflow-ui/")
 
 
 async def http_workflow_ui(_: Request) -> Response:
     return HTMLResponse(load_ui_html())
+
+
+async def http_ui_asset(request: Request) -> Response:
+    asset_name = request.path_params["asset_name"]
+    safe_name = os.path.basename(asset_name)
+    ui_path = os.path.join(UI_DIR, safe_name)
+    if not os.path.exists(ui_path):
+        return PlainTextResponse("Not Found", status_code=404)
+
+    media_type = "text/plain"
+    if safe_name.endswith(".js"):
+        media_type = "text/javascript"
+    elif safe_name.endswith(".css"):
+        media_type = "text/css"
+    elif safe_name.endswith(".html"):
+        media_type = "text/html"
+
+    with open(ui_path, "r", encoding="utf-8") as f:
+        return Response(f.read(), media_type=media_type)
 
 
 async def http_api_list_workflows(_: Request) -> Response:
@@ -2238,9 +2505,8 @@ async def http_api_start_draft(request: Request) -> Response:
 
 
 async def http_ext_apps_js(request: Request) -> Response:
-    ui_path = os.path.join(UI_DIR, "ext-apps.js")
-    with open(ui_path, "r", encoding="utf-8") as f:
-        return Response(f.read(), media_type="text/javascript")
+    request.path_params["asset_name"] = "ext-apps.js"
+    return await http_ui_asset(request)
 
 
 class StreamableHTTPRouteApp:
@@ -2256,8 +2522,16 @@ streamable_http_manager = None
 
 @asynccontextmanager
 async def starlette_lifespan(_: Starlette):
+    startup_task = None
     async with streamable_http_manager.run():
-        yield
+        if detect_validation_mode() == "subprocess" and os.name != "nt":
+            startup_task = asyncio.create_task(ensure_poll_worker_running())
+        try:
+            yield
+        finally:
+            if startup_task:
+                startup_task.cancel()
+            await stop_poll_worker()
 
 async def cleanup_port(port=8000):
     """Kills any process currently using the specified port on Windows."""
@@ -2283,14 +2557,16 @@ def build_starlette_app() -> Starlette:
     routes = [
         Route("/", http_root, methods=["GET"]),
         Route("/healthz", http_healthz, methods=["GET"]),
-        Route("/workflow-ui", http_workflow_ui, methods=["GET"]),
-        Route("/workflow-ui/ext-apps.js", http_ext_apps_js, methods=["GET"]),
+        Route("/workflow-ui", http_root, methods=["GET"]),
+        Route("/workflow-ui/", http_workflow_ui, methods=["GET"]),
         Route("/workflow-ui/api/workflows", http_api_list_workflows, methods=["GET"]),
         Route("/workflow-ui/api/workflows", http_api_create_workflow, methods=["POST"]),
         Route("/workflow-ui/api/workflows/{workflow_id}", http_api_get_workflow, methods=["GET"]),
         Route("/workflow-ui/api/workflows/{workflow_id}/phases/{phase}/submit", http_api_submit_phase, methods=["POST"]),
         Route("/workflow-ui/api/workflows/{workflow_id}/phases/{phase}/review", http_api_review_phase, methods=["POST"]),
         Route("/workflow-ui/api/workflows/{workflow_id}/draft/start", http_api_start_draft, methods=["POST"]),
+        Route("/workflow-ui/ext-apps.js", http_ext_apps_js, methods=["GET"]),
+        Route("/workflow-ui/{asset_name:str}", http_ui_asset, methods=["GET"]),
         Route("/task", http_handle_get_task, methods=["GET"]),
         Route("/result", http_handle_post_result, methods=["POST"]),
         Route(MCP_HTTP_PATH, StreamableHTTPRouteApp(streamable_http_manager), methods=["GET", "POST", "DELETE"]),
@@ -2353,7 +2629,7 @@ async def telemetry_loop():
 
 mcp_server = Server(
     "scilab-xcos-server",
-    version="0.1.0",
+    version=SERVER_VERSION,
     instructions=(
         "Use the phased Xcos workflow. Phase 1 derives the mathematical model and waits for approval. "
         "Phase 2 defines block architecture, parameters, and links and waits for approval. "

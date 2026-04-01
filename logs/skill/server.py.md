@@ -22,3 +22,10 @@
 - The Scilab verification script now prints fileinfo and last-line metadata before importXcosDiagram so premature EOF can be attributed to Python write vs Scilab import.
 - **Files:** server.py, ui/app.js
 
+### 2026-04-01 16:24:00 UTC — Note
+- **Summary:** Added automatic poll-worker fallback for remote premature EOF failures
+- Hosted HTTP mode now serves the real /workflow-ui assets and reports version 1.0.2.
+- When subprocess validation fails with premature EOF, run_verification now retries automatically via a long-lived Scilab poll worker using the existing /task and /result bridge.
+- The server also starts the poll worker in the HTTP app lifespan so fallback validation is ready on the remote Spaces deployment.
+- **Files:** server.py
+
