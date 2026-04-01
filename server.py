@@ -807,7 +807,9 @@ def resolve_scilab_binary() -> str | None:
         if from_registry:
             return from_registry
 
-    for command in ("scilab-cli", "scilab-adv-cli", "scilab"):
+    # Search for the full GUI binary first ("scilab") because xcosDiagramToScilab
+    # requires Java GUI packages which are stripped from "scilab-cli" / "scilab-adv-cli".
+    for command in ("scilab", "scilab-adv-cli", "scilab-cli"):
         resolved = shutil.which(command)
         if resolved:
             _scilab_bin_cache = resolved
