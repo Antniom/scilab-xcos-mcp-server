@@ -881,14 +881,25 @@ def build_headless_verification_script(xcos_path: str) -> str:
     ).strip() + "\n"
 
 
-async def run_subprocess_verification(xml_content: str, auto_fixed: bool):
+async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> dict:
+    """Runs a real Scilab compilation headlessly (subprocess mode).
+
+    Uses xvfb-run on Linux so that the GUI subsystem is satisfied without a
+    physical display.  Falls back to running scilab-adv-cli directly when
+    xvfb-run is not available (e.g. during local Windows testing with SCILAB_BIN
+    set explicitly).
+
+    Timeout: 90 seconds.  Full Scilab stdout/stderr is captured and returned
+    on failure so the caller can debug without re-running manually.
+    """
     scilab_bin = resolve_scilab_binary()
     if not scilab_bin:
         return {
             "success": False,
-            "origin": "subprocess-validator",
+            "origin": "scilab-subprocess",
             "error": "Scilab binary not found. Set SCILAB_BIN or install scilab-cli in the runtime image.",
             "auto_fixed_mux_to_scalar": auto_fixed,
+            "scilab_log": None,
         }
 
     task_id = str(uuid.uuid4())
@@ -900,6 +911,87 @@ async def run_subprocess_verification(xml_content: str, auto_fixed: bool):
     verify_script_path = os.path.join(TEMP_OUTPUT_DIR, f"{task_id}.sce")
     with open(verify_script_path, "w", encoding="utf-8") as f:
         f.write(build_headless_verification_script(temp_path))
+
+    # Build the command: xvfb-run wraps on Linux; run bare on Windows/other.
+    if os.name != "nt" and shutil.which("xvfb-run"):
+        cmd = ["xvfb-run", "-a", scilab_bin, "-nb", "-nw", "-f", verify_script_path]
+    else:
+        cmd = [scilab_bin, "-nb", "-nw", "-f", verify_script_path]
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+            env={**os.environ, "HOME": os.environ.get("HOME", "/tmp")},
+        )
+        try:
+            stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=90.0)
+        except asyncio.TimeoutError:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+            return {
+                "success": False,
+                "origin": "scilab-subprocess",
+                "error": "Scilab headless validation timed out after 90 seconds.",
+                "auto_fixed_mux_to_scalar": auto_fixed,
+                "scilab_log": None,
+                "file_path": temp_meta["path"],
+                "file_size_bytes": temp_meta["size_bytes"],
+            }
+
+        scilab_log = stdout_bytes.decode("utf-8", errors="replace").strip()
+        returncode = proc.returncode
+
+        # Check sentinel markers written by the embedded Scilab script
+        if "XCOSAI_VERIFY_OK" in scilab_log and returncode == 0:
+            warnings = []
+            if "XCOSAI_VERIFY_WARN:" in scilab_log:
+                for line in scilab_log.splitlines():
+                    if line.startswith("XCOSAI_VERIFY_WARN:"):
+                        warnings.append(line[len("XCOSAI_VERIFY_WARN:"):])
+            return {
+                "success": True,
+                "origin": "scilab-subprocess",
+                "warnings": warnings if warnings else None,
+                "auto_fixed_mux_to_scalar": auto_fixed,
+                "scilab_log": scilab_log,
+                "file_path": temp_meta["path"],
+                "file_size_bytes": temp_meta["size_bytes"],
+            }
+
+        # Failure: extract the error sentinel if present
+        scilab_error = f"Scilab exited with code {returncode}."
+        for line in scilab_log.splitlines():
+            if line.startswith("XCOSAI_VERIFY_ERROR:"):
+                scilab_error = line[len("XCOSAI_VERIFY_ERROR:"):]
+                break
+
+        return {
+            "success": False,
+            "origin": "scilab-subprocess",
+            "error": scilab_error,
+            "auto_fixed_mux_to_scalar": auto_fixed,
+            "scilab_log": scilab_log,
+            "file_path": temp_meta["path"],
+            "file_size_bytes": temp_meta["size_bytes"],
+            "hint": (
+                "Full Scilab output is available in 'scilab_log'. "
+                "Common causes: unsupported block GUI in headless mode, "
+                "parameter size mismatches, or missing SplitBlocks."
+            ),
+        }
+
+    except Exception as exc:
+        return {
+            "success": False,
+            "origin": "scilab-subprocess",
+            "error": f"Failed to launch Scilab subprocess: {exc}",
+            "auto_fixed_mux_to_scalar": auto_fixed,
+            "scilab_log": None,
+        }
 
 def validate_diagram_structure(tree: etree._Element, auto_fixed: bool) -> dict:
     """Performs structural audit of Xcos XML without needing Scilab."""
@@ -963,12 +1055,7 @@ def validate_diagram_structure(tree: etree._Element, auto_fixed: bool) -> dict:
     }
 
 
-async def run_subprocess_verification(xml_content: str, auto_fixed: bool = False):
-    """Legacy Scilab subprocess validator - now uses structural validation on HF."""
-    # This is kept for backward compatibility if needed, but run_verification now bypasses it.
-    parser = etree.XMLParser(remove_blank_text=True)
-    tree = etree.fromstring(xml_content.encode("utf-8"), parser)
-    return validate_diagram_structure(tree, auto_fixed)
+
 
 # --- MCP Tool Implementations ---
 
@@ -1116,9 +1203,29 @@ async def run_verification(xml_content: str):
 
     validation_mode = detect_validation_mode()
     if validation_mode == "subprocess":
-        # Headless Scilab has too many limitations (-nogui disables xcosDiagramToScilab).
-        # We switch to a high-fidelity Python-based structural validator.
-        return validate_diagram_structure(tree, auto_fixed)
+        # Stage 1 — fast Python structural audit (catches broken IDs, fan-outs, etc.)
+        python_result = validate_diagram_structure(tree, auto_fixed)
+        if not python_result["success"]:
+            # Fail immediately – no point spawning Scilab if the XML is broken.
+            return python_result
+
+        # Stage 2 — deep Scilab compilation check (catches parameter mismatches,
+        # missing functions, simulation-time type errors, etc.)
+        scilab_result = await run_headless_scilab_validation(xml_content, auto_fixed)
+
+        # Merge warnings from both stages
+        merged_warnings = (python_result.get("warnings") or []) + (scilab_result.get("warnings") or [])
+
+        return {
+            **scilab_result,
+            # Surface both validator results so the caller has full context
+            "structural_check": {
+                "success": python_result["success"],
+                "warnings": python_result.get("warnings"),
+            },
+            "warnings": merged_warnings if merged_warnings else None,
+            "origin": "hybrid (structural-python + scilab-subprocess)",
+        }
 
     task_id = str(uuid.uuid4())
     temp_path = os.path.join(TEMP_OUTPUT_DIR, f"{task_id}.xcos")
