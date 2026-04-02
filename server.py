@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import textwrap
 import hashlib
+import re
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -59,6 +60,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 UI_DIR = os.path.join(BASE_DIR, "ui")
 ICONS_DIR = os.path.join(BASE_DIR, "icons")
+BLOCK_IMAGES_DIR = os.path.join(BASE_DIR, "block_images")
 PORT_REGISTRY_PATH = os.path.join(DATA_DIR, "blocks", "port_registry.json")
 TEMP_OUTPUT_DIR = os.environ.get("XCOS_TEMP_OUTPUT_DIR", os.path.join(DATA_DIR, "temp"))
 SESSION_OUTPUT_DIR = os.environ.get("XCOS_SESSION_OUTPUT_DIR", os.path.join(BASE_DIR, "sessions"))
@@ -259,13 +261,87 @@ def build_xcos_prompt_text(problem_statement: str) -> str:
     )
 
 
-def icon_data_uri(filename: str, mime_type: str) -> str | None:
-    path = os.path.join(ICONS_DIR, filename)
+def file_to_data_uri(path: str, mime_type: str) -> str | None:
     if not os.path.exists(path):
         return None
     with open(path, "rb") as handle:
         encoded = base64.b64encode(handle.read()).decode("ascii")
     return f"data:{mime_type};base64,{encoded}"
+
+
+def icon_data_uri(filename: str, mime_type: str) -> str | None:
+    return file_to_data_uri(os.path.join(ICONS_DIR, filename), mime_type)
+
+
+def normalize_block_asset_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (value or "").lower())
+
+
+def build_block_image_catalog() -> dict[str, dict[str, str]]:
+    catalog = {}
+    if not os.path.isdir(BLOCK_IMAGES_DIR):
+        return catalog
+
+    for filename in sorted(os.listdir(BLOCK_IMAGES_DIR)):
+        if not filename.lower().endswith(".svg"):
+            continue
+
+        stem, _ = os.path.splitext(filename)
+        src = file_to_data_uri(os.path.join(BLOCK_IMAGES_DIR, filename), "image/svg+xml")
+        if not src:
+            continue
+
+        catalog[normalize_block_asset_key(stem)] = {
+            "file_name": filename,
+            "label": stem,
+            "src": src,
+        }
+
+    return catalog
+
+
+BLOCK_IMAGE_ALIASES = {
+    "BIGSOM_f": ["SUM"],
+    "CANIMXY3D": ["3DSCOPE"],
+    "CEVENTSCOPE": ["DSCOPE"],
+    "CFSCOPE": ["DSCOPE"],
+    "CMSCOPE": ["DSCOPE"],
+    "CMAT3D": ["3DSCOPE"],
+    "CSCOPE": ["ASCOPE"],
+    "GENSIN_f": ["SINUS_f"],
+    "GENSQR_f": ["SQUARE_WAVE_f"],
+    "NRMSOM_f": ["SUM"],
+    "SCALE_CMSCOPE": ["SCALE_ASCOPE"],
+    "SCALE_CSCOPE": ["SCALE_ASCOPE"],
+    "SOM_f": ["SUM"],
+    "SUMMATION": ["SUM"],
+}
+
+
+def block_image_candidates(block_name: str) -> list[str]:
+    candidates = [block_name]
+    for suffix in ("_f", "_m", "_c"):
+        if block_name.endswith(suffix):
+            candidates.append(block_name[: -len(suffix)])
+
+    candidates.extend(BLOCK_IMAGE_ALIASES.get(block_name, []))
+
+    seen = set()
+    ordered = []
+    for candidate in candidates:
+        key = normalize_block_asset_key(candidate)
+        if key and key not in seen:
+            seen.add(key)
+            ordered.append(key)
+    return ordered
+
+
+def resolve_block_image(block_name: str) -> dict[str, str] | None:
+    for key in block_image_candidates(block_name):
+        image = BLOCK_IMAGE_CATALOG.get(key)
+        if image:
+            return image
+    return None
 
 
 def load_server_icons() -> list[mcp_types.Icon]:
@@ -288,6 +364,7 @@ def load_server_icons() -> list[mcp_types.Icon]:
 
 
 SERVER_ICONS = load_server_icons()
+BLOCK_IMAGE_CATALOG = build_block_image_catalog()
 
 
 def now_iso() -> str:
@@ -757,6 +834,20 @@ def make_structured_tool_result(summary: str, payload: dict):
         mcp_types.TextContent(
             type="text",
             text=f"{summary}\n\n{json.dumps(payload, indent=2)}"
+        )
+    ]
+
+
+def make_widget_tool_result(summary: str, payload: dict):
+    return [
+        mcp_types.TextContent(
+            type="text",
+            text=(
+                f"{summary}\n"
+                "// Render this using visualize:show_widget.\n"
+                "// Do not display raw JSON to the user.\n\n"
+                f"{json.dumps(payload, indent=2)}"
+            )
         )
     ]
 
@@ -2027,10 +2118,13 @@ async def xcos_get_block_catalogue_widget(category: str = None):
         
     formatted_blocks = []
     for b in blocks:
+        image = resolve_block_image(b.get("name", ""))
         formatted_blocks.append({
             "name": b.get("name", ""),
             "type": b.get("category", ""),
-            "description": b.get("description", "")
+            "description": b.get("description", ""),
+            "image_data_uri": image.get("src") if image else None,
+            "image_file_name": image.get("file_name") if image else None,
         })
         
     return make_json_response({
@@ -2996,15 +3090,24 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         mcp_types.Tool(
             name="xcos_get_status_widget",
             description=(
-                "Call this first for Xcos diagram work. "
-                "It returns the connection/status widget and should be displayed to the user."
+                "Call this first for Xcos diagram work. PHASE 2 (block diagram preview): "
+                "It returns the connection/status widget and should be displayed to the user. "
+                "After receiving this tool's response, you MUST call the visualize:show_widget tool "
+                "to render the data as an HTML widget. Do not display raw JSON to the user."
             ),
             inputSchema={"type": "object", "properties": {}},
             **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_workflow_widget",
-            description="Call this after every xcos_submit_phase and xcos_review_phase call. Always display the returned widget â€” it shows the user their current phase progress. Pass workflow_id to show a specific workflow, or omit it to list all active workflows.",
+            description=(
+                "Call this after every xcos_submit_phase and xcos_review_phase call. "
+                "Always display the returned widget â€” it shows the user their current phase "
+                "progress. Pass workflow_id to show a specific workflow, or omit it to list all "
+                "active workflows. After receiving this tool's response, you MUST call the "
+                "visualize:show_widget tool to render the data as an HTML widget. Do not display "
+                "raw JSON to the user."
+            ),
             inputSchema={"type": "object", "properties": {"workflow_id": {"type": "string"}}},
             **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
@@ -3024,7 +3127,9 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "category (e.g. \"Sources\", \"Continuous\", \"Sinks/Visualization\", "
                 "\"Math Operations\"). Always display the returned widget to the user so "
                 "they can see and confirm the blocks being selected before any math is "
-                "explained."
+                "explained. After receiving this tool's response, you MUST call the "
+                "visualize:show_widget tool to render the data as an HTML widget. Do not "
+                "display raw JSON to the user."
             ),
             inputSchema={"type": "object", "properties": {"category": {"type": "string"}}},
             **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
@@ -3032,7 +3137,10 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         mcp_types.Tool(
             name="xcos_get_topology_widget",
             description=(
-                "Display the current draft topology. Use it after adding blocks and again after adding links."
+                "Display the current draft topology. Use it after adding blocks and again after "
+                "adding links. After receiving this tool's response, you MUST call the "
+                "visualize:show_widget tool to render the data as an HTML widget. Do not display "
+                "raw JSON to the user."
             ),
             inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
             **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
@@ -3278,19 +3386,19 @@ async def handle_call_tool(name: str, arguments: dict | None):
     
     if name == "xcos_get_status_widget":
         payload = parse_mcp_text_json_response(await xcos_get_status_widget())
-        return make_structured_tool_result("Status Widget Generated", payload)
+        return make_widget_tool_result("Status Widget Generated", payload)
     elif name == "xcos_get_workflow_widget":
         payload = parse_mcp_text_json_response(await xcos_get_workflow_widget(arguments.get("workflow_id")))
-        return make_structured_tool_result("Workflow Widget Generated", payload)
+        return make_widget_tool_result("Workflow Widget Generated", payload)
     elif name == "xcos_get_validation_widget":
         payload = parse_mcp_text_json_response(await xcos_get_validation_widget(arguments["xml_content"]))
         return make_structured_tool_result("Validation Widget Generated", payload)
     elif name == "xcos_get_block_catalogue_widget":
         payload = parse_mcp_text_json_response(await xcos_get_block_catalogue_widget(arguments.get("category")))
-        return make_structured_tool_result("Block Catalogue Widget Generated", payload)
+        return make_widget_tool_result("Block Catalogue Widget Generated", payload)
     elif name == "xcos_get_topology_widget":
         payload = parse_mcp_text_json_response(await xcos_get_topology_widget(arguments["session_id"]))
-        return make_structured_tool_result("Topology Widget Generated", payload)
+        return make_widget_tool_result("Topology Widget Generated", payload)
     elif name == "xcos_create_workflow":
         payload = parse_mcp_text_json_response(await xcos_create_workflow(arguments["problem_statement"]))
         workflow = payload["workflow"]

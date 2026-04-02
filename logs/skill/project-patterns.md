@@ -71,3 +71,10 @@
 - Hugging Face Spaces-style hosting works best when the MCP server owns the HTTP port and launches scilab-cli directly for each verification job. The old /task + /result poll loop remains useful for local Scilab desktop setups but should not be the primary hosted path.
 - **Files:** scilab-xcos-mcp-server/server.py, scilab-xcos-mcp-server/README.md
 
+---
+### 2026-04-02 00:00:00 UTC â€” Note
+- **Summary:** Block catalogue previews can now load SVGs from `block_images/` instead of using text-only cards.
+- `xcos_get_block_catalogue_widget()` now attaches `image_data_uri` for blocks whose names resolve against the local SVG asset catalogue. Matching uses normalized names, common suffix stripping (`_f`, `_m`, `_c`), and a small alias table for known Scilab/UI mismatches such as `GENSIN_f -> SINUS_f` and `CSCOPE -> ASCOPE`.
+- The UI renders the SVG preview when present and falls back to a short monogram when no image exists yet, so incomplete image coverage does not break the catalogue.
+- **Files:** scilab-xcos-mcp-server/server.py, scilab-xcos-mcp-server/ui/app.js, scilab-xcos-mcp-server/ui/styles.css, scilab-xcos-mcp-server/ui/index.html
+

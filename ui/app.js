@@ -73,6 +73,59 @@ const showAppError = (message, detail = "") => {
     `;
 };
 
+const getBlockFallbackLabel = (blockName) => {
+    const compact = String(blockName || "")
+        .replace(/[_-]+/g, " ")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (compact.length === 0) return "?";
+    if (compact.length === 1) return compact[0].slice(0, 2).toUpperCase();
+    return `${compact[0][0] || ""}${compact[1][0] || ""}`.toUpperCase();
+};
+
+const createCatalogueCard = (block) => {
+    const blockEl = document.createElement("article");
+    blockEl.className = "card transition-all catalogue-card";
+
+    const preview = document.createElement("div");
+    preview.className = "catalogue-card__preview";
+
+    if (block.image_data_uri) {
+        const image = document.createElement("img");
+        image.className = "catalogue-card__image";
+        image.src = block.image_data_uri;
+        image.alt = `${block.name} block`;
+        image.loading = "lazy";
+        preview.appendChild(image);
+    } else {
+        const fallback = document.createElement("div");
+        fallback.className = "catalogue-card__fallback";
+        fallback.textContent = getBlockFallbackLabel(block.name);
+        preview.appendChild(fallback);
+    }
+
+    const body = document.createElement("div");
+    body.className = "catalogue-card__body";
+
+    const title = document.createElement("h4");
+    title.className = "catalogue-card__title";
+    title.textContent = block.name;
+
+    const badge = document.createElement("div");
+    badge.className = "badge badge-neutral";
+    badge.textContent = block.type;
+
+    const description = document.createElement("p");
+    description.className = "text-secondary catalogue-card__description";
+    description.textContent = block.description || "No description available.";
+
+    body.append(title, badge, description);
+    blockEl.append(preview, body);
+    return blockEl;
+};
+
 app.ontoolresult = (result) => {
     try {
         const data = getToolPayload(result);
@@ -153,14 +206,7 @@ app.ontoolresult = (result) => {
             
             if (payload.blocks && payload.blocks.length > 0) {
                 payload.blocks.forEach(block => {
-                    const blockEl = document.createElement('div');
-                    blockEl.className = 'card transition-all';
-                    blockEl.style.padding = '16px';
-                    blockEl.innerHTML = `
-                        <h4 style="margin:0 0 4px 0">${escapeHtml(block.name)}</h4>
-                        <div class="badge badge-neutral">${escapeHtml(block.type)}</div>
-                    `;
-                    list.appendChild(blockEl);
+                    list.appendChild(createCatalogueCard(block));
                 });
             } else {
                 list.innerHTML = '<p class="text-muted">No blocks found.</p>';

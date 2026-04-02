@@ -186,13 +186,36 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIn("PHASE 2 (block diagram preview):", by_name["xcos_get_status_widget"].description)
         self.assertIn(
+            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            by_name["xcos_get_status_widget"].description,
+        )
+        self.assertIn(
             "Call this after every xcos_submit_phase and xcos_review_phase call.",
             by_name["xcos_get_workflow_widget"].description,
+        )
+        self.assertIn(
+            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            by_name["xcos_get_workflow_widget"].description,
+        )
+        self.assertIn(
+            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            by_name["xcos_get_block_catalogue_widget"].description,
+        )
+        self.assertIn(
+            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            by_name["xcos_get_topology_widget"].description,
         )
         self.assertIn(
             "phase_label='phase3_implementation'",
             by_name["xcos_commit_phase"].description,
         )
+
+    async def test_widget_tool_call_wrapper_includes_visualizer_instruction(self):
+        response = await server.handle_call_tool("xcos_get_status_widget", {})
+        text = response[0].text
+
+        self.assertIn("// Render this using visualize:show_widget.", text)
+        self.assertIn("// Do not display raw JSON to the user.", text)
 
 
 if __name__ == "__main__":
