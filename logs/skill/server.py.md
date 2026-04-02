@@ -35,3 +35,8 @@
 - run_poll_validation now exposes those fields directly and adds a scilab_verdict message so clients do not have to infer that success=true means import+simulate passed.
 - **Files:** server.py, data/xcosai_poll_loop.sci
 
+### 2026-04-02 13:10:41 UTC — Note
+- **Summary:** Validation output is now public-by-default and cached
+- Added a compact public validation payload for verify_xcos_xml and xcos_verify_draft, gated raw internals behind XCOS_DEBUG_TOOL_OUTPUT, cached validation results by XML hash so xcos_get_validation_widget does not re-run validation after a fresh verify, and made get_xcos_block_data load help/extra examples only on demand to reduce token-heavy responses.
+- **Files:** scilab-xcos-mcp-server/server.py
+
