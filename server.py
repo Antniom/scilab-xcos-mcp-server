@@ -10,6 +10,7 @@ import tempfile
 import textwrap
 import hashlib
 import re
+import html
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -277,24 +278,62 @@ def normalize_block_asset_key(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", (value or "").lower())
 
 
+def block_image_mime_type(extension: str) -> str | None:
+    return {
+        ".svg": "image/svg+xml",
+        ".png": "image/png",
+    }.get(extension.lower())
+
+
+def build_generated_block_image(block_name: str) -> dict[str, str]:
+    label = get_block_label(block_name)
+    safe_label = html.escape(label)
+    safe_name = html.escape(block_name or "Unknown")
+    svg = f"""
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 110" role="img" aria-label="{safe_name} block">
+  <rect x="8" y="8" width="144" height="94" rx="18" fill="#f8f5ef" stroke="#2f3640" stroke-width="4"/>
+  <rect x="20" y="20" width="120" height="36" rx="12" fill="#d9e6f2"/>
+  <text x="80" y="45" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#1f2933">{safe_label}</text>
+  <text x="80" y="76" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#52606d">{safe_name}</text>
+</svg>
+""".strip()
+    encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return {
+        "file_name": f"{block_name or 'generated'}.generated.svg",
+        "label": label,
+        "src": f"data:image/svg+xml;base64,{encoded}",
+        "source": "generated",
+    }
+
+
 def build_block_image_catalog() -> dict[str, dict[str, str]]:
     catalog = {}
     if not os.path.isdir(BLOCK_IMAGES_DIR):
         return catalog
 
     for filename in sorted(os.listdir(BLOCK_IMAGES_DIR)):
-        if not filename.lower().endswith(".svg"):
+        stem, extension = os.path.splitext(filename)
+        mime_type = block_image_mime_type(extension)
+        if not mime_type:
             continue
 
-        stem, _ = os.path.splitext(filename)
-        src = file_to_data_uri(os.path.join(BLOCK_IMAGES_DIR, filename), "image/svg+xml")
+        src = file_to_data_uri(os.path.join(BLOCK_IMAGES_DIR, filename), mime_type)
         if not src:
             continue
 
-        catalog[normalize_block_asset_key(stem)] = {
+        key = normalize_block_asset_key(stem)
+        current = catalog.get(key)
+        should_replace = current is None or (
+            current.get("source") != "svg" and extension.lower() == ".svg"
+        )
+        if not should_replace:
+            continue
+
+        catalog[key] = {
             "file_name": filename,
             "label": stem,
             "src": src,
+            "source": extension.lower().lstrip("."),
         }
 
     return catalog
@@ -336,12 +375,21 @@ def block_image_candidates(block_name: str) -> list[str]:
     return ordered
 
 
+def get_block_label(block_name: str) -> str:
+    compact = re.sub(r"[_-]+", " ", (block_name or "")).strip().split()
+    if not compact:
+        return "?"
+    if len(compact) == 1:
+        return compact[0][:2].upper()
+    return f"{compact[0][:1]}{compact[1][:1]}".upper()
+
+
 def resolve_block_image(block_name: str) -> dict[str, str] | None:
     for key in block_image_candidates(block_name):
         image = BLOCK_IMAGE_CATALOG.get(key)
         if image:
             return image
-    return None
+    return build_generated_block_image(block_name)
 
 
 def load_server_icons() -> list[mcp_types.Icon]:
