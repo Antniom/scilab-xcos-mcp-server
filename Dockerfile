@@ -22,6 +22,8 @@ RUN apt-get update && \
         libxi6 && \
     rm -rf /var/lib/apt/lists/*
 
+RUN useradd --create-home --shell /bin/bash user
+
 WORKDIR /app
 COPY . /app
 
