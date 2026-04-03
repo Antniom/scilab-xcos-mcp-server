@@ -1,5 +1,3 @@
-result,,val,time,a,b
-,,0,2021-11-12 01:00:00,20,on
-,,0,2021-11-12 02:00:00,24,on
-,,0,2021-11-12 03:00:00,21,off
-,,0,2021-11-12 04:00:00,24,on
+version https://git-lfs.github.com/spec/v1
+oid sha256:90428a61b53dd5ccaa86b5d19215abe5eac5c93e343e3bb9e69f54be2cccdc83
+size 145
