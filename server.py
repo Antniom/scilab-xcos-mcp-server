@@ -1918,10 +1918,17 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
 
         # Failure: extract the error sentinel if present
         scilab_error = f"Scilab exited with code {returncode}."
+        found_sentinel = False
         for line in scilab_log.splitlines():
             if line.startswith("XCOSAI_VERIFY_ERROR:"):
                 scilab_error = line[len("XCOSAI_VERIFY_ERROR:"):]
+                found_sentinel = True
                 break
+        
+        if not found_sentinel and scilab_log:
+            lines = scilab_log.strip().splitlines()
+            tail_err = "\n".join(lines[-15:])
+            scilab_error += f"\n\n--- Last 15 lines of Scilab output ---\n{tail_err}\n---------------------------------------" 
 
         return {
             "success": False,
@@ -2709,14 +2716,10 @@ async def xcos_get_block_catalogue_widget(category: str = None):
         }
     })
 
-async def xcos_get_topology_widget(session_id: str):
+def generate_topology_svg(session_id: str) -> tuple[str, int, int]:
+    """Returns (svg_string, block_count, link_count) or raises ValueError"""
     if session_id not in state.drafts:
-        return make_json_response({
-            "widget_type": "topology",
-            "payload": {
-                "error": f"Session {session_id} not found"
-            }
-        })
+        raise ValueError(f"Session {session_id} not found")
         
     draft = state.drafts[session_id]
     xml_content = draft.to_xml()
@@ -2725,12 +2728,7 @@ async def xcos_get_topology_widget(session_id: str):
         parser = etree.XMLParser(remove_blank_text=True)
         tree = etree.fromstring(xml_content.encode("utf-8"), parser)
     except Exception as e:
-        return make_json_response({
-            "widget_type": "topology",
-            "payload": {
-                "error": f"Error parsing XML: {str(e)}"
-            }
-        })
+        raise ValueError(f"Error parsing XML: {str(e)}")
         
     blocks = tree.xpath(XCOS_BLOCK_XPATH)
     links = tree.xpath(XCOS_LINK_XPATH)
@@ -2804,12 +2802,24 @@ async def xcos_get_topology_widget(session_id: str):
 
     b_coords = {}
 
+    block_images_dir = os.path.join(BASE_DIR, "block_images")
+
     for idx, (bid, bdata) in enumerate(block_map.items()):
         b_coords[bid] = (curr_x, curr_y)
-        svg_nodes.append(f'<rect x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" fill="#f8f9fa" stroke="#343a40" rx="4" />')
-        svg_nodes.append(f'<text x="{curr_x + 6}" y="{curr_y + 24}" font-family="sans-serif" font-size="12" fill="#000">{bdata["name"]}</text>')
+        
+        svg_path = os.path.join(block_images_dir, f"{bdata['name']}.svg")
+        png_path = os.path.join(block_images_dir, f"{bdata['name']}.png")
+        
+        if os.path.exists(svg_path):
+            svg_nodes.append(f'<image href="http://localhost:{SERVER_PORT}/block_images/{bdata["name"]}.svg" x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" />')
+        elif os.path.exists(png_path):
+            svg_nodes.append(f'<image href="http://localhost:{SERVER_PORT}/block_images/{bdata["name"]}.png" x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" />')
+        else:
+            svg_nodes.append(f'<rect x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" fill="#f8f9fa" stroke="#343a40" rx="4" />')
+            svg_nodes.append(f'<text x="{curr_x + 6}" y="{curr_y + 24}" font-family="sans-serif" font-size="12" fill="#000">{bdata["name"]}</text>')
+            
         curr_y += pad_y
-        if idx > 0 and idx % 10 == 0:
+        if idx > 0 and (idx + 1) % 10 == 0:
             curr_y = 20
             curr_x += pad_x
 
@@ -2856,7 +2866,7 @@ async def xcos_get_topology_widget(session_id: str):
     nodes_str = ''.join(svg_nodes)
     edges_str = ''.join(svg_edges)
     
-    svg_out = f'''<svg width="100%" height="{max_y}" viewBox="0 0 {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg">
+    svg_out = f'''<svg width="{max_x}" height="{max_y}" viewBox="0 0 {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#007bff" />
@@ -2866,30 +2876,195 @@ async def xcos_get_topology_widget(session_id: str):
       {nodes_str}
     </svg>'''
     
-    return make_json_response({
-        "widget_type": "topology",
-        "payload": {
-            "session_id": session_id,
-            "block_count": len(block_map),
-            "link_count": len(links),
-            "svg": svg_out
-        }
-    })
+    return svg_out, len(block_map), len(links)
 
 
-async def xcos_submit_phase(
-    workflow_id: str,
-    phase: str,
-    content: str,
-    artifact_type: str = "markdown",
-):
-    payload, error = submit_workflow_phase(workflow_id, phase, content, artifact_type)
-    if error:
-        return make_text_response(f"Error: {error}")
-    return make_json_response({
-        "status": "success",
-        "workflow": payload,
-    })
+def _generate_topology_svg(session_id: str) -> tuple[str, int, int]:
+    if session_id not in state.drafts:
+        raise ValueError(f"Session {session_id} not found")
+        
+    draft = state.drafts[session_id]
+    xml_content = draft.to_xml()
+    
+    parser = etree.XMLParser(remove_blank_text=True)
+    tree = etree.fromstring(xml_content.encode("utf-8"), parser)
+        
+    blocks = tree.xpath(XCOS_BLOCK_XPATH)
+    links = tree.xpath(XCOS_LINK_XPATH)
+    
+    block_map = {}
+    for b in blocks:
+        bid = b.get("id")
+        name = b.get("interfaceFunctionName", b.tag)
+        block_map[bid] = {"name": name, "in_ports": [], "out_ports": []}
+        
+    ports_map = {}
+
+    for p in tree.iter():
+        if not isinstance(p.tag, str):
+            continue
+        if "Port" not in p.tag:
+            continue
+        pid = p.get("id")
+        if not pid:
+            continue
+        owner_id = p.get("parent")
+        if owner_id and owner_id in block_map and pid not in ports_map:
+            tag = p.tag
+            p_type = "in" if any(k in tag for k in ("Input", "InPort", "Control")) else "out"
+            ports_map[pid] = {"block_id": owner_id, "type": p_type}
+            bdata = block_map[owner_id]
+            if p_type == "in":
+                bdata["in_ports"].append(pid)
+            else:
+                bdata["out_ports"].append(pid)
+
+    for bid, bdata in block_map.items():
+        block_nodes = tree.xpath(f"//*[@id='{bid}']")
+        if not block_nodes:
+            continue
+        block = block_nodes[0]
+        for p in block.iter():
+            if not isinstance(p.tag, str) or "Port" not in p.tag:
+                continue
+            pid = p.get("id")
+            if pid and pid not in ports_map:
+                tag = p.tag
+                p_type = "in" if any(k in tag for k in ("Input", "InPort", "Control")) else "out"
+                ports_map[pid] = {"block_id": bid, "type": p_type}
+                if p_type == "in":
+                    bdata["in_ports"].append(pid)
+                else:
+                    bdata["out_ports"].append(pid)
+
+    svg_nodes = []
+    svg_edges = []
+
+    node_w = 100
+    node_h = 40
+    pad_y = 60
+    pad_x = 150
+    curr_y = 20
+    curr_x = 20
+
+    b_coords = {}
+    block_images_dir = os.path.join(BASE_DIR, "block_images")
+
+    port_override = os.environ.get("SPACE_HOST", f"127.0.0.1:{SERVER_PORT}")
+    base_url = f"https://{port_override}" if "hf.space" in port_override else f"http://{port_override}"
+
+    for idx, (bid, bdata) in enumerate(block_map.items()):
+        b_coords[bid] = (curr_x, curr_y)
+        
+        name = bdata["name"]
+        svg_path = os.path.join(block_images_dir, f"{name}.svg")
+        png_path = os.path.join(block_images_dir, f"{name}.png")
+        
+        if os.path.exists(svg_path):
+            img_url = f"{base_url}/block_images/{name}.svg"
+            svg_nodes.append(f'<image href="{img_url}" x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" />')
+        elif os.path.exists(png_path):
+            img_url = f"{base_url}/block_images/{name}.png"
+            svg_nodes.append(f'<image href="{img_url}" x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" />')
+        else:
+            svg_nodes.append(f'<rect x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" fill="#f8f9fa" stroke="#343a40" rx="4" />')
+            svg_nodes.append(f'<text x="{curr_x + 6}" y="{curr_y + 24}" font-family="sans-serif" font-size="12" fill="#000">{name}</text>')
+            
+        curr_y += pad_y
+        if idx > 0 and idx % 10 == 0:
+            curr_y = 20
+            curr_x += pad_x
+
+    connected_ports = set()
+    link_strings = []
+    
+    for l in links:
+        src_id = l.get("source")
+        if not src_id:
+            src_node = l.xpath("./*[@as='source']")
+            if src_node: src_id = src_node[0].get("reference")
+            
+        dst_id = l.get("target")
+        if not dst_id:
+            dst_node = l.xpath("./*[@as='target']")
+            if dst_node: dst_id = dst_node[0].get("reference")
+
+        if src_id and dst_id:
+            connected_ports.add(src_id)
+            connected_ports.add(dst_id)
+            
+            src_info = ports_map.get(src_id)
+            dst_info = ports_map.get(dst_id)
+            
+            src_name = block_map[src_info["block_id"]]["name"] if src_info else "?"
+            dst_name = block_map[dst_info["block_id"]]["name"] if dst_info else "?"
+            
+            link_strings.append(f"{src_name} &rarr; {dst_name}")
+            
+            if src_info and dst_info:
+                s_coords = b_coords.get(src_info["block_id"])
+                d_coords = b_coords.get(dst_info["block_id"])
+                if s_coords and d_coords:
+                    sx = s_coords[0] + node_w
+                    sy = s_coords[1] + (node_h/2)
+                    dx = d_coords[0]
+                    dy = d_coords[1] + (node_h/2)
+                    svg_edges.append(f'<path d="M {sx} {sy} L {dx} {dy}" stroke="#007bff" stroke-width="2" fill="none" marker-end="url(#arrow)" />')
+            
+    max_x = curr_x + node_w + 20
+    max_y = curr_y + 20
+    
+    nodes_str = ''.join(svg_nodes)
+    edges_str = ''.join(svg_edges)
+    
+    svg_out = f'''<svg width="{max_x}" height="{max_y}" viewBox="0 0 {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#007bff" />
+        </marker>
+      </defs>
+      {edges_str}
+      {nodes_str}
+    </svg>'''
+    
+    return svg_out, len(block_map), len(links)
+
+async def xcos_get_topology_widget(session_id: str):
+    port_override = os.environ.get("SPACE_HOST", f"127.0.0.1:{SERVER_PORT}")
+    base_url = f"https://{port_override}" if "hf.space" in port_override else f"http://{port_override}"
+
+    try:
+        svg_out, block_count, link_count = _generate_topology_svg(session_id)
+        
+        json_payload = json.dumps({
+            "widget_type": "topology",
+            "payload": {
+                "session_id": session_id,
+                "block_count": block_count,
+                "link_count": link_count,
+                "svg": svg_out
+            }
+        })
+        
+        markdown_str = f"""### Xcos Topology Visual
+
+![Topology]({base_url}/api/topology/{session_id}/svg)
+
+[Open Interactive UI]({base_url}/workflow-ui/)
+
+"""
+        
+        return [
+            mcp_types.TextContent(type="text", text=markdown_str),
+            mcp_types.TextContent(type="text", text=json_payload)
+        ]
+    except Exception as e:
+        return make_json_response({
+            "widget_type": "topology",
+            "payload": {
+                "error": f"Error: {str(e)}"
+            }
+        })
 
 
 async def xcos_review_phase(
@@ -3342,6 +3517,26 @@ async def http_workflow_ui(_: Request) -> Response:
     return HTMLResponse(load_ui_html())
 
 
+
+async def http_api_topology_svg(request: Request) -> Response:
+    session_id = request.path_params["session_id"]
+    try:
+        svg_out, _, _ = _generate_topology_svg(session_id)
+        return Response(svg_out, media_type="image/svg+xml")
+    except Exception as e:
+        return PlainTextResponse(f"Error generating SVG: {str(e)}", status_code=500)
+
+async def http_block_image(request: Request) -> Response:
+    asset_name = request.path_params["asset_name"]
+    safe_name = os.path.basename(asset_name)
+    ui_path = os.path.join(BASE_DIR, "block_images", safe_name)
+    if not os.path.exists(ui_path):
+        return PlainTextResponse("Not Found", status_code=404)
+
+    media_type = "image/svg+xml" if safe_name.endswith(".svg") else "image/png"
+    with open(ui_path, "rb") as f:
+        return Response(f.read(), media_type=media_type)
+
 async def http_ui_asset(request: Request) -> Response:
     asset_name = request.path_params["asset_name"]
     safe_name = os.path.basename(asset_name)
@@ -3421,6 +3616,29 @@ async def http_api_start_draft(request: Request) -> Response:
     return http_json(json.loads(text))
 
 
+async def http_api_topology_svg(request: Request) -> Response:
+    session_id = request.path_params.get("session_id")
+    try:
+        svg_out, block_count, link_count = generate_topology_svg(session_id)
+        return Response(svg_out, media_type="image/svg+xml")
+    except Exception as e:
+        return http_json({"error": str(e)}, status_code=400)
+
+async def http_block_image(request: Request) -> Response:
+    image_name = request.path_params.get("image_name")
+    if not image_name:
+         return PlainTextResponse("Not Found", status_code=404)
+    # Be careful to avoid path traversal
+    safe_name = os.path.basename(image_name)
+    img_path = os.path.join(BASE_DIR, "block_images", safe_name)
+    if not os.path.exists(img_path):
+        return PlainTextResponse("Not Found", status_code=404)
+
+    media_type = "image/svg+xml" if safe_name.endswith(".svg") else "image/png"
+    with open(img_path, "rb") as f:
+        return Response(f.read(), media_type=media_type)
+
+
 async def http_ext_apps_js(request: Request) -> Response:
     request.path_params["asset_name"] = "ext-apps.js"
     return await http_ui_asset(request)
@@ -3484,8 +3702,12 @@ def build_starlette_app() -> Starlette:
         Route("/workflow-ui/api/workflows/{workflow_id}/draft/start", http_api_start_draft, methods=["POST"]),
         Route("/workflow-ui/ext-apps.js", http_ext_apps_js, methods=["GET"]),
         Route("/workflow-ui/{asset_name:str}", http_ui_asset, methods=["GET"]),
+        Route("/api/topology/{session_id:str}/svg", http_api_topology_svg, methods=["GET"]),
+        Route("/block_images/{asset_name:str}", http_block_image, methods=["GET"]),
         Route("/task", http_handle_get_task, methods=["GET"]),
         Route("/result", http_handle_post_result, methods=["POST"]),
+        Route("/block_images/{image_name:str}", http_block_image, methods=["GET"]),
+        Route("/api/topology/{session_id}/svg", http_api_topology_svg, methods=["GET"]),
         Route(MCP_HTTP_PATH, StreamableHTTPRouteApp(streamable_http_manager), methods=["GET", "POST", "DELETE"]),
     ]
     return Starlette(debug=False, routes=routes, lifespan=starlette_lifespan)
