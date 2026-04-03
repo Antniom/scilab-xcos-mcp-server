@@ -3144,7 +3144,6 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "to render the data as an HTML widget. Do not display raw JSON to the user."
             ),
             inputSchema={"type": "object", "properties": {}},
-            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_workflow_widget",
@@ -3157,7 +3156,6 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "raw JSON to the user."
             ),
             inputSchema={"type": "object", "properties": {"workflow_id": {"type": "string"}}},
-            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_validation_widget",
@@ -3180,7 +3178,6 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "display raw JSON to the user."
             ),
             inputSchema={"type": "object", "properties": {"category": {"type": "string"}}},
-            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_get_topology_widget",
@@ -3191,7 +3188,6 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "raw JSON to the user."
             ),
             inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
-            **{"_meta": {"ui": {"resourceUri": "ui://xcos/index.html"}}}
         ),
         mcp_types.Tool(
             name="xcos_create_workflow",

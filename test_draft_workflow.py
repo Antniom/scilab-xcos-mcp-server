@@ -183,6 +183,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
     async def test_tool_descriptions_reflect_updated_workflow_guidance(self):
         tools = await server.handle_list_tools()
         by_name = {tool.name: tool for tool in tools}
+        dumps = {name: tool.model_dump(mode="json") for name, tool in by_name.items()}
 
         self.assertIn("PHASE 2 (block diagram preview):", by_name["xcos_get_status_widget"].description)
         self.assertIn(
@@ -205,6 +206,10 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             "After receiving this tool's response, you MUST call the visualize:show_widget tool",
             by_name["xcos_get_topology_widget"].description,
         )
+        self.assertNotIn("_meta", dumps["xcos_get_status_widget"])
+        self.assertNotIn("_meta", dumps["xcos_get_workflow_widget"])
+        self.assertNotIn("_meta", dumps["xcos_get_block_catalogue_widget"])
+        self.assertNotIn("_meta", dumps["xcos_get_topology_widget"])
         self.assertIn(
             "phase_label='phase3_implementation'",
             by_name["xcos_commit_phase"].description,
