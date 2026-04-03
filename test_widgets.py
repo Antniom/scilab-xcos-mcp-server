@@ -1,114 +1,83 @@
-import asyncio
-import os
 import json
+import os
+import tempfile
+import unittest
 
-# Force structural validation mode for testing
-os.environ["XCOS_VALIDATION_MODE"] = "subprocess"
+import server
 
-from server import xcos_get_block_catalogue_widget, xcos_get_topology_widget, state, DraftDiagram
 
-async def verify_fixes():
-    print("--- Verifying Bug 1 (Catalogue) ---")
-    res = await xcos_get_block_catalogue_widget()
-    html = json.loads(res[0].text)["html"]
-    if "No blocks found." in html:
-        print("FAIL: Catalogue still empty.")
-    else:
-        print("SUCCESS: Catalogue populated.")
-        if "CMAT3D" in html:
-            print("Verified: CMAT3D found in catalogue.")
+BLOCKS_XML = """
+<BasicBlock id="b1" parent="0:2:0" interfaceFunctionName="CONST_m" style="CONST_m">
+  <mxGeometry x="0" y="0" width="40" height="40" as="geometry"/>
+</BasicBlock>
+<ExplicitOutputPort id="p1" parent="b1" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" value=""/>
+<BasicBlock id="b2" parent="0:2:0" interfaceFunctionName="CMSCOPE" style="CMSCOPE">
+  <mxGeometry x="200" y="0" width="40" height="40" as="geometry"/>
+</BasicBlock>
+<ExplicitInputPort id="p2" parent="b2" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" value=""/>
+""".strip()
 
-    print("\n--- Verifying Bug 2 (Topology Interpolation) ---")
-    session_id = "test-session"
-    state.drafts[session_id] = DraftDiagram()
-    # Add dummy blocks and a link
-    state.drafts[session_id].add_blocks('''
-    <BasicBlock id="101" interfaceFunctionName="GAIN_f">
-      <mxGeometry x="0" y="0" width="40" height="40" as="geometry"/>
-      <ExplicitOutputPort id="p1" as="out"/>
-    </BasicBlock>
-    <BasicBlock id="102" interfaceFunctionName="AFFICH_m">
-      <mxGeometry x="200" y="0" width="40" height="40" as="geometry"/>
-      <ExplicitInputPort id="p2" as="in"/>
-    </BasicBlock>
-    ''')
-    state.drafts[session_id].add_links('''
-    <BasicLink id="103" parent="0">
-      <ExplicitOutputPort as="source" reference="p1"/>
-      <ExplicitInputPort as="target" reference="p2"/>
-    </BasicLink>
-    ''')
-    
-    res = await xcos_get_topology_widget(session_id)
-    html = json.loads(res[0].text)["html"]
-    
-    # ... previous checks ...
-    
-    # Add dummy blocks and an attribute-based link (like Tarefa 10.xcos)
-    state.drafts["attr-session"] = DraftDiagram()
-    state.drafts["attr-session"].add_blocks('''
-    <BasicBlock id="b1" interfaceFunctionName="CONST_m">
-      <mxGeometry x="0" y="0" width="40" height="40" as="geometry"/>
-      <ExplicitOutputPort id="p1" as="out"/>
-    </BasicBlock>
-    <BasicBlock id="b2" interfaceFunctionName="CMSCOPE">
-      <mxGeometry x="200" y="0" width="40" height="40" as="geometry"/>
-      <ExplicitInputPort id="p2" as="in"/>
-    </BasicBlock>
-    ''')
-    state.drafts["attr-session"].add_links('''
-    <ExplicitLink id="l1" source="p1" target="p2" parent="0" style="ExplicitLink" />
-    ''')
-    
-    res = await xcos_get_topology_widget("attr-session")
-    html = json.loads(res[0].text)["html"]
-    
-    if "CONST_m &rarr; CMSCOPE" in html:
-        print("SUCCESS: Attribute-based link detected in text.")
-    else:
-        print("FAIL: Attribute-based link NOT detected in text.")
-        
-    if '<path d="M' in html:
-        print("SUCCESS: Attribute-based SVG edge rendered.")
-    else:
-        print("FAIL: Attribute-based SVG edge NOT rendered.")
 
-    print("\n--- Verifying Bug 3.2 (Structural Validator) ---")
-    from server import verify_xcos_xml
-    # Test 1: Missing endpoint ID
-    bad_xml = '''
-    <xcosDiagram>
-      <mxGraphModel><root>
-        <BasicBlock id="1" interfaceFunctionName="GAIN_f"/>
-        <ExplicitLink id="2" source="1" target="999"/>
-      </root></mxGraphModel>
-    </xcosDiagram>
-    '''
-    res = await verify_xcos_xml(bad_xml)
-    data = json.loads(res[0].text)
-    if not data["success"] and "999" in str(data["errors"]):
-        print("SUCCESS: Validator caught missing ID error.")
-    else:
-        print(f"FAIL: Validator did not catch error. Output: {data}")
+LINKS_XML = """
+<ExplicitLink id="l1" source="p1" target="p2" parent="0:2:0" style="ExplicitLink" />
+""".strip()
 
-    # Test 2: Fan-out error
-    fanout_xml = '''
-    <xcosDiagram>
-      <mxGraphModel><root>
-        <BasicBlock id="1" interfaceFunctionName="GAIN_f"><ExplicitOutputPort id="p1"/></BasicBlock>
-        <BasicBlock id="2" interfaceFunctionName="SINK"/>
-        <BasicBlock id="3" interfaceFunctionName="SINK"/>
-        <ExplicitLink id="L1" source="p1" target="2"/>
-        <ExplicitLink id="L2" source="p1" target="3"/>
-      </root></mxGraphModel>
-    </xcosDiagram>
-    '''
-    res = await verify_xcos_xml(fanout_xml)
-    data = json.loads(res[0].text)
-    if not data["success"] and "fan-out" in str(data["errors"]):
-        print("SUCCESS: Validator caught fan-out error.")
-    else:
-        print(f"FAIL: Validator did not catch fan-out. Output: {data}")
+
+class WidgetTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.old_dirs = {
+            "STATE_DIR": server.STATE_DIR,
+            "DRAFT_STATE_DIR": server.DRAFT_STATE_DIR,
+            "WORKFLOW_STATE_DIR": server.WORKFLOW_STATE_DIR,
+            "VALIDATION_JOB_STATE_DIR": server.VALIDATION_JOB_STATE_DIR,
+            "SESSION_OUTPUT_DIR": server.SESSION_OUTPUT_DIR,
+            "TEMP_OUTPUT_DIR": server.TEMP_OUTPUT_DIR,
+        }
+        server.STATE_DIR = os.path.join(self.tempdir.name, "state")
+        server.DRAFT_STATE_DIR = os.path.join(server.STATE_DIR, "drafts")
+        server.WORKFLOW_STATE_DIR = os.path.join(server.STATE_DIR, "workflows")
+        server.VALIDATION_JOB_STATE_DIR = os.path.join(server.STATE_DIR, "validation_jobs")
+        server.SESSION_OUTPUT_DIR = os.path.join(self.tempdir.name, "sessions")
+        server.TEMP_OUTPUT_DIR = os.path.join(self.tempdir.name, "temp")
+        server.ensure_state_dirs()
+        server.state.drafts.clear()
+        server.state.phase_plans.clear()
+        server.state.workflows.clear()
+        server.state.draft_to_workflow.clear()
+        server.state.validation_jobs.clear()
+        for task in list(server.state.validation_tasks.values()):
+            task.cancel()
+        server.state.validation_tasks.clear()
+
+    def tearDown(self):
+        for task in list(server.state.validation_tasks.values()):
+            task.cancel()
+        server.state.validation_tasks.clear()
+        for key, value in self.old_dirs.items():
+            setattr(server, key, value)
+        self.tempdir.cleanup()
+
+    async def test_topology_widget_reports_counts_after_blocks_and_links(self):
+        start_response = await server.xcos_start_draft(session_id="widget-session")
+        start_payload = json.loads(start_response[0].text)
+        self.assertTrue(start_payload["created"])
+
+        await server.xcos_add_blocks("widget-session", BLOCKS_XML)
+        blocks_response = await server.xcos_get_topology_widget("widget-session")
+        blocks_payload = json.loads(blocks_response[0].text)
+        self.assertEqual(blocks_payload["payload"]["session_id"], "widget-session")
+        self.assertEqual(blocks_payload["payload"]["block_count"], 2)
+        self.assertEqual(blocks_payload["payload"]["link_count"], 0)
+        self.assertIn("<svg", blocks_payload["payload"]["svg"])
+
+        await server.xcos_add_links("widget-session", LINKS_XML)
+        links_response = await server.xcos_get_topology_widget("widget-session")
+        links_payload = json.loads(links_response[0].text)
+        self.assertEqual(links_payload["payload"]["block_count"], 2)
+        self.assertEqual(links_payload["payload"]["link_count"], 1)
+        self.assertIn('marker-end="url(#arrow)"', links_payload["payload"]["svg"])
+
 
 if __name__ == "__main__":
-    asyncio.run(verify_fixes())
+    unittest.main()

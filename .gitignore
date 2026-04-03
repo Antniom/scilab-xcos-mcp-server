@@ -9,6 +9,7 @@ __pycache__/
 logs/
 !logs/skill/
 sessions/
+state/
 data/temp/
 launcher/node_modules/
 

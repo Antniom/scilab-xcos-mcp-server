@@ -34,6 +34,8 @@ SERVER_VERSION = "1.0.3"
 POLL_WORKER_IDLE_SECONDS = 5.0
 POLL_WORKER_STARTUP_TIMEOUT_SECONDS = 20.0
 VALIDATION_CACHE_LIMIT = 64
+ASYNC_VALIDATION_BRIEF_WAIT_SECONDS = 1.0
+DEFAULT_VALIDATION_TIMEOUT_SECONDS = 120.0
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
 
 # Shared State
@@ -48,6 +50,8 @@ class SharedState:
         self.phase_plans = {} # session_id -> {"phases": list[str], "completed": list[str]}
         self.workflows = {} # workflow_id -> WorkflowSession
         self.draft_to_workflow = {} # session_id -> workflow_id
+        self.validation_jobs = {} # job_id -> ValidationJob
+        self.validation_tasks = {} # job_id -> asyncio.Task
         self.poll_worker_process = None
         self.poll_worker_log_handle = None
         self.poll_worker_log_path = None
@@ -65,9 +69,14 @@ BLOCK_IMAGES_DIR = os.path.join(BASE_DIR, "block_images")
 PORT_REGISTRY_PATH = os.path.join(DATA_DIR, "blocks", "port_registry.json")
 TEMP_OUTPUT_DIR = os.environ.get("XCOS_TEMP_OUTPUT_DIR", os.path.join(DATA_DIR, "temp"))
 SESSION_OUTPUT_DIR = os.environ.get("XCOS_SESSION_OUTPUT_DIR", os.path.join(BASE_DIR, "sessions"))
+STATE_DIR = os.environ.get("XCOS_STATE_DIR", os.path.join(BASE_DIR, "state"))
+DRAFT_STATE_DIR = os.path.join(STATE_DIR, "drafts")
+WORKFLOW_STATE_DIR = os.path.join(STATE_DIR, "workflows")
+VALIDATION_JOB_STATE_DIR = os.path.join(STATE_DIR, "validation_jobs")
 SERVER_PORT = int(os.environ.get("PORT", os.environ.get("XCOS_SERVER_PORT", "8000")))
 MCP_HTTP_PATH = os.environ.get("XCOS_MCP_HTTP_PATH", "/mcp")
 MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
+WORKFLOW_UI_RESOURCE_URI = "ui://xcos/index.html"
 
 WORKFLOW_PHASE_ORDER = [
     "phase1_math_model",
@@ -431,18 +440,37 @@ class WorkflowPhase:
     feedback: str = ""
     last_error: str | None = None
 
-    def to_dict(self) -> dict:
-        return {
+    def to_dict(self, view: str = "full") -> dict:
+        payload = {
             "key": self.key,
             "label": self.label,
             "status": self.status,
-            "content": self.content,
-            "artifact_type": self.artifact_type,
             "submitted_at": self.submitted_at,
             "reviewed_at": self.reviewed_at,
-            "feedback": self.feedback,
             "last_error": self.last_error,
         }
+        if view == "summary":
+            return payload
+        payload.update({
+            "content": self.content,
+            "artifact_type": self.artifact_type,
+            "feedback": self.feedback,
+        })
+        return payload
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "WorkflowPhase":
+        return cls(
+            key=payload["key"],
+            label=payload["label"],
+            status=payload.get("status", "pending"),
+            content=payload.get("content", ""),
+            artifact_type=payload.get("artifact_type", "markdown"),
+            submitted_at=payload.get("submitted_at"),
+            reviewed_at=payload.get("reviewed_at"),
+            feedback=payload.get("feedback", ""),
+            last_error=payload.get("last_error"),
+        )
 
 
 @dataclass
@@ -456,7 +484,7 @@ class WorkflowSession:
     draft_session_id: str | None = None
     last_verified: dict | None = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self, view: str = "full") -> dict:
         return {
             "workflow_id": self.workflow_id,
             "problem_statement": self.problem_statement,
@@ -467,10 +495,217 @@ class WorkflowSession:
             "draft_session_id": self.draft_session_id,
             "last_verified": self.last_verified,
             "phases": {
-                key: phase.to_dict()
+                key: phase.to_dict(view=view)
                 for key, phase in self.phases.items()
             },
         }
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "WorkflowSession":
+        return cls(
+            workflow_id=payload["workflow_id"],
+            problem_statement=payload["problem_statement"],
+            created_at=payload["created_at"],
+            updated_at=payload["updated_at"],
+            current_phase=payload["current_phase"],
+            phases={
+                key: WorkflowPhase.from_dict(value)
+                for key, value in payload.get("phases", {}).items()
+            },
+            draft_session_id=payload.get("draft_session_id"),
+            last_verified=payload.get("last_verified"),
+        )
+
+
+@dataclass
+class ValidationJob:
+    job_id: str
+    session_id: str
+    workflow_id: str | None
+    status: str
+    created_at: str
+    started_at: str | None = None
+    finished_at: str | None = None
+    timeout_seconds: float = DEFAULT_VALIDATION_TIMEOUT_SECONDS
+    result: dict | None = None
+    error: str | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "job_id": self.job_id,
+            "session_id": self.session_id,
+            "workflow_id": self.workflow_id,
+            "status": self.status,
+            "created_at": self.created_at,
+            "started_at": self.started_at,
+            "finished_at": self.finished_at,
+            "timeout_seconds": self.timeout_seconds,
+            "result": self.result,
+            "error": self.error,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "ValidationJob":
+        return cls(
+            job_id=payload["job_id"],
+            session_id=payload["session_id"],
+            workflow_id=payload.get("workflow_id"),
+            status=payload.get("status", "queued"),
+            created_at=payload.get("created_at", now_iso()),
+            started_at=payload.get("started_at"),
+            finished_at=payload.get("finished_at"),
+            timeout_seconds=float(payload.get("timeout_seconds", DEFAULT_VALIDATION_TIMEOUT_SECONDS)),
+            result=payload.get("result"),
+            error=payload.get("error"),
+        )
+
+
+def ensure_state_dirs():
+    for path in [
+        TEMP_OUTPUT_DIR,
+        SESSION_OUTPUT_DIR,
+        STATE_DIR,
+        DRAFT_STATE_DIR,
+        WORKFLOW_STATE_DIR,
+        VALIDATION_JOB_STATE_DIR,
+    ]:
+        os.makedirs(path, exist_ok=True)
+
+
+def atomic_write_json(path: str, payload: dict):
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    temp_path = f"{path}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=True)
+    os.replace(temp_path, path)
+
+
+def load_json_records(directory: str) -> list[dict]:
+    if not os.path.exists(directory):
+        return []
+    records = []
+    for file_name in sorted(os.listdir(directory)):
+        if not file_name.endswith(".json"):
+            continue
+        path = os.path.join(directory, file_name)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                records.append(json.load(f))
+        except Exception:
+            continue
+    return records
+
+
+def get_draft_state_path(session_id: str) -> str:
+    return os.path.join(DRAFT_STATE_DIR, f"{session_id}.json")
+
+
+def get_workflow_state_path(workflow_id: str) -> str:
+    return os.path.join(WORKFLOW_STATE_DIR, f"{workflow_id}.json")
+
+
+def get_validation_job_state_path(job_id: str) -> str:
+    return os.path.join(VALIDATION_JOB_STATE_DIR, f"{job_id}.json")
+
+
+def delete_json_file(path: str):
+    if os.path.exists(path):
+        os.remove(path)
+
+
+def persist_draft_session(session_id: str):
+    draft = state.drafts.get(session_id)
+    if not draft:
+        return
+    draft.session_id = session_id
+    draft.workflow_id = state.draft_to_workflow.get(session_id) or draft.workflow_id
+    draft.phase_plan = state.phase_plans.get(session_id) or draft.phase_plan
+    atomic_write_json(get_draft_state_path(session_id), draft.to_persisted_dict())
+
+
+def persist_workflow_session(workflow_id: str):
+    workflow = state.workflows.get(workflow_id)
+    if not workflow:
+        return
+    atomic_write_json(get_workflow_state_path(workflow_id), workflow.to_dict(view="full"))
+
+
+def persist_validation_job(job_id: str):
+    job = state.validation_jobs.get(job_id)
+    if not job:
+        return
+    atomic_write_json(get_validation_job_state_path(job_id), job.to_dict())
+
+
+def delete_draft_session(session_id: str):
+    state.drafts.pop(session_id, None)
+    state.phase_plans.pop(session_id, None)
+    state.draft_to_workflow.pop(session_id, None)
+    delete_json_file(get_draft_state_path(session_id))
+
+
+def build_session_last_verified(draft: "DraftDiagram") -> dict | None:
+    if not any([
+        draft.last_verified_at,
+        draft.last_verified_task_id,
+        draft.last_verified_file_path,
+    ]):
+        return None
+    return {
+        "at": draft.last_verified_at,
+        "success": draft.last_verified_success,
+        "task_id": draft.last_verified_task_id,
+        "file_path": draft.last_verified_file_path,
+        "file_size_bytes": draft.last_verified_file_size,
+        "error": draft.last_verified_error,
+        "origin": draft.last_verified_origin,
+    }
+
+
+def hydrate_persistent_state():
+    ensure_state_dirs()
+    state.drafts.clear()
+    state.phase_plans.clear()
+    state.workflows.clear()
+    state.draft_to_workflow.clear()
+    state.validation_jobs.clear()
+    state.validation_tasks.clear()
+
+    for payload in load_json_records(DRAFT_STATE_DIR):
+        session_id = payload.get("session_id")
+        if not session_id:
+            continue
+        draft = DraftDiagram.from_persisted_dict(payload)
+        draft.restored_from_disk = True
+        state.drafts[session_id] = draft
+        if draft.phase_plan:
+            state.phase_plans[session_id] = draft.phase_plan
+        if draft.workflow_id:
+            state.draft_to_workflow[session_id] = draft.workflow_id
+
+    for payload in load_json_records(WORKFLOW_STATE_DIR):
+        workflow_id = payload.get("workflow_id")
+        if not workflow_id:
+            continue
+        workflow = WorkflowSession.from_dict(payload)
+        if workflow.draft_session_id and workflow.draft_session_id not in state.drafts:
+            workflow.draft_session_id = None
+        state.workflows[workflow_id] = workflow
+
+    for payload in load_json_records(VALIDATION_JOB_STATE_DIR):
+        job_id = payload.get("job_id")
+        if not job_id:
+            continue
+        job = ValidationJob.from_dict(payload)
+        if job.status in {"queued", "running"}:
+            job.status = "failed"
+            job.finished_at = now_iso()
+            job.error = "Validation interrupted by server restart."
+            persist_payload = job.to_dict()
+            atomic_write_json(get_validation_job_state_path(job_id), persist_payload)
+        state.validation_jobs[job_id] = job
 
 
 def create_workflow_session(problem_statement: str) -> WorkflowSession:
@@ -489,6 +724,7 @@ def create_workflow_session(problem_statement: str) -> WorkflowSession:
         phases=phases,
     )
     state.workflows[workflow_id] = workflow
+    persist_workflow_session(workflow_id)
     return workflow
 
 
@@ -523,14 +759,14 @@ def reset_workflow_downstream(workflow: WorkflowSession, phase_key: str):
         reset_workflow_phase(workflow.phases[downstream])
 
     if workflow.draft_session_id:
-        state.draft_to_workflow.pop(workflow.draft_session_id, None)
+        delete_draft_session(workflow.draft_session_id)
         workflow.draft_session_id = None
     workflow.last_verified = None
 
 
-def list_workflow_payloads() -> list[dict]:
+def list_workflow_payloads(view: str = "full") -> list[dict]:
     return [
-        workflow.to_dict()
+        workflow.to_dict(view=view)
         for workflow in sorted(
             state.workflows.values(),
             key=lambda item: item.created_at,
@@ -571,6 +807,7 @@ def submit_workflow_phase(
     phase.status = "awaiting_approval" if phase_key in REVIEWABLE_PHASES else "in_progress"
     workflow.current_phase = phase_key
     workflow.updated_at = now_iso()
+    persist_workflow_session(workflow_id)
     return workflow.to_dict(), None
 
 
@@ -614,16 +851,21 @@ def review_workflow_phase(
         reset_workflow_downstream(workflow, phase_key)
 
     workflow.updated_at = now_iso()
+    persist_workflow_session(workflow_id)
     return workflow.to_dict(), None
 
 # --- Incremental Draft Management ---
 
 class DraftDiagram:
-    def __init__(self, schema_version="1.1"):
+    def __init__(self, schema_version="1.1", session_id: str | None = None, created_at: datetime | None = None):
+        self.session_id = session_id
         self.schema_version = schema_version
         self.blocks = []
         self.links = []
-        self.created_at = datetime.now()
+        self.created_at = created_at or datetime.now()
+        self.phase_plan = None
+        self.workflow_id = None
+        self.restored_from_disk = False
         self.last_verified_at = None
         self.last_verified_success = None
         self.last_verified_task_id = None
@@ -637,6 +879,51 @@ class DraftDiagram:
 
     def add_links(self, xml_chunk):
         self.links.append(xml_chunk)
+
+    def to_persisted_dict(self) -> dict:
+        return {
+            "session_id": self.session_id,
+            "schema_version": self.schema_version,
+            "created_at": self.created_at.isoformat(),
+            "blocks": list(self.blocks),
+            "links": list(self.links),
+            "phase_plan": self.phase_plan,
+            "workflow_id": self.workflow_id,
+            "restored_from_disk": self.restored_from_disk,
+            "last_verified": {
+                "at": self.last_verified_at,
+                "success": self.last_verified_success,
+                "task_id": self.last_verified_task_id,
+                "file_path": self.last_verified_file_path,
+                "file_size_bytes": self.last_verified_file_size,
+                "error": self.last_verified_error,
+                "origin": self.last_verified_origin,
+            },
+        }
+
+    @classmethod
+    def from_persisted_dict(cls, payload: dict) -> "DraftDiagram":
+        created_at_raw = payload.get("created_at")
+        created_at = datetime.fromisoformat(created_at_raw) if created_at_raw else datetime.now()
+        draft = cls(
+            schema_version=payload.get("schema_version", "1.1"),
+            session_id=payload.get("session_id"),
+            created_at=created_at,
+        )
+        draft.blocks = list(payload.get("blocks", []))
+        draft.links = list(payload.get("links", []))
+        draft.phase_plan = payload.get("phase_plan")
+        draft.workflow_id = payload.get("workflow_id")
+        draft.restored_from_disk = bool(payload.get("restored_from_disk", True))
+        last_verified = payload.get("last_verified") or {}
+        draft.last_verified_at = last_verified.get("at")
+        draft.last_verified_success = last_verified.get("success")
+        draft.last_verified_task_id = last_verified.get("task_id")
+        draft.last_verified_file_path = last_verified.get("file_path")
+        draft.last_verified_file_size = last_verified.get("file_size_bytes")
+        draft.last_verified_error = last_verified.get("error")
+        draft.last_verified_origin = last_verified.get("origin")
+        return draft
 
     def to_xml(self):
         """Assembles the full Xcos XML from parts compatible with Scilab 2026.0.1."""
@@ -1032,6 +1319,12 @@ def make_public_validation_payload(
         payload["workflow_id"] = workflow_id
     if session_id:
         payload["session_id"] = session_id
+    if result.get("task_id"):
+        payload["task_id"] = result["task_id"]
+    if result.get("file_path"):
+        payload["file_path"] = result["file_path"]
+    if result.get("file_size_bytes") is not None:
+        payload["file_size_bytes"] = result["file_size_bytes"]
     if EXPOSE_INTERNAL_VALIDATION_DETAILS:
         payload["debug"] = result
     return payload
@@ -1105,6 +1398,81 @@ def write_session_snapshot(session_id: str):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(state.drafts[session_id].to_xml())
     return get_file_metadata(file_path)
+
+
+def record_validation_outcome(session_id: str, result: dict, session_meta: dict | None = None):
+    if session_id not in state.drafts:
+        return None
+
+    draft = state.drafts[session_id]
+    session_meta = session_meta or get_file_metadata(get_session_file_path(session_id))
+    draft.last_verified_at = now_iso()
+    draft.last_verified_success = result.get("success")
+    draft.last_verified_task_id = result.get("task_id")
+    if result.get("success") and session_meta:
+        draft.last_verified_file_path = session_meta["path"]
+        draft.last_verified_file_size = session_meta["size_bytes"]
+    else:
+        draft.last_verified_file_path = result.get("file_path")
+        draft.last_verified_file_size = result.get("file_size_bytes")
+    draft.last_verified_error = result.get("error")
+    draft.last_verified_origin = result.get("origin", "scilab-validator")
+    persist_draft_session(session_id)
+
+    workflow_id = state.draft_to_workflow.get(session_id)
+    if workflow_id and workflow_id in state.workflows:
+        workflow = state.workflows[workflow_id]
+        phase3 = workflow.phases["phase3_implementation"]
+        phase3.reviewed_at = now_iso()
+        phase3.last_error = result.get("error")
+        phase3.status = "completed" if result.get("success") else "failed"
+        workflow.current_phase = "phase3_implementation"
+        workflow.last_verified = {
+            "success": result.get("success"),
+            "task_id": result.get("task_id"),
+            "file_path": result.get("file_path"),
+            "file_size_bytes": result.get("file_size_bytes"),
+            "error": result.get("error"),
+            "origin": result.get("origin", "scilab-validator"),
+        }
+        workflow.updated_at = now_iso()
+        persist_workflow_session(workflow_id)
+    return workflow_id
+
+
+def make_validation_job_public_payload(job: ValidationJob) -> dict:
+    payload = {
+        "job_id": job.job_id,
+        "session_id": job.session_id,
+        "workflow_id": job.workflow_id,
+        "status": job.status,
+        "created_at": job.created_at,
+        "started_at": job.started_at,
+        "finished_at": job.finished_at,
+        "timeout_seconds": job.timeout_seconds,
+    }
+    if job.status in {"queued", "running"}:
+        payload["poll_with"] = "xcos_get_validation_status"
+    if job.result:
+        payload.update(
+            make_public_validation_payload(
+                job.result,
+                workflow_id=job.workflow_id,
+                session_id=job.session_id,
+            )
+        )
+    elif job.error:
+        payload.update({
+            "success": False,
+            "code": "VALIDATION_JOB_FAILED" if job.status != "timed_out" else "VALIDATION_JOB_TIMED_OUT",
+            "message": job.error,
+        })
+
+    session_meta = get_file_metadata(get_session_file_path(job.session_id))
+    if session_meta:
+        payload["session_file_path"] = session_meta["path"]
+        payload["session_file_size_bytes"] = session_meta["size_bytes"]
+    return payload
 
 
 def load_ui_html() -> str:
@@ -1733,19 +2101,61 @@ async def get_xcos_block_source(name: str):
                 return [mcp_types.TextContent(type="text", text=f.read())]
     return [mcp_types.TextContent(type="text", text=f"Error: Source for '{name}' not found in {macros_dir}")]
 
+
+def build_compact_reference_payload(xml_text: str | None) -> dict | None:
+    if not xml_text:
+        return None
+    try:
+        parser = etree.XMLParser(remove_blank_text=True)
+        tree = etree.fromstring(xml_text.encode("utf-8"), parser)
+        block = tree.xpath(XCOS_BLOCK_XPATH)
+        if not block:
+            return None
+        block_node = block[0]
+        block_id = block_node.get("id")
+        port_nodes = tree.xpath(f"//*[@parent='{block_id}'][contains(local-name(), 'Port')]")
+        compact_nodes = [block_node] + port_nodes
+        fragment = "\n".join(
+            etree.tostring(node, encoding="unicode", pretty_print=True).strip()
+            for node in compact_nodes
+        )
+        port_ids = [node.get("id") for node in port_nodes if node.get("id")]
+        parameter_fields = []
+        for child in block_node:
+            child_tag = child.tag if isinstance(child.tag, str) else ""
+            if child_tag in {"mxGeometry"}:
+                continue
+            child_as = child.get("as")
+            if child_as:
+                parameter_fields.append(child_as)
+        return {
+            "template_xml": fragment,
+            "block_id": block_id,
+            "port_ids": port_ids,
+            "parameter_fields": parameter_fields,
+        }
+    except Exception:
+        return None
+
 async def get_xcos_block_data(
     name: str,
     include_help: bool = False,
     include_extra_examples: bool = False,
+    include_reference_xml: bool = False,
 ):
-    """Returns compact block metadata and the canonical XML example for an Xcos block."""
+    """Returns compact block metadata and optional reference XML for an Xcos block."""
     data = {
+        "name": name,
         "info": None,
-        "example": None,
-        "warnings": []
+        "warnings": [],
+        "has_example": False,
+        "has_help": False,
+        "has_extra_examples": False,
+        "compact_reference": None,
+        "reference_xml": None,
     }
-    
-    # 1. INFO 
+
+    # 1. INFO
     info_path = os.path.join(DATA_DIR, "blocks", f"{name}.json")
     if os.path.exists(info_path):
         with open(info_path, 'r', encoding='utf-8') as f:
@@ -1756,11 +2166,16 @@ async def get_xcos_block_data(
     else:
         data["warnings"].append(f"Block info for '{name}' not found at data/blocks/{name}.json")
 
-    # 2. EXAMPLE 
+    # 2. EXAMPLE
     example_path = os.path.join(DATA_DIR, "reference_blocks", f"{name}.xcos")
+    example_xml = None
     if os.path.exists(example_path):
+        data["has_example"] = True
         with open(example_path, 'r', encoding='utf-8') as f:
-            data["example"] = f.read()
+            example_xml = f.read()
+        data["compact_reference"] = build_compact_reference_payload(example_xml)
+        if include_reference_xml:
+            data["reference_xml"] = example_xml
     else:
         data["warnings"].append(f"Reference block '{name}' not found at data/reference_blocks/{name}.xcos")
 
@@ -1779,18 +2194,20 @@ async def get_xcos_block_data(
                 extra_path = os.path.join(reference_dir, extra_file_name)
                 with open(extra_path, "r", encoding="utf-8") as f:
                     data["extra_examples"][label] = f.read()
+            data["has_extra_examples"] = bool(data["extra_examples"])
 
-    # 3. HELP 
+    # 3. HELP
+    help_file = None
+    search_dir = os.path.join(DATA_DIR, "help")
+    if os.path.exists(search_dir):
+        for root, dirs, files in os.walk(search_dir):
+            if f"{name}.xml" in files:
+                help_file = os.path.join(root, f"{name}.xml")
+                break
+
+    data["has_help"] = bool(help_file)
     if include_help:
         data["help"] = None
-        help_file = None
-        search_dir = os.path.join(DATA_DIR, "help")
-        if os.path.exists(search_dir):
-            for root, dirs, files in os.walk(search_dir):
-                if f"{name}.xml" in files:
-                    help_file = os.path.join(root, f"{name}.xml")
-                    break
-
         if not help_file:
             data["warnings"].append(f"Help file for '{name}' not found. Attempting to extract from MACRO source...")
             macros_dir = os.path.join(DATA_DIR, "macros")
@@ -1928,6 +2345,114 @@ async def verify_xcos_xml(xml_content: str):
     remember_validation_result(xml_content, result)
     return make_json_response(make_public_validation_payload(result))
 
+
+def _schedule_validation_job(job_id: str):
+    task = asyncio.create_task(_run_validation_job(job_id))
+    state.validation_tasks[job_id] = task
+
+    def _cleanup(_: asyncio.Task):
+        state.validation_tasks.pop(job_id, None)
+
+    task.add_done_callback(_cleanup)
+    return task
+
+
+async def _run_validation_job(job_id: str):
+    job = state.validation_jobs.get(job_id)
+    if not job:
+        return
+
+    job.status = "running"
+    job.started_at = now_iso()
+    job.error = None
+    persist_validation_job(job_id)
+
+    session_meta = None
+    try:
+        if job.session_id not in state.drafts:
+            job.status = "failed"
+            job.finished_at = now_iso()
+            job.error = f"Session {job.session_id} not found"
+            persist_validation_job(job_id)
+            return
+
+        xml_content = state.drafts[job.session_id].to_xml()
+        session_meta = write_session_snapshot(job.session_id)
+        result = await asyncio.wait_for(run_verification(xml_content), timeout=job.timeout_seconds)
+        remember_validation_result(xml_content, result)
+        record_validation_outcome(job.session_id, result, session_meta)
+        job.status = "succeeded" if result.get("success") else "failed"
+        job.finished_at = now_iso()
+        job.result = result
+        job.error = result.get("error")
+        persist_validation_job(job_id)
+    except asyncio.TimeoutError:
+        timeout_result = {
+            "success": False,
+            "task_id": job.job_id,
+            "error": f"Validation timed out after {job.timeout_seconds:.0f} seconds.",
+            "origin": "validation-job",
+            "file_path": session_meta["path"] if session_meta else None,
+            "file_size_bytes": session_meta["size_bytes"] if session_meta else None,
+        }
+        record_validation_outcome(job.session_id, timeout_result, session_meta)
+        job.status = "timed_out"
+        job.finished_at = now_iso()
+        job.result = timeout_result
+        job.error = timeout_result["error"]
+        persist_validation_job(job_id)
+    except Exception as exc:
+        error_result = {
+            "success": False,
+            "task_id": job.job_id,
+            "error": f"Validation job failed: {exc}",
+            "origin": "validation-job",
+            "file_path": session_meta["path"] if session_meta else None,
+            "file_size_bytes": session_meta["size_bytes"] if session_meta else None,
+        }
+        record_validation_outcome(job.session_id, error_result, session_meta)
+        job.status = "failed"
+        job.finished_at = now_iso()
+        job.result = error_result
+        job.error = error_result["error"]
+        persist_validation_job(job_id)
+
+
+async def xcos_start_validation(session_id: str, timeout_seconds: float = DEFAULT_VALIDATION_TIMEOUT_SECONDS):
+    if session_id not in state.drafts:
+        return make_text_response(f"Error: Session {session_id} not found")
+
+    if timeout_seconds <= 0:
+        return make_text_response("Error: timeout_seconds must be greater than 0")
+
+    session_meta = write_session_snapshot(session_id)
+    job_id = str(uuid.uuid4())
+    workflow_id = state.draft_to_workflow.get(session_id)
+    job = ValidationJob(
+        job_id=job_id,
+        session_id=session_id,
+        workflow_id=workflow_id,
+        status="queued",
+        created_at=now_iso(),
+        timeout_seconds=float(timeout_seconds),
+    )
+    state.validation_jobs[job_id] = job
+    persist_validation_job(job_id)
+    _schedule_validation_job(job_id)
+
+    payload = make_validation_job_public_payload(job)
+    payload["message"] = f"Validation job {job_id} queued for session {session_id}."
+    payload["session_file_path"] = session_meta["path"]
+    payload["session_file_size_bytes"] = session_meta["size_bytes"]
+    return make_json_response(payload)
+
+
+async def xcos_get_validation_status(job_id: str):
+    job = state.validation_jobs.get(job_id)
+    if not job:
+        return make_text_response(f"Error: Validation job {job_id} not found")
+    return make_json_response(make_validation_job_public_payload(job))
+
 # --- Incremental Tool Implementations ---
 
 async def xcos_create_workflow(problem_statement: str):
@@ -1936,19 +2461,20 @@ async def xcos_create_workflow(problem_statement: str):
     workflow = create_workflow_session(problem_statement)
     return make_json_response({
         "status": "success",
+        "workflow_id": workflow.workflow_id,
         "workflow": workflow.to_dict(),
     })
 
 
-async def xcos_list_workflows():
-    return make_json_response({"workflows": list_workflow_payloads()})
+async def xcos_list_workflows(view: str = "summary"):
+    return make_json_response({"workflows": list_workflow_payloads(view=view)})
 
 
-async def xcos_get_workflow(workflow_id: str):
+async def xcos_get_workflow(workflow_id: str, view: str = "summary"):
     workflow = get_workflow(workflow_id)
     if not workflow:
         return make_text_response(f"Error: Workflow {workflow_id} not found")
-    return make_json_response({"workflow": workflow.to_dict()})
+    return make_json_response({"workflow": workflow.to_dict(view=view)})
 
 
 async def xcos_get_status_widget():
@@ -2381,7 +2907,13 @@ async def xcos_review_phase(
     })
 
 
-async def xcos_start_draft(schema_version: str = "1.1", workflow_id: str | None = None, replace: bool = False, phases: list[str] = None):
+async def xcos_start_draft(
+    schema_version: str = "1.1",
+    workflow_id: str | None = None,
+    replace: bool = False,
+    phases: list[str] = None,
+    session_id: str | None = None,
+):
     workflow = None
     if workflow_id:
         workflow = get_workflow(workflow_id)
@@ -2391,44 +2923,70 @@ async def xcos_start_draft(schema_version: str = "1.1", workflow_id: str | None 
             return make_text_response(
                 "Error: Phase 2 must be approved before Phase 3 implementation can start."
             )
-        if workflow.draft_session_id and not replace:
+        if workflow.draft_session_id and not replace and (not session_id or workflow.draft_session_id != session_id):
             return make_text_response(f"Error: Workflow {workflow_id} already has an active draft session ({workflow.draft_session_id}). Pass replace=True to overwrite.")
+    if phases and len(set(phases)) != len(phases):
+        return make_text_response("Error: Phases list must contain unique labels.")
 
-    session_id = str(uuid.uuid4())
-    state.drafts[session_id] = DraftDiagram(schema_version)
+    resumed = False
+    created = False
+    existing_session_id = workflow.draft_session_id if workflow else None
+
+    if replace and workflow and existing_session_id and existing_session_id != session_id:
+        delete_draft_session(existing_session_id)
+        workflow.draft_session_id = None
+
+    target_session_id = session_id or existing_session_id or str(uuid.uuid4())
+    draft = state.drafts.get(target_session_id)
+
+    if draft:
+        resumed = True
+    else:
+        created = True
+        draft = DraftDiagram(schema_version, session_id=target_session_id)
+        state.drafts[target_session_id] = draft
+
+    draft.session_id = target_session_id
+    draft.schema_version = draft.schema_version or schema_version
+    draft.restored_from_disk = False
 
     payload = {
         "status": "success",
-        "session_id": session_id,
-        "message": f"Started new Xcos draft session {session_id}",
+        "session_id": target_session_id,
+        "resumed": resumed,
+        "created": created,
+        "message": (
+            f"Resumed Xcos draft session {target_session_id}"
+            if resumed else
+            f"Started new Xcos draft session {target_session_id}"
+        ),
         "critical_rule": "IMPORTANT: Any ExplicitOutputPort or EventOutPort that fanning out to multiple downstream blocks REQUIRES an intermediate SplitBlock (for data) or CLKSPLIT_f (for events)."
     }
 
     if phases:
-        if len(set(phases)) != len(phases):
-            return make_text_response("Error: Phases list must contain unique labels.")
-        state.phase_plans[session_id] = {
-            "phases": phases,
-            "completed": []
-        }
+        plan = {"phases": phases, "completed": []}
+        state.phase_plans[target_session_id] = plan
+        draft.phase_plan = plan
         payload["phase_plan_registered"] = True
         payload["phase_count"] = len(phases)
+    elif draft.phase_plan:
+        state.phase_plans[target_session_id] = draft.phase_plan
 
     if workflow:
-        if workflow.draft_session_id and workflow.draft_session_id in state.draft_to_workflow:
-            del state.draft_to_workflow[workflow.draft_session_id]
-            if workflow.draft_session_id in state.drafts:
-                del state.drafts[workflow.draft_session_id]
-                
-        state.draft_to_workflow[session_id] = workflow.workflow_id
-        workflow.draft_session_id = session_id
+        if workflow.draft_session_id and workflow.draft_session_id != target_session_id and replace:
+            delete_draft_session(workflow.draft_session_id)
+        state.draft_to_workflow[target_session_id] = workflow.workflow_id
+        draft.workflow_id = workflow.workflow_id
+        workflow.draft_session_id = target_session_id
         workflow.current_phase = "phase3_implementation"
         workflow.updated_at = now_iso()
         workflow.phases["phase3_implementation"].status = "in_progress"
         workflow.phases["phase3_implementation"].submitted_at = workflow.phases["phase3_implementation"].submitted_at or now_iso()
         workflow.phases["phase3_implementation"].last_error = None
+        persist_workflow_session(workflow.workflow_id)
         payload["workflow_id"] = workflow.workflow_id
 
+    persist_draft_session(target_session_id)
     return make_json_response(payload)
 
 async def xcos_get_draft_xml(
@@ -2462,21 +3020,7 @@ async def xcos_list_sessions():
     for sid, draft in state.drafts.items():
         counts = summarize_draft(draft)
         session_meta = get_file_metadata(get_session_file_path(sid))
-        last_verified = None
-        if any([
-            draft.last_verified_at,
-            draft.last_verified_task_id,
-            draft.last_verified_file_path,
-        ]):
-            last_verified = {
-                "at": draft.last_verified_at,
-                "success": draft.last_verified_success,
-                "task_id": draft.last_verified_task_id,
-                "file_path": draft.last_verified_file_path,
-                "file_size_bytes": draft.last_verified_file_size,
-                "error": draft.last_verified_error,
-                "origin": draft.last_verified_origin,
-            }
+        last_verified = build_session_last_verified(draft)
         session_data = {
             "session_id": sid,
             "created_at": draft.created_at.isoformat(),
@@ -2489,6 +3033,7 @@ async def xcos_list_sessions():
             "session_file_path": session_meta["path"] if session_meta else None,
             "session_file_size_bytes": session_meta["size_bytes"] if session_meta else None,
             "last_verified": last_verified,
+            "restored_from_disk": draft.restored_from_disk,
         }
         if sid in state.phase_plans:
             plan = state.phase_plans[sid]
@@ -2508,6 +3053,8 @@ async def xcos_add_blocks(session_id: str, blocks_xml: str):
         workflow.current_phase = "phase3_implementation"
         workflow.updated_at = now_iso()
         workflow.phases["phase3_implementation"].status = "in_progress"
+        persist_workflow_session(workflow_id)
+    persist_draft_session(session_id)
     return make_text_response(f"Successfully added blocks to session {session_id}")
 
 async def xcos_add_links(session_id: str, links_xml: str):
@@ -2520,6 +3067,8 @@ async def xcos_add_links(session_id: str, links_xml: str):
         workflow.current_phase = "phase3_implementation"
         workflow.updated_at = now_iso()
         workflow.phases["phase3_implementation"].status = "in_progress"
+        persist_workflow_session(workflow_id)
+    persist_draft_session(session_id)
     return make_text_response(f"Successfully added links to session {session_id}")
 
 async def _legacy_xcos_verify_draft(session_id: str):
@@ -2571,50 +3120,17 @@ async def _legacy_xcos_verify_draft(session_id: str):
 async def xcos_verify_draft(session_id: str):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
-
-    draft = state.drafts[session_id]
-    xml_content = draft.to_xml()
-    session_meta = write_session_snapshot(session_id)
-    result = await run_verification(xml_content)
-    remember_validation_result(xml_content, result)
-
-    draft.last_verified_at = datetime.now().isoformat()
-    draft.last_verified_success = result.get("success")
-    draft.last_verified_task_id = result.get("task_id")
-    if result.get("success"):
-        draft.last_verified_file_path = session_meta["path"]
-        draft.last_verified_file_size = session_meta["size_bytes"]
-    else:
-        draft.last_verified_file_path = result.get("file_path")
-        draft.last_verified_file_size = result.get("file_size_bytes")
-    draft.last_verified_error = result.get("error")
-    draft.last_verified_origin = result.get("origin", "scilab-validator")
-
-    workflow_id = state.draft_to_workflow.get(session_id)
-    if workflow_id and workflow_id in state.workflows:
-        workflow = state.workflows[workflow_id]
-        phase3 = workflow.phases["phase3_implementation"]
-        phase3.reviewed_at = now_iso()
-        phase3.last_error = result.get("error")
-        phase3.status = "completed" if result.get("success") else "failed"
-        workflow.current_phase = "phase3_implementation"
-        workflow.last_verified = {
-            "success": result.get("success"),
-            "task_id": result.get("task_id"),
-            "file_path": result.get("file_path"),
-            "file_size_bytes": result.get("file_size_bytes"),
-            "error": result.get("error"),
-            "origin": result.get("origin", "scilab-validator"),
-        }
-        workflow.updated_at = now_iso()
-
-    return make_json_response(
-        make_public_validation_payload(
-            result,
-            workflow_id=workflow_id,
-            session_id=session_id,
-        )
+    start_payload = parse_mcp_text_json_response(
+        await xcos_start_validation(session_id, DEFAULT_VALIDATION_TIMEOUT_SECONDS)
     )
+    job_id = start_payload["job_id"]
+    task = state.validation_tasks.get(job_id)
+    if task:
+        try:
+            await asyncio.wait_for(asyncio.shield(task), timeout=ASYNC_VALIDATION_BRIEF_WAIT_SECONDS)
+        except asyncio.TimeoutError:
+            pass
+    return await xcos_get_validation_status(job_id)
 
 
 
@@ -2652,10 +3168,13 @@ async def xcos_commit_phase(session_id: str, phase_label: str, blocks_xml: str =
         except Exception as e:
             return make_text_response(f"Error: Invalid XML fragment syntax: {str(e)}")
         state.drafts[session_id].add_blocks(blocks_xml)
+        persist_draft_session(session_id)
 
     # Mark phase complete (idempotent)
     if phase_label not in plan["completed"]:
         plan["completed"].append(phase_label)
+    state.drafts[session_id].phase_plan = plan
+    persist_draft_session(session_id)
 
     session_meta = write_session_snapshot(session_id)
 
@@ -2689,20 +3208,14 @@ async def xcos_get_file_path(session_id: str):
         return make_text_response(f"Error: Session {session_id} not found")
 
     session_meta = get_file_metadata(get_session_file_path(session_id))
+    if not session_meta:
+        return make_text_response(f"Error: Session snapshot for {session_id} doesn't exist yet.")
     draft = state.drafts[session_id]
     payload = {
         "session_id": session_id,
         "session_file_path": session_meta["path"],
         "session_file_size_bytes": session_meta["size_bytes"],
-        "last_verified": {
-            "at": draft.last_verified_at,
-            "success": draft.last_verified_success,
-            "task_id": draft.last_verified_task_id,
-            "file_path": draft.last_verified_file_path,
-            "file_size_bytes": draft.last_verified_file_size,
-            "error": draft.last_verified_error,
-            "origin": draft.last_verified_origin,
-        }
+        "last_verified": build_session_last_verified(draft),
     }
     return make_json_response(payload)
 
@@ -3121,7 +3634,17 @@ async def handle_get_prompt(name: str, arguments: dict[str, str] | None) -> mcp_
 
 @mcp_server.list_resources()
 async def handle_list_resources() -> list[mcp_types.Resource]:
-    return []
+    ui_path = os.path.join(UI_DIR, "index.html")
+    if not os.path.exists(ui_path):
+        return []
+    return [
+        mcp_types.Resource(
+            uri=WORKFLOW_UI_RESOURCE_URI,
+            name="Xcos Workflow UI",
+            description="Embedded workflow UI for the MCP app.",
+            mimeType=MCP_APP_MIME_TYPE,
+        )
+    ]
 
 
 @mcp_server.read_resource()
@@ -3217,12 +3740,12 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         mcp_types.Tool(
             name="xcos_list_workflows",
             description="List all phased Xcos workflow sessions and their review state.",
-            inputSchema={"type": "object", "properties": {}},
+            inputSchema={"type": "object", "properties": {"view": {"type": "string", "enum": ["summary", "full"], "default": "summary"}}},
         ),
         mcp_types.Tool(
             name="xcos_get_workflow",
-            description="Get the full state of one phased Xcos workflow session.",
-            inputSchema={"type": "object", "properties": {"workflow_id": {"type": "string"}}, "required": ["workflow_id"]},
+            description="Get one phased Xcos workflow session. Use view='summary' for compact status or view='full' for all phase content.",
+            inputSchema={"type": "object", "properties": {"workflow_id": {"type": "string"}, "view": {"type": "string", "enum": ["summary", "full"], "default": "summary"}}, "required": ["workflow_id"]},
         ),
         mcp_types.Tool(
             name="xcos_submit_phase",
@@ -3271,13 +3794,14 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "PHASE 2 â€” Step 1. Call this for EVERY block before writing any XML. "
                 "Never write block XML from memory or from examples in other tool results â€” "
                 "always call this first and use the returned XML as the authoritative "
-                "template. Returns the correct port IDs, parameter structure, simulation "
-                "function name, and blockType needed to build valid Xcos XML."
+                "template. Returns compact block metadata by default, with optional full "
+                "reference XML when requested."
             ),
             inputSchema={"type": "object", "properties": {
                 "name": {"type": "string"},
                 "include_help": {"type": "boolean", "default": False},
-                "include_extra_examples": {"type": "boolean", "default": False}
+                "include_extra_examples": {"type": "boolean", "default": False},
+                "include_reference_xml": {"type": "boolean", "default": False}
             }, "required": ["name"]}
         ),
         mcp_types.Tool(
@@ -3305,9 +3829,9 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
         mcp_types.Tool(
             name="xcos_start_draft",
             description=(
-                "PHASE 3 â€” Step 1. Call this to open a new draft session after Phase 2 "
+                "PHASE 3 â€” Step 1. Call this to open or resume a draft session after Phase 2 "
                 "is approved. Always pass the workflow_id so the draft is linked to the "
-                "workflow. Store the returned session_id â€” it is required for all "
+                "workflow. You may pass session_id to resume a specific draft. Store the returned session_id â€” it is required for all "
                 "subsequent xcos_add_blocks, xcos_add_links, xcos_get_topology_widget, "
                 "xcos_get_draft_xml, xcos_verify_draft, and xcos_get_file_path calls.\n"
                 "IMPORTANT: To use xcos_commit_phase later, you MUST pass "
@@ -3317,6 +3841,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             inputSchema={"type": "object", "properties": {
                 "schema_version": {"type": "string", "default": "1.1"},
                 "workflow_id": {"type": "string"},
+                "session_id": {"type": "string"},
                 "replace": {"type": "boolean", "default": False},
                 "phases": {"type": "array", "items": {"type": "string"}, "description": "Optional list of phase labels to provision."}
             }}
@@ -3350,11 +3875,30 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             }, "required": ["session_id", "links_xml"]}
         ),
         mcp_types.Tool(
+            name="xcos_start_validation",
+            description=(
+                "Start asynchronous validation for a draft session. Use this when validation "
+                "may exceed stream limits, then poll xcos_get_validation_status until the "
+                "job reaches a terminal state."
+            ),
+            inputSchema={"type": "object", "properties": {
+                "session_id": {"type": "string"},
+                "timeout_seconds": {"type": "number", "default": DEFAULT_VALIDATION_TIMEOUT_SECONDS}
+            }, "required": ["session_id"]},
+        ),
+        mcp_types.Tool(
+            name="xcos_get_validation_status",
+            description="Poll the status of an asynchronous validation job created by xcos_start_validation or xcos_verify_draft.",
+            inputSchema={"type": "object", "properties": {"job_id": {"type": "string"}}, "required": ["job_id"]},
+        ),
+        mcp_types.Tool(
             name="xcos_verify_draft",
             description=(
                 "PHASE 3 â€” Step 7. Call this after xcos_get_draft_xml to validate the "
                 "diagram. After calling this, always call xcos_get_validation_widget with "
-                "the current draft XML and display the result widget to the user.\n"
+                "the current draft XML and display the result widget to the user. This tool "
+                "starts asynchronous validation and may return a running job_id instead of a "
+                "final verdict when validation takes too long.\n"
                 "  - If success=true: IMMEDIATELY call xcos_commit_phase with "
                 "    phase_label='phase3_implementation' and blocks_xml='', then call "
                 "    xcos_get_file_path, read the file with xcos_get_file_content, write "
@@ -3466,13 +4010,13 @@ async def handle_call_tool(name: str, arguments: dict | None):
             payload,
         )
     elif name == "xcos_list_workflows":
-        payload = parse_mcp_text_json_response(await xcos_list_workflows())
+        payload = parse_mcp_text_json_response(await xcos_list_workflows(arguments.get("view", "summary")))
         return make_structured_tool_result(
             f"Found {len(payload['workflows'])} workflow session(s).",
             payload,
         )
     elif name == "xcos_get_workflow":
-        payload = parse_mcp_text_json_response(await xcos_get_workflow(arguments["workflow_id"]))
+        payload = parse_mcp_text_json_response(await xcos_get_workflow(arguments["workflow_id"], arguments.get("view", "summary")))
         return make_structured_tool_result(
             f"{payload['workflow']['current_phase_label']} is the active step for workflow {arguments['workflow_id']}.",
             payload,
@@ -3504,6 +4048,7 @@ async def handle_call_tool(name: str, arguments: dict | None):
             arguments["name"],
             arguments.get("include_help", False),
             arguments.get("include_extra_examples", False),
+            arguments.get("include_reference_xml", False),
         )
     elif name == "get_xcos_block_source":
         return await get_xcos_block_source(arguments["name"])
@@ -3513,12 +4058,13 @@ async def handle_call_tool(name: str, arguments: dict | None):
         return await verify_xcos_xml(arguments["xml_content"])
     elif name == "xcos_start_draft":
         payload = parse_mcp_text_json_response(await xcos_start_draft(
-            arguments.get("schema_version", "1.1"), 
-            arguments.get("workflow_id"), 
-            arguments.get("replace", False), 
-            arguments.get("phases")
+            schema_version=arguments.get("schema_version", "1.1"),
+            workflow_id=arguments.get("workflow_id"),
+            replace=arguments.get("replace", False),
+            phases=arguments.get("phases"),
+            session_id=arguments.get("session_id"),
         ))
-        msg = f"Started draft session {payload.get('session_id')}."
+        msg = f"{'Resumed' if payload.get('resumed') else 'Started'} draft session {payload.get('session_id')}."
         if payload.get("phase_plan_registered"):
             msg += f" Registered {payload.get('phase_count')} phases."
         return make_structured_tool_result(msg, payload)
@@ -3526,10 +4072,29 @@ async def handle_call_tool(name: str, arguments: dict | None):
         return await xcos_add_blocks(arguments["session_id"], arguments["blocks_xml"])
     elif name == "xcos_add_links":
         return await xcos_add_links(arguments["session_id"], arguments["links_xml"])
+    elif name == "xcos_start_validation":
+        payload = parse_mcp_text_json_response(await xcos_start_validation(
+            arguments["session_id"],
+            arguments.get("timeout_seconds", DEFAULT_VALIDATION_TIMEOUT_SECONDS),
+        ))
+        return make_structured_tool_result(
+            f"Validation job {payload['job_id']} started for session {arguments['session_id']}.",
+            payload,
+        )
+    elif name == "xcos_get_validation_status":
+        payload = parse_mcp_text_json_response(await xcos_get_validation_status(arguments["job_id"]))
+        return make_structured_tool_result(
+            f"Validation job {arguments['job_id']} is {payload['status']}.",
+            payload,
+        )
     elif name == "xcos_verify_draft":
         payload = parse_mcp_text_json_response(await xcos_verify_draft(arguments["session_id"]))
         return make_structured_tool_result(
-            f"Verification {'succeeded' if payload.get('success') else 'failed'} for draft session {arguments['session_id']}.",
+            (
+                f"Validation job {payload.get('job_id')} is {payload.get('status')} for draft session {arguments['session_id']}."
+                if payload.get("status") in {"queued", "running"}
+                else f"Verification {'succeeded' if payload.get('success') else 'failed'} for draft session {arguments['session_id']}."
+            ),
             payload,
         )
 
@@ -3559,6 +4124,8 @@ async def handle_call_tool(name: str, arguments: dict | None):
         return [mcp_types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
 async def main():
+    ensure_state_dirs()
+    hydrate_persistent_state()
     mode = os.environ.get("XCOS_SERVER_MODE", "stdio").strip().lower()
     if mode not in {"both", "http", "stdio"}:
         raise RuntimeError("XCOS_SERVER_MODE must be one of: both, http, stdio")
