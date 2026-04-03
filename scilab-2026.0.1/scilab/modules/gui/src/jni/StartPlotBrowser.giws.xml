@@ -1,7 +1,0 @@
-<package name="org.scilab.modules.gui.plotbrowser">
-    <object name="StartPlotBrowser">
-        <method name="plotBrowser" returnType="void" modifier="static">
-            <parameter name="uid" type="int"/>
-        </method>
-    </object>
-</package>

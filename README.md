@@ -32,6 +32,8 @@ This repository is intended to be deployed as a Docker Space.
 
 See [DEPLOY_TO_HUGGINGFACE_SPACES.md](./DEPLOY_TO_HUGGINGFACE_SPACES.md).
 
+The Docker build downloads the official Scilab `2026.0.1` Linux archive during image build, so the repository does not need to vendor the Scilab distribution.
+
 ## Developer Debug Output
 
 Normal users receive compact validation results only.

@@ -5,6 +5,7 @@ __pycache__/
 
 .scilab_path
 .env
+scilab-2026.0.1/
 
 logs/
 !logs/skill/

@@ -4,17 +4,16 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PORT=7860 \
     XCOS_SERVER_MODE=http \
-    XCOS_VALIDATION_MODE=subprocess
+    XCOS_VALIDATION_MODE=subprocess \
+    SCILAB_VERSION=2026.0.1 \
+    SCILAB_INSTALL_DIR=/opt/scilab
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential \
-        autoconf \
-        gcc \
-        gfortran \
         default-jdk \
-        libxml2-dev \
-        libhdf5-dev \
+        curl \
+        ca-certificates \
+        xz-utils \
         xvfb \
         xauth \
         libgl1-mesa-glx \
@@ -25,12 +24,12 @@ RUN apt-get update && \
 WORKDIR /app
 COPY . /app
 
-# Compile the bundled Scilab source
-RUN cd /app/scilab-2026.0.1/scilab && \
-    ./configure && \
-    make && \
-    make install
-
+RUN curl -fsSL "https://www.scilab.org/download/${SCILAB_VERSION}/scilab-${SCILAB_VERSION}.bin.linux-x86_64.tar.xz" -o /tmp/scilab.tar.xz && \
+    mkdir -p "${SCILAB_INSTALL_DIR}" && \
+    tar -xJf /tmp/scilab.tar.xz -C "${SCILAB_INSTALL_DIR}" && \
+    ln -s "${SCILAB_INSTALL_DIR}/scilab-${SCILAB_VERSION}/bin/scilab" /usr/local/bin/scilab && \
+    ln -s "${SCILAB_INSTALL_DIR}/scilab-${SCILAB_VERSION}/bin/scilab-cli" /usr/local/bin/scilab-cli && \
+    rm -f /tmp/scilab.tar.xz
 
 RUN chown -R user:user /app && \
     pip install .
