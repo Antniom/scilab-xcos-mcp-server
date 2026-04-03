@@ -222,6 +222,29 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("// Render this using visualize:show_widget.", text)
         self.assertIn("// Do not display raw JSON to the user.", text)
 
+    async def test_http_post_result_accepts_control_characters_in_error_text(self):
+        task_id = "task-with-control-chars"
+        state_entry = {"success": None, "error": "", "details": {}, "event": asyncio.Event()}
+        server.state.results[task_id] = state_entry
+
+        class DummyRequest:
+            async def body(self):
+                return (
+                    b'{"task_id":"task-with-control-chars","success":false,'
+                    b'"error":"line1\nline2\tbad\\rvalue"}'
+                )
+
+        try:
+            response = await server.http_handle_post_result(DummyRequest())
+            payload = json.loads(response.body.decode("utf-8"))
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(payload["status"], "received")
+            self.assertEqual(server.state.results[task_id]["error"], "line1\nline2\tbad\rvalue")
+            self.assertTrue(server.state.results[task_id]["event"].is_set())
+        finally:
+            server.state.results.pop(task_id, None)
+
 
 if __name__ == "__main__":
     unittest.main()

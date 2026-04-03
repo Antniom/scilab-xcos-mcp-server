@@ -2759,6 +2759,15 @@ def http_json(payload, status_code: int = 200) -> JSONResponse:
     return JSONResponse(payload, status_code=status_code)
 
 
+async def read_request_json_lenient(request: Request) -> dict:
+    raw = await request.body()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        text = raw.decode("utf-8", errors="replace")
+        return json.loads(text, strict=False)
+
+
 async def http_handle_get_task(request: Request) -> Response:
     try:
         task = state.task_queue.get_nowait()
@@ -2770,7 +2779,13 @@ async def http_handle_get_task(request: Request) -> Response:
 
 
 async def http_handle_post_result(request: Request) -> Response:
-    data = await request.json()
+    try:
+        data = await read_request_json_lenient(request)
+    except json.JSONDecodeError as exc:
+        return http_json(
+            {"status": "error", "message": f"Invalid JSON body: {exc.msg}"},
+            status_code=400,
+        )
     task_id = data.get("task_id")
     success = data.get("success")
     error = data.get("error", "")
