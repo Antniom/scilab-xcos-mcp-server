@@ -3082,6 +3082,21 @@ async def xcos_review_phase(
     })
 
 
+async def xcos_submit_phase(
+    workflow_id: str,
+    phase: str,
+    content: str,
+    artifact_type: str = "markdown",
+):
+    payload, error = submit_workflow_phase(workflow_id, phase, content, artifact_type)
+    if error:
+        return make_text_response(f"Error: {error}")
+    return make_json_response({
+        "status": "success",
+        "workflow": payload,
+    })
+
+
 async def xcos_start_draft(
     schema_version: str = "1.1",
     workflow_id: str | None = None,
