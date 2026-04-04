@@ -103,6 +103,7 @@ TOOL_DESCRIPTOR_OVERRIDES = {
     "search_related_xcos_files": {"title": "Search Related Xcos Files", "read_only": True, "idempotent": True},
     "verify_xcos_xml": {"title": "Verify Xcos XML", "read_only": True, "idempotent": True},
     "xcos_start_draft": {"title": "Start Draft Session", "read_only": False, "idempotent": False},
+    "xcos_set_context": {"title": "Set Draft Context", "read_only": False, "idempotent": False},
     "xcos_add_blocks": {"title": "Add Blocks To Draft", "read_only": False, "idempotent": False},
     "xcos_add_links": {"title": "Add Links To Draft", "read_only": False, "idempotent": False},
     "xcos_start_validation": {"title": "Start Draft Validation", "read_only": True, "idempotent": False},
@@ -127,6 +128,40 @@ WORKFLOW_PHASE_LABELS = {
     "phase3_implementation": "Phase 3: Implementation & Validation",
 }
 REVIEWABLE_PHASES = {"phase1_math_model", "phase2_architecture"}
+GENERATION_REQUIREMENTS_TEMPLATE = {
+    "required_blocks": [],
+    "preferred_blocks": [],
+    "required_context_vars": [],
+    "must_use_context": False,
+    "must_preserve_visual_blocks": False,
+    "allowed_simplifications": [],
+}
+PHASE2_MANIFEST_FIELDS = {
+    "blocks",
+    "links",
+    "context_vars",
+    "omissions",
+    "synthetic_blocks_planned",
+}
+BLOCK_TOKEN_STOPWORDS = {
+    "AND",
+    "FOR",
+    "FROM",
+    "NOT",
+    "THE",
+    "USE",
+    "WITH",
+    "WITHOUT",
+    "SYSTEM",
+    "MODEL",
+    "BLOCK",
+    "BLOCKS",
+    "DIAGRAM",
+    "SCOPE",
+    "SIGNAL",
+    "FLOW",
+    "PID",
+}
 
 BUILD_XCOS_DIAGRAM_PROMPT_NAME = "build_xcos_diagram"
 BUILD_XCOS_DIAGRAM_PROMPT_TITLE = "Build Xcos Diagram"
@@ -161,7 +196,7 @@ BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
 
     **Step 2.** Call `xcos_get_block_catalogue_widget` with a relevant category (e.g. 'Continuous', 'Sources', 'Sinks'). Display the widget so the user can see which blocks are available.
 
-    **Step 3.** Call `xcos_create_workflow` with the problem statement. Store the returned `workflow_id` â€” you will need it for every subsequent phase call.
+    **Step 3.** Call `xcos_create_workflow` with the problem statement. Only pass `autopilot=true` if the user explicitly asked to skip approval pauses. Store the returned `workflow_id` â€” you will need it for every subsequent phase call.
 
     **Step 4.** Derive the governing equations step by step in plain text. Show all algebra. Define every variable and parameter with units and numeric values.
 
@@ -187,7 +222,7 @@ BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
 
     **Step 13.** Generate a custom visual diagram showing the actual Xcos block architecture. Use simple block shapes with the exact Xcos name and key parameter (e.g. GAIN[k=-5]). Use solid arrows for data/signal links and dashed arrows for clock/activation links. Ensure the layout is extremely clean and spacious, with distinct inputs/outputs and NO overlapping text or arrows pointing to nowhere. The diagram must match the architecture plan perfectly.
 
-    **Step 14.** Call `xcos_submit_phase` with `phase='phase2_architecture'`, `workflow_id`, and the full block + link plan as content.
+    **Step 14.** Call `xcos_submit_phase` with `phase='phase2_architecture'`, `workflow_id`, and the full block + link plan as content. The content MUST end with a fenced JSON manifest containing `blocks`, `links`, `context_vars`, `omissions`, and `synthetic_blocks_planned`.
 
     **Step 15.** Call `xcos_get_workflow_widget` with the `workflow_id`. Display the widget.
 
@@ -511,6 +546,155 @@ class WorkflowPhase:
         )
 
 
+def normalize_generation_requirements(payload: dict | None) -> dict:
+    normalized = {
+        key: (list(value) if isinstance(value, list) else value)
+        for key, value in GENERATION_REQUIREMENTS_TEMPLATE.items()
+    }
+    if isinstance(payload, dict):
+        for key in GENERATION_REQUIREMENTS_TEMPLATE:
+            value = payload.get(key, GENERATION_REQUIREMENTS_TEMPLATE[key])
+            normalized[key] = list(value) if isinstance(value, list) else value
+    normalized["required_blocks"] = sorted(dict.fromkeys(str(item) for item in normalized["required_blocks"] if str(item).strip()))
+    normalized["preferred_blocks"] = sorted(dict.fromkeys(str(item) for item in normalized["preferred_blocks"] if str(item).strip()))
+    normalized["required_context_vars"] = sorted(dict.fromkeys(str(item) for item in normalized["required_context_vars"] if str(item).strip()))
+    normalized["allowed_simplifications"] = sorted(dict.fromkeys(str(item) for item in normalized["allowed_simplifications"] if str(item).strip()))
+    normalized["must_use_context"] = bool(normalized["must_use_context"])
+    normalized["must_preserve_visual_blocks"] = bool(normalized["must_preserve_visual_blocks"])
+    return normalized
+
+
+def load_catalog_block_name_map() -> dict[str, str]:
+    names = {}
+    blocks_dir = os.path.join(DATA_DIR, "blocks")
+    if os.path.isdir(blocks_dir):
+        for filename in os.listdir(blocks_dir):
+            if filename.endswith(".json"):
+                name = os.path.splitext(filename)[0]
+                names[name.upper()] = name
+    references_dir = os.path.join(DATA_DIR, "reference_blocks")
+    if os.path.isdir(references_dir):
+        for filename in os.listdir(references_dir):
+            if filename.endswith(".xcos"):
+                name = os.path.splitext(filename)[0].split("__", 1)[0]
+                names.setdefault(name.upper(), name)
+    return names
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    return list(dict.fromkeys(value for value in values if value))
+
+
+def derive_generation_requirements(problem_statement: str) -> tuple[dict, list[str], list[str]]:
+    text = problem_statement or ""
+    requirements = normalize_generation_requirements(None)
+    catalog_block_names = load_catalog_block_name_map()
+
+    required_blocks: list[str] = []
+    for upper_name, canonical_name in sorted(catalog_block_names.items(), key=lambda item: len(item[1]), reverse=True):
+        pattern = rf"(?<![A-Za-z0-9_]){re.escape(canonical_name)}(?![A-Za-z0-9_])"
+        if re.search(pattern, text, flags=re.IGNORECASE):
+            required_blocks.append(canonical_name)
+
+    unsupported_blocks: list[str] = []
+    for token in re.findall(r"\b[A-Z][A-Z0-9_]*(?:_f)?\b", text):
+        if len(token) < 3:
+            continue
+        if token in BLOCK_TOKEN_STOPWORDS:
+            continue
+        if token.upper() in catalog_block_names:
+            continue
+        if token not in unsupported_blocks:
+            unsupported_blocks.append(token)
+
+    context_lines: list[str] = []
+    required_context_vars: list[str] = []
+    for match in re.finditer(r"\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*([^,\n;]+)", text):
+        var_name = match.group(1).strip()
+        rhs = match.group(2).strip()
+        if not rhs:
+            continue
+        if var_name.upper() in catalog_block_names:
+            continue
+        required_context_vars.append(var_name)
+        context_lines.append(f"{var_name}={rhs}")
+
+    var_list_match = re.search(
+        r"\b(?:variables?|constants?|parameters?)\b\s*[:=]?\s*([A-Za-z0-9_,\sand]+)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if var_list_match:
+        for candidate in re.split(r",|\band\b", var_list_match.group(1)):
+            var_name = candidate.strip()
+            if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", var_name):
+                continue
+            if var_name.upper() in catalog_block_names:
+                continue
+            required_context_vars.append(var_name)
+
+    requirements["required_blocks"] = sorted(_unique_strings(required_blocks))
+    requirements["required_context_vars"] = sorted(_unique_strings(required_context_vars))
+    requirements["must_use_context"] = bool(requirements["required_context_vars"])
+    requirements["must_preserve_visual_blocks"] = bool(requirements["required_blocks"])
+    return requirements, _unique_strings(context_lines), unsupported_blocks
+
+
+def parse_phase2_architecture_manifest(content: str) -> tuple[dict | None, str | None]:
+    matches = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", content or "", flags=re.IGNORECASE | re.DOTALL)
+    if not matches:
+        return None, "Phase 2 submissions must end with a fenced JSON architecture manifest."
+
+    try:
+        manifest = json.loads(matches[-1])
+    except json.JSONDecodeError as exc:
+        return None, f"Phase 2 architecture manifest is not valid JSON: {exc}"
+
+    missing_fields = sorted(PHASE2_MANIFEST_FIELDS - set(manifest.keys()))
+    if missing_fields:
+        return None, f"Phase 2 architecture manifest is missing required field(s): {', '.join(missing_fields)}"
+
+    return manifest, None
+
+
+def get_approved_manifest_omissions(manifest: dict, allowed_simplifications: list[str]) -> set[str]:
+    approved = {item for item in allowed_simplifications if isinstance(item, str) and item.strip()}
+    for omission in manifest.get("omissions") or []:
+        if isinstance(omission, str):
+            continue
+        if not isinstance(omission, dict):
+            continue
+        is_approved = bool(
+            omission.get("approved")
+            or omission.get("user_approved")
+            or omission.get("user_approved_simplification")
+            or str(omission.get("status", "")).lower() in {"approved", "user_approved", "user_approved_simplification"}
+        )
+        if not is_approved:
+            continue
+        name = (
+            omission.get("item")
+            or omission.get("name")
+            or omission.get("block")
+            or omission.get("context_var")
+        )
+        if name:
+            approved.add(str(name))
+    return approved
+
+
+def auto_advance_workflow_phase_if_needed(workflow: "WorkflowSession", phase_key: str):
+    if not workflow.autopilot or phase_key not in REVIEWABLE_PHASES:
+        return
+    phase = workflow.phases[phase_key]
+    phase.status = "approved"
+    phase.reviewed_at = now_iso()
+    phase.feedback = "Auto-approved by workflow autopilot."
+    next_phase = next_workflow_phase(phase_key)
+    if next_phase:
+        workflow.current_phase = next_phase
+
+
 @dataclass
 class WorkflowSession:
     workflow_id: str
@@ -521,6 +705,9 @@ class WorkflowSession:
     phases: dict[str, WorkflowPhase]
     draft_session_id: str | None = None
     last_verified: dict | None = None
+    generation_requirements: dict | None = None
+    generation_context_lines: list[str] | None = None
+    autopilot: bool = False
 
     def to_dict(self, view: str = "full") -> dict:
         return {
@@ -532,6 +719,9 @@ class WorkflowSession:
             "current_phase_label": WORKFLOW_PHASE_LABELS[self.current_phase],
             "draft_session_id": self.draft_session_id,
             "last_verified": self.last_verified,
+            "generation_requirements": normalize_generation_requirements(self.generation_requirements),
+            "generation_context_lines": list(self.generation_context_lines or []),
+            "autopilot": bool(self.autopilot),
             "phases": {
                 key: phase.to_dict(view=view)
                 for key, phase in self.phases.items()
@@ -552,6 +742,9 @@ class WorkflowSession:
             },
             draft_session_id=payload.get("draft_session_id"),
             last_verified=payload.get("last_verified"),
+            generation_requirements=normalize_generation_requirements(payload.get("generation_requirements")),
+            generation_context_lines=list(payload.get("generation_context_lines") or []),
+            autopilot=bool(payload.get("autopilot", False)),
         )
 
 
@@ -746,7 +939,13 @@ def hydrate_persistent_state():
         state.validation_jobs[job_id] = job
 
 
-def create_workflow_session(problem_statement: str) -> WorkflowSession:
+def create_workflow_session(
+    problem_statement: str,
+    *,
+    generation_requirements: dict | None = None,
+    generation_context_lines: list[str] | None = None,
+    autopilot: bool = False,
+) -> WorkflowSession:
     workflow_id = str(uuid.uuid4())
     timestamp = now_iso()
     phases = {
@@ -760,6 +959,9 @@ def create_workflow_session(problem_statement: str) -> WorkflowSession:
         updated_at=timestamp,
         current_phase=WORKFLOW_PHASE_ORDER[0],
         phases=phases,
+        generation_requirements=normalize_generation_requirements(generation_requirements),
+        generation_context_lines=list(generation_context_lines or []),
+        autopilot=bool(autopilot),
     )
     state.workflows[workflow_id] = workflow
     persist_workflow_session(workflow_id)
@@ -833,6 +1035,45 @@ def submit_workflow_phase(
         if workflow.phases[previous_phase].status != "approved":
             return None, f"{WORKFLOW_PHASE_LABELS[previous_phase]} must be approved before submitting {WORKFLOW_PHASE_LABELS[phase_key]}."
 
+    if phase_key == "phase2_architecture":
+        manifest, manifest_error = parse_phase2_architecture_manifest(content)
+        if manifest_error:
+            return None, manifest_error
+
+        requirements = normalize_generation_requirements(workflow.generation_requirements)
+        approved_omissions = get_approved_manifest_omissions(
+            manifest,
+            requirements.get("allowed_simplifications") or [],
+        )
+        catalog_block_names = load_catalog_block_name_map()
+        manifest_blocks = {
+            catalog_block_names.get(str(item).upper(), str(item))
+            for item in (manifest.get("blocks") or [])
+            if str(item).strip()
+        }
+        manifest_context_vars = {
+            str(item).strip()
+            for item in (manifest.get("context_vars") or [])
+            if str(item).strip()
+        }
+        missing_blocks = sorted(
+            block_name
+            for block_name in requirements["required_blocks"]
+            if block_name not in manifest_blocks and block_name not in approved_omissions
+        )
+        missing_context_vars = sorted(
+            var_name
+            for var_name in requirements["required_context_vars"]
+            if var_name not in manifest_context_vars and var_name not in approved_omissions
+        )
+        if missing_blocks or missing_context_vars:
+            details = []
+            if missing_blocks:
+                details.append(f"missing required blocks: {', '.join(missing_blocks)}")
+            if missing_context_vars:
+                details.append(f"missing required context vars: {', '.join(missing_context_vars)}")
+            return None, "Phase 2 fidelity check failed: " + "; ".join(details)
+
     reset_workflow_downstream(workflow, phase_key)
 
     phase = workflow.phases[phase_key]
@@ -844,6 +1085,7 @@ def submit_workflow_phase(
     phase.last_error = None
     phase.status = "awaiting_approval" if phase_key in REVIEWABLE_PHASES else "in_progress"
     workflow.current_phase = phase_key
+    auto_advance_workflow_phase_if_needed(workflow, phase_key)
     workflow.updated_at = now_iso()
     persist_workflow_session(workflow_id)
     return workflow.to_dict(), None
@@ -900,6 +1142,7 @@ class DraftDiagram:
         self.schema_version = schema_version
         self.blocks = []
         self.links = []
+        self.context_lines = []
         self.created_at = created_at or datetime.now()
         self.phase_plan = None
         self.workflow_id = None
@@ -918,6 +1161,9 @@ class DraftDiagram:
     def add_links(self, xml_chunk):
         self.links.append(xml_chunk)
 
+    def set_context(self, context_lines: list[str]):
+        self.context_lines = [line.strip() for line in context_lines if str(line).strip()]
+
     def to_persisted_dict(self) -> dict:
         return {
             "session_id": self.session_id,
@@ -925,6 +1171,7 @@ class DraftDiagram:
             "created_at": self.created_at.isoformat(),
             "blocks": list(self.blocks),
             "links": list(self.links),
+            "context_lines": list(self.context_lines),
             "phase_plan": self.phase_plan,
             "workflow_id": self.workflow_id,
             "restored_from_disk": self.restored_from_disk,
@@ -950,6 +1197,7 @@ class DraftDiagram:
         )
         draft.blocks = list(payload.get("blocks", []))
         draft.links = list(payload.get("links", []))
+        draft.context_lines = list(payload.get("context_lines") or [])
         draft.phase_plan = payload.get("phase_plan")
         draft.workflow_id = payload.get("workflow_id")
         draft.restored_from_disk = bool(payload.get("restored_from_disk", True))
@@ -972,7 +1220,14 @@ class DraftDiagram:
         full_xml += 'integratorRelativeTolerance="1.0E-6" toleranceOnTime="1.0E-10" '
         full_xml += 'maxIntegrationTimeInterval="100001.0" maximumStepSize="0.0" '
         full_xml += 'realTimeScaling="1.0" solver="0.0">\n'
-        full_xml += '  <Array as="context" scilabClass="String[]"></Array>\n'
+        full_xml += '  <Array as="context" scilabClass="String[]">'
+        if self.context_lines:
+            full_xml += "\n"
+            for index, line in enumerate(self.context_lines):
+                escaped = html.escape(line, quote=True)
+                full_xml += f'    <data line="{index}" column="0" value="{escaped}"/>\n'
+            full_xml += "  "
+        full_xml += '</Array>\n'
         full_xml += '  <mxGraphModel as="model" grid="1" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff">\n'
         full_xml += '    <root>\n'
         full_xml += '      <mxCell id="0"/>\n'
@@ -1192,6 +1447,340 @@ XCOS_BLOCK_XPATH = (
     "//ImplicitInBlock | //ImplicitOutBlock"
 )
 XCOS_LINK_XPATH = "//BasicLink | //ExplicitLink | //CommandControlLink | //ImplicitLink"
+XCOS_LINK_TAGS = {"BasicLink", "ExplicitLink", "CommandControlLink", "ImplicitLink"}
+XCOS_BLOCK_TAGS = {"BasicBlock", "BigSom", "SplitBlock", "TextBlock", "EventInBlock", "EventOutBlock", "ExplicitInBlock", "ExplicitOutBlock", "ImplicitInBlock", "ImplicitOutBlock"}
+XCOS_PORT_TAGS = {"ExplicitInputPort", "ExplicitOutputPort", "ImplicitInputPort", "ImplicitOutputPort", "ControlPort", "CommandPort", "EventInPort", "EventOutPort"}
+
+
+def get_xcos_root(tree: etree._Element) -> etree._Element:
+    root_nodes = tree.xpath("//mxGraphModel/root")
+    if not root_nodes:
+        raise ValueError("Xcos diagram is missing mxGraphModel/root.")
+    return root_nodes[0]
+
+
+def get_link_endpoint(link: etree._Element, role: str) -> str | None:
+    attribute = "source" if role == "source" else "target"
+    endpoint = link.get(attribute)
+    if endpoint:
+        return endpoint
+    child_name = "SourcePort" if role == "source" else "DestinationPort"
+    return link.xpath(f"string(./{child_name}/@reference)") or None
+
+
+def get_node_geometry(node: etree._Element) -> tuple[float, float, float, float]:
+    geometry = node.xpath("./mxGeometry[@as='geometry']") or node.xpath(".//mxGeometry[@as='geometry']")
+    if not geometry:
+        return (0.0, 0.0, 0.0, 0.0)
+    geom = geometry[0]
+    return (
+        float(geom.get("x", "0") or 0),
+        float(geom.get("y", "0") or 0),
+        float(geom.get("width", "0") or 0),
+        float(geom.get("height", "0") or 0),
+    )
+
+
+def get_node_center(node: etree._Element | None) -> tuple[float, float]:
+    if node is None:
+        return (0.0, 0.0)
+    x, y, width, height = get_node_geometry(node)
+    return (x + (width / 2.0), y + (height / 2.0))
+
+
+def build_simple_link_node(
+    tag_name: str,
+    parent_id: str,
+    source_id: str,
+    target_id: str,
+    *,
+    style: str = "",
+    value: str = "",
+) -> etree._Element:
+    link = etree.Element(
+        tag_name,
+        id=f"synthetic-link-{uuid.uuid4().hex[:12]}",
+        parent=parent_id,
+        source=source_id,
+        target=target_id,
+        style=style,
+        value=value,
+    )
+    etree.SubElement(link, "mxGeometry", as_="geometry")
+    return link
+
+
+def build_synthetic_split_block(
+    interface_name: str,
+    parent_id: str,
+    block_id: str,
+    x: float,
+    y: float,
+    *,
+    output_count: int,
+) -> tuple[etree._Element, list[etree._Element]]:
+    if interface_name == "CLKSPLIT_f":
+        block = etree.Element(
+            "SplitBlock",
+            id=block_id,
+            parent=parent_id,
+            interfaceFunctionName="CLKSPLIT_f",
+            blockType="d",
+            dependsOnU="0",
+            dependsOnT="0",
+            simulationFunctionName="split",
+            simulationFunctionType="DEFAULT",
+            style="CLKSPLIT_f",
+        )
+        etree.SubElement(block, "ScilabDouble", as_="exprs", height="0", width="0")
+        etree.SubElement(block, "ScilabDouble", as_="realParameters", height="0", width="0")
+        etree.SubElement(block, "ScilabDouble", as_="integerParameters", height="0", width="0")
+        etree.SubElement(block, "Array", as_="objectsParameters", scilabClass="ScilabList")
+        nb_zero = etree.SubElement(block, "ScilabInteger", as_="nbZerosCrossing", height="1", width="1", intPrecision="sci_int32")
+        etree.SubElement(nb_zero, "data", line="0", column="0", value="0")
+        nmode = etree.SubElement(block, "ScilabInteger", as_="nmode", height="1", width="1", intPrecision="sci_int32")
+        etree.SubElement(nmode, "data", line="0", column="0", value="0")
+        etree.SubElement(block, "ScilabDouble", as_="state", height="0", width="0")
+        etree.SubElement(block, "ScilabDouble", as_="dState", height="0", width="0")
+        etree.SubElement(block, "Array", as_="oDState", scilabClass="ScilabList")
+        etree.SubElement(block, "Array", as_="equations", scilabClass="ScilabList")
+        etree.SubElement(block, "mxGeometry", as_="geometry", x=f"{x:.3f}", y=f"{y:.3f}", width="0.3333333", height="0.3333333")
+        ports = [
+            etree.Element("ControlPort", id=f"{block_id}_ctrl", parent=block_id, ordering="1", dataType="REAL_MATRIX", dataColumns="1", dataLines="1", initialState="0.0", style="ControlPort;align=center;verticalAlign=top;spacing=10.0", value=""),
+            etree.Element("CommandPort", id=f"{block_id}_cmd1", parent=block_id, ordering="1", dataType="REAL_MATRIX", dataColumns="1", dataLines="1", initialState="-1.0", style="CommandPort;align=center;verticalAlign=bottom;spacing=10.0", value=""),
+            etree.Element("CommandPort", id=f"{block_id}_cmd2", parent=block_id, ordering="2", dataType="REAL_MATRIX", dataColumns="1", dataLines="1", initialState="-1.0", style="CommandPort;align=center;verticalAlign=bottom;spacing=10.0", value=""),
+        ]
+        return block, ports
+
+    block = etree.Element(
+        "SplitBlock",
+        id=block_id,
+        parent=parent_id,
+        interfaceFunctionName="SPLIT_f",
+        blockType="c",
+        dependsOnU="1",
+        dependsOnT="0",
+        simulationFunctionName="lsplit",
+        simulationFunctionType="DEFAULT",
+        style="SPLIT_f",
+    )
+    etree.SubElement(block, "ScilabDouble", as_="exprs", height="0", width="0")
+    etree.SubElement(block, "ScilabDouble", as_="realParameters", height="0", width="0")
+    etree.SubElement(block, "ScilabDouble", as_="integerParameters", height="0", width="0")
+    etree.SubElement(block, "Array", as_="objectsParameters", scilabClass="ScilabList")
+    nb_zero = etree.SubElement(block, "ScilabInteger", as_="nbZerosCrossing", height="1", width="1", intPrecision="sci_int32")
+    etree.SubElement(nb_zero, "data", line="0", column="0", value="0")
+    nmode = etree.SubElement(block, "ScilabInteger", as_="nmode", height="1", width="1", intPrecision="sci_int32")
+    etree.SubElement(nmode, "data", line="0", column="0", value="0")
+    etree.SubElement(block, "ScilabDouble", as_="state", height="0", width="0")
+    etree.SubElement(block, "ScilabDouble", as_="dState", height="0", width="0")
+    etree.SubElement(block, "Array", as_="oDState", scilabClass="ScilabList")
+    etree.SubElement(block, "Array", as_="equations", scilabClass="ScilabList")
+    etree.SubElement(block, "mxGeometry", as_="geometry", x=f"{x:.3f}", y=f"{y:.3f}", width="0.3333333", height="0.3333333")
+    ports = [
+        etree.Element("ExplicitInputPort", id=f"{block_id}_in", parent=block_id, ordering="1", dataType="REAL_MATRIX", dataColumns="1", dataLines="-1", initialState="0.0", style="", value=""),
+    ]
+    for index in range(output_count):
+        ports.append(
+            etree.Element(
+                "ExplicitOutputPort",
+                id=f"{block_id}_out{index + 1}",
+                parent=block_id,
+                ordering=str(index + 1),
+                dataType="REAL_MATRIX",
+                dataColumns="1",
+                dataLines="-1",
+                initialState="0.0",
+                style="",
+                value="",
+            )
+        )
+    return block, ports
+
+
+def normalize_fanout_to_split_blocks(tree: etree._Element) -> dict:
+    root = get_xcos_root(tree)
+    nodes_by_id = {node.get("id"): node for node in tree.xpath("//*[@id]") if node.get("id")}
+    links = [node for node in root if node.tag in XCOS_LINK_TAGS]
+    links_by_source: dict[str, list[etree._Element]] = {}
+    for link in links:
+        source_id = get_link_endpoint(link, "source")
+        if not source_id:
+            continue
+        links_by_source.setdefault(source_id, []).append(link)
+
+    inserted_blocks: list[dict] = []
+    warnings: list[str] = []
+    links_to_remove: list[etree._Element] = []
+    nodes_to_append: list[etree._Element] = []
+
+    for source_id, grouped_links in links_by_source.items():
+        if len(grouped_links) <= 1:
+            continue
+        source_port = nodes_by_id.get(source_id)
+        if source_port is None:
+            continue
+        source_block = source_port.getparent()
+        if source_block is None:
+            continue
+        if source_block.tag == "SplitBlock" and source_block.get("interfaceFunctionName") in {"SPLIT_f", "CLKSPLIT_f"}:
+            continue
+
+        is_event_fanout = source_port.tag in {"CommandPort", "EventOutPort", "ControlPort"} or any(link.tag == "CommandControlLink" for link in grouped_links)
+        parent_id = (
+            grouped_links[0].get("parent")
+            or source_block.get("parent")
+            or "0:2:0"
+        )
+        source_x, source_y = get_node_center(source_block)
+        target_centers = []
+        for link in grouped_links:
+            target_id = get_link_endpoint(link, "target")
+            target_port = nodes_by_id.get(target_id) if target_id else None
+            target_centers.append(get_node_center(target_port.getparent() if target_port is not None else None))
+        average_target_y = sum(center[1] for center in target_centers) / len(target_centers) if target_centers else source_y
+
+        if is_event_fanout:
+            remaining_links = list(grouped_links)
+            current_source_id = source_id
+            chain_index = 0
+            while len(remaining_links) > 1:
+                block_id = f"synthetic-clksplit-{uuid.uuid4().hex[:10]}"
+                split_block, split_ports = build_synthetic_split_block(
+                    "CLKSPLIT_f",
+                    parent_id,
+                    block_id,
+                    source_x + 40.0 + (chain_index * 40.0),
+                    average_target_y,
+                    output_count=2,
+                )
+                ctrl_port = split_ports[0]
+                cmd_ports = split_ports[1:]
+                nodes_to_append.extend([split_block, *split_ports])
+                inserted_blocks.append({"id": block_id, "type": "CLKSPLIT_f", "source_port": source_id})
+                warnings.append(f"Inserted synthetic CLKSPLIT_f '{block_id}' for fan-out from '{source_id}'.")
+
+                first_link = remaining_links.pop(0)
+                links_to_remove.append(first_link)
+                nodes_to_append.append(
+                    build_simple_link_node(
+                        "CommandControlLink",
+                        parent_id,
+                        current_source_id,
+                        ctrl_port.get("id"),
+                        style=first_link.get("style", ""),
+                        value=first_link.get("value", ""),
+                    )
+                )
+                first_target = get_link_endpoint(first_link, "target")
+                nodes_to_append.append(
+                    build_simple_link_node(
+                        "CommandControlLink",
+                        parent_id,
+                        cmd_ports[0].get("id"),
+                        first_target,
+                        style=first_link.get("style", ""),
+                        value=first_link.get("value", ""),
+                    )
+                )
+
+                if len(remaining_links) == 1:
+                    final_link = remaining_links.pop(0)
+                    links_to_remove.append(final_link)
+                    final_target = get_link_endpoint(final_link, "target")
+                    nodes_to_append.append(
+                        build_simple_link_node(
+                            "CommandControlLink",
+                            parent_id,
+                            cmd_ports[1].get("id"),
+                            final_target,
+                            style=final_link.get("style", ""),
+                            value=final_link.get("value", ""),
+                        )
+                    )
+                else:
+                    current_source_id = cmd_ports[1].get("id")
+                chain_index += 1
+            continue
+
+        block_id = f"synthetic-split-{uuid.uuid4().hex[:10]}"
+        split_block, split_ports = build_synthetic_split_block(
+            "SPLIT_f",
+            parent_id,
+            block_id,
+            source_x + 40.0,
+            average_target_y,
+            output_count=len(grouped_links),
+        )
+        input_port = split_ports[0]
+        output_ports = split_ports[1:]
+        nodes_to_append.extend([split_block, *split_ports])
+        inserted_blocks.append({"id": block_id, "type": "SPLIT_f", "source_port": source_id})
+        warnings.append(f"Inserted synthetic SPLIT_f '{block_id}' for fan-out from '{source_id}'.")
+
+        nodes_to_append.append(
+            build_simple_link_node(
+                grouped_links[0].tag if grouped_links[0].tag in XCOS_LINK_TAGS else "ExplicitLink",
+                parent_id,
+                source_id,
+                input_port.get("id"),
+                style=grouped_links[0].get("style", ""),
+                value=grouped_links[0].get("value", ""),
+            )
+        )
+
+        for index, link in enumerate(grouped_links):
+            links_to_remove.append(link)
+            target_id = get_link_endpoint(link, "target")
+            nodes_to_append.append(
+                build_simple_link_node(
+                    link.tag if link.tag in XCOS_LINK_TAGS else "ExplicitLink",
+                    parent_id,
+                    output_ports[index].get("id"),
+                    target_id,
+                    style=link.get("style", ""),
+                    value=link.get("value", ""),
+                )
+            )
+
+    if links_to_remove:
+        for link in links_to_remove:
+            if link.getparent() is not None:
+                link.getparent().remove(link)
+        for node in nodes_to_append:
+            root.append(node)
+
+    return {
+        "normalized": bool(inserted_blocks),
+        "synthetic_blocks": inserted_blocks,
+        "warnings": warnings,
+    }
+
+
+def rewrite_draft_from_tree(session_id: str, tree: etree._Element):
+    draft = state.drafts[session_id]
+    root = get_xcos_root(tree)
+    draft.blocks = [
+        etree.tostring(node, encoding="unicode", pretty_print=True).strip()
+        for node in root
+        if node.tag in XCOS_BLOCK_TAGS or node.tag in XCOS_PORT_TAGS
+    ]
+    draft.links = [
+        etree.tostring(node, encoding="unicode", pretty_print=True).strip()
+        for node in root
+        if node.tag in XCOS_LINK_TAGS
+    ]
+    persist_draft_session(session_id)
+
+
+def normalize_draft_fanout(session_id: str) -> dict:
+    draft = state.drafts[session_id]
+    parser = etree.XMLParser(remove_blank_text=True)
+    tree = etree.fromstring(draft.to_xml().encode("utf-8"), parser)
+    normalization = normalize_fanout_to_split_blocks(tree)
+    if normalization.get("normalized"):
+        rewrite_draft_from_tree(session_id, tree)
+    return normalization
 
 
 def make_text_response(text: str):
@@ -1552,6 +2141,8 @@ def infer_validation_code(result: dict) -> str:
         return "PRE_SIM_VALIDATION_FAILED"
     if result.get("origin") == "structural-validator":
         return "STRUCTURAL_VALIDATION_FAILED"
+    if "timed out" in str(result.get("error", "")).lower():
+        return "SCILAB_RUNTIME_TIMEOUT"
     if result.get("origin") == "scilab-poll-fallback":
         return "SCILAB_POLL_FAILED"
     if result.get("origin") == "scilab-subprocess":
@@ -1574,6 +2165,12 @@ def make_public_validation_payload(
     }
     if not success and messages:
         payload["issues"] = messages[:5]
+    if result.get("warnings"):
+        payload["warnings"] = [
+            format_validation_issue(issue)
+            for issue in result.get("warnings") or []
+            if format_validation_issue(issue)
+        ][:10]
     if workflow_id:
         payload["workflow_id"] = workflow_id
     if session_id:
@@ -1585,6 +2182,8 @@ def make_public_validation_payload(
         payload["file_path"] = result["file_path"]
     if result.get("file_size_bytes") is not None:
         payload["file_size_bytes"] = result["file_size_bytes"]
+    if result.get("fanout_normalization"):
+        payload["fanout_normalization"] = result["fanout_normalization"]
     if EXPOSE_INTERNAL_VALIDATION_DETAILS:
         payload["debug"] = result
     return payload
@@ -2200,6 +2799,8 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
         cmd = ["xvfb-run", "-a", scilab_bin] + scilab_args
     else:
         cmd = [scilab_bin] + scilab_args
+    xml_diagnostics["subprocess_command"] = cmd
+    xml_diagnostics["timeout_seconds"] = 90.0
 
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -2224,15 +2825,17 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             return {
                 "success": False,
                 "origin": "scilab-subprocess",
-                "error": "Scilab headless validation timed out after 90 seconds.",
+                "error": "Structural validation passed, but Scilab runtime validation timed out after 90 seconds.",
                 "auto_fixed_mux_to_scalar": auto_fixed,
                 "scilab_log": None,
+                "scilab_log_tail": None,
                 "file_path": temp_meta["path"],
                 "file_size_bytes": temp_meta["size_bytes"],
                 "xml_diagnostics": xml_diagnostics,
             }
 
         scilab_log = stdout_bytes.decode("utf-8", errors="replace").strip()
+        scilab_log_tail = "\n".join(scilab_log.splitlines()[-40:]) if scilab_log else ""
         returncode = proc.returncode
         log_analysis = analyze_scilab_verification_output(scilab_log, returncode)
 
@@ -2243,6 +2846,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
                 "warnings": log_analysis.get("warnings"),
                 "auto_fixed_mux_to_scalar": auto_fixed,
                 "scilab_log": scilab_log,
+                "scilab_log_tail": scilab_log_tail,
                 "file_path": temp_meta["path"],
                 "file_size_bytes": temp_meta["size_bytes"],
                 "xml_diagnostics": xml_diagnostics,
@@ -2251,10 +2855,11 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
         return {
             "success": False,
             "origin": "scilab-subprocess",
-            "error": log_analysis["error"],
+            "error": f"Structural validation passed, but Scilab runtime validation failed: {log_analysis['error']}",
             "auto_fixed_mux_to_scalar": auto_fixed,
             "warnings": log_analysis.get("warnings"),
             "scilab_log": scilab_log,
+            "scilab_log_tail": scilab_log_tail,
             "file_path": temp_meta["path"],
             "file_size_bytes": temp_meta["size_bytes"],
             "xml_diagnostics": xml_diagnostics,
@@ -2594,7 +3199,8 @@ async def run_verification(xml_content: str):
         
         # 1. Auto-fix
         auto_fixed = auto_fix_mux_to_scalar(tree)
-        if auto_fixed:
+        fanout_normalization = normalize_fanout_to_split_blocks(tree)
+        if auto_fixed or fanout_normalization.get("normalized"):
             xml_content = etree.tostring(tree, encoding='unicode', pretty_print=True)
         
         # 2. Pre-simulation Validation
@@ -2605,6 +3211,8 @@ async def run_verification(xml_content: str):
                 "origin": "pre-sim-validator",
                 "errors": val_errors,
                 "auto_fixed_mux_to_scalar": auto_fixed,
+                "fanout_normalization": fanout_normalization,
+                "warnings": fanout_normalization.get("warnings"),
             }
             
     except Exception as e:
@@ -2620,6 +3228,9 @@ async def run_verification(xml_content: str):
         python_result = validate_diagram_structure(tree, auto_fixed)
         if not python_result["success"]:
             # Fail immediately - no point spawning Scilab if the XML is broken.
+            if fanout_normalization.get("normalized"):
+                python_result["fanout_normalization"] = fanout_normalization
+                python_result["warnings"] = (python_result.get("warnings") or []) + (fanout_normalization.get("warnings") or [])
             return python_result
 
         # Stage 2 â€” deep Scilab compilation check (catches parameter mismatches,
@@ -2630,12 +3241,17 @@ async def run_verification(xml_content: str):
         if should_retry_with_poll_fallback(scilab_result):
             poll_fallback_result = await run_poll_validation(xml_content, auto_fixed)
             if poll_fallback_result.get("success"):
-                merged_warnings = (python_result.get("warnings") or []) + (poll_fallback_result.get("warnings") or [])
+                merged_warnings = (
+                    (fanout_normalization.get("warnings") or [])
+                    + (python_result.get("warnings") or [])
+                    + (poll_fallback_result.get("warnings") or [])
+                )
                 return {
                     **poll_fallback_result,
                     "fallback_used": True,
                     "fallback_reason": "Subprocess validator reported premature EOF; retried with long-lived Scilab poll worker.",
                     "subprocess_result": scilab_result,
+                    "fanout_normalization": fanout_normalization,
                     "structural_check": {
                         "success": python_result["success"],
                         "warnings": python_result.get("warnings"),
@@ -2645,7 +3261,11 @@ async def run_verification(xml_content: str):
                 }
 
         # Merge warnings from both stages
-        merged_warnings = (python_result.get("warnings") or []) + (scilab_result.get("warnings") or [])
+        merged_warnings = (
+            (fanout_normalization.get("warnings") or [])
+            + (python_result.get("warnings") or [])
+            + (scilab_result.get("warnings") or [])
+        )
 
         result = {
             **scilab_result,
@@ -2656,6 +3276,7 @@ async def run_verification(xml_content: str):
             },
             "warnings": merged_warnings if merged_warnings else None,
             "origin": "hybrid (structural-python + scilab-subprocess)",
+            "fanout_normalization": fanout_normalization,
         }
         if poll_fallback_result:
             result["fallback_used"] = True
@@ -2663,7 +3284,10 @@ async def run_verification(xml_content: str):
             result["poll_fallback_result"] = poll_fallback_result
         return result
 
-    return await run_poll_validation(xml_content, auto_fixed)
+    result = await run_poll_validation(xml_content, auto_fixed)
+    result["fanout_normalization"] = fanout_normalization
+    result["warnings"] = (result.get("warnings") or []) + (fanout_normalization.get("warnings") or [])
+    return result
 
 
 async def verify_xcos_xml(xml_content: str):
@@ -2702,9 +3326,13 @@ async def _run_validation_job(job_id: str):
             persist_validation_job(job_id)
             return
 
+        draft_normalization = normalize_draft_fanout(job.session_id)
         xml_content = state.drafts[job.session_id].to_xml()
         session_meta = write_session_snapshot(job.session_id)
         result = await asyncio.wait_for(run_verification(xml_content), timeout=job.timeout_seconds)
+        if draft_normalization.get("normalized"):
+            result["fanout_normalization"] = draft_normalization
+            result["warnings"] = (result.get("warnings") or []) + (draft_normalization.get("warnings") or [])
         remember_validation_result(xml_content, result)
         record_validation_outcome(job.session_id, result, session_meta)
         job.status = "succeeded" if result.get("success") else "failed"
@@ -2781,19 +3409,32 @@ async def xcos_get_validation_status(job_id: str):
 
 # --- Incremental Tool Implementations ---
 
-async def xcos_create_workflow(problem_statement: str):
+async def xcos_create_workflow(problem_statement: str, autopilot: bool = False):
     if not problem_statement.strip():
         return make_text_response("Error: problem_statement cannot be empty")
-    workflow = create_workflow_session(problem_statement)
+    requirements, context_lines, unsupported_blocks = derive_generation_requirements(problem_statement)
+    if unsupported_blocks:
+        return make_text_response(
+            "Error: Unsupported required block(s) requested: "
+            + ", ".join(sorted(unsupported_blocks))
+            + ". Remove them or add them to the catalogue before continuing."
+        )
+    workflow = create_workflow_session(
+        problem_statement,
+        generation_requirements=requirements,
+        generation_context_lines=context_lines,
+        autopilot=autopilot,
+    )
+    approval_required_phases = [] if workflow.autopilot else [
+        phase_key for phase_key in WORKFLOW_PHASE_ORDER
+        if phase_key in REVIEWABLE_PHASES
+    ]
     return make_json_response({
         "status": "success",
         "workflow_id": workflow.workflow_id,
         "workflow": workflow.to_dict(),
         "phase_order": WORKFLOW_PHASE_ORDER,
-        "approval_required_phases": [
-            phase_key for phase_key in WORKFLOW_PHASE_ORDER
-            if phase_key in REVIEWABLE_PHASES
-        ],
+        "approval_required_phases": approval_required_phases,
         "phase_start_requirements": {
             "phase3_implementation": {
                 "tool": "xcos_start_draft",
@@ -2802,8 +3443,15 @@ async def xcos_create_workflow(problem_statement: str):
             }
         },
         "next_required_action": (
-            f"Submit {WORKFLOW_PHASE_LABELS[workflow.current_phase]} and wait for approval "
-            "before starting implementation."
+            (
+                f"Submit {WORKFLOW_PHASE_LABELS[workflow.current_phase]}. "
+                "Autopilot will auto-advance approved phases on successful submission."
+            )
+            if workflow.autopilot else
+            (
+                f"Submit {WORKFLOW_PHASE_LABELS[workflow.current_phase]} and wait for approval "
+                "before starting implementation."
+            )
         ),
     })
 
@@ -3501,6 +4149,9 @@ async def xcos_start_draft(
             delete_draft_session(workflow.draft_session_id)
         state.draft_to_workflow[target_session_id] = workflow.workflow_id
         draft.workflow_id = workflow.workflow_id
+        requirements = normalize_generation_requirements(workflow.generation_requirements)
+        if requirements["must_use_context"] and not draft.context_lines:
+            draft.set_context(workflow.generation_context_lines or [])
         workflow.draft_session_id = target_session_id
         workflow.current_phase = "phase3_implementation"
         workflow.updated_at = now_iso()
@@ -3512,6 +4163,20 @@ async def xcos_start_draft(
 
     persist_draft_session(target_session_id)
     return make_json_response(payload)
+
+
+async def xcos_set_context(session_id: str, context_lines: list[str]):
+    if session_id not in state.drafts:
+        return make_text_response(f"Error: Session {session_id} not found")
+    draft = state.drafts[session_id]
+    draft.set_context(context_lines)
+    persist_draft_session(session_id)
+    return make_json_response({
+        "status": "success",
+        "session_id": session_id,
+        "context_line_count": len(draft.context_lines),
+        "context_lines": list(draft.context_lines),
+    })
 
 async def xcos_get_draft_xml(
     session_id: str,
@@ -3934,8 +4599,11 @@ async def http_api_create_workflow(request: Request) -> Response:
     problem_statement = (data.get("problem_statement") or "").strip()
     if not problem_statement:
         return http_json({"error": "problem_statement cannot be empty"}, status_code=400)
-    workflow = create_workflow_session(problem_statement)
-    return http_json({"status": "success", "workflow": workflow.to_dict()})
+    result = await xcos_create_workflow(problem_statement, bool(data.get("autopilot", False)))
+    text = result[0].text
+    if text.startswith("Error:"):
+        return http_json({"error": text[7:].strip()}, status_code=400)
+    return http_json(json.loads(text))
 
 
 async def http_api_get_workflow(request: Request) -> Response:
@@ -4340,9 +5008,10 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "PHASE 1 â€” Step 3. Call this with the user's problem statement to register "
                 "the 3-phase workflow. Store the returned workflow_id â€” it is required for "
                 "all subsequent xcos_submit_phase, xcos_review_phase, xcos_get_workflow_widget, "
-                "and xcos_start_draft calls. Do not proceed without it."
+                "and xcos_start_draft calls. Pass autopilot=true only when the user explicitly "
+                "wants approvals to auto-advance. Do not proceed without the workflow_id."
             ),
-            inputSchema={"type": "object", "properties": {"problem_statement": {"type": "string"}}, "required": ["problem_statement"]},
+            inputSchema={"type": "object", "properties": {"problem_statement": {"type": "string"}, "autopilot": {"type": "boolean", "default": False}}, "required": ["problem_statement"]},
         ),
         mcp_types.Tool(
             name="xcos_list_workflows",
@@ -4365,7 +5034,9 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "  - phase2_architecture: after get_xcos_block_data has been called for \n"
                 "    every block and the full architecture plan (blocks + links) is written. \n"
                 "    Content should list every block name, Xcos function name, parameters, \n"
-                "    and every link with source/target port IDs.\n"
+                "    and every link with source/target port IDs. The submission MUST end with \n"
+                "    a fenced JSON manifest containing blocks, links, context_vars, omissions, \n"
+                "    and synthetic_blocks_planned.\n"
                 "  - phase3_implementation: after xcos_verify_draft returns success=true. \n"
                 "    Content should confirm the file path and validation result.\n"
                 "After calling this, always call xcos_get_workflow_widget to show the \n"
@@ -4452,6 +5123,19 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "replace": {"type": "boolean", "default": False},
                 "phases": {"type": "array", "items": {"type": "string"}, "description": "Optional list of phase labels to provision."}
             }}
+        ),
+        mcp_types.Tool(
+            name="xcos_set_context",
+            description=(
+                "Add or replace top-level Xcos context lines for a draft session. Use this "
+                "when the workflow requires symbolic constants or named variables in the "
+                "diagram context. The provided lines are injected into the top-level "
+                "<Array as='context' scilabClass='String[]'> during XML assembly."
+            ),
+            inputSchema={"type": "object", "properties": {
+                "session_id": {"type": "string"},
+                "context_lines": {"type": "array", "items": {"type": "string"}},
+            }, "required": ["session_id", "context_lines"]},
         ),
         mcp_types.Tool(
             name="xcos_add_blocks",
@@ -4611,7 +5295,7 @@ async def handle_call_tool(name: str, arguments: dict | None):
         payload = parse_mcp_text_json_response(await xcos_get_topology_widget(arguments["session_id"]))
         return make_widget_tool_result("Topology Widget Generated", payload)
     elif name == "xcos_create_workflow":
-        payload = parse_mcp_text_json_response(await xcos_create_workflow(arguments["problem_statement"]))
+        payload = parse_mcp_text_json_response(await xcos_create_workflow(arguments["problem_statement"], arguments.get("autopilot", False)))
         workflow = payload["workflow"]
         return make_structured_tool_result(
             f"Created workflow {workflow['workflow_id']}. {workflow['current_phase_label']} is ready.",
@@ -4676,6 +5360,12 @@ async def handle_call_tool(name: str, arguments: dict | None):
         if payload.get("phase_plan_registered"):
             msg += f" Registered {payload.get('phase_count')} phases."
         return make_structured_tool_result(msg, payload)
+    elif name == "xcos_set_context":
+        payload = parse_mcp_text_json_response(await xcos_set_context(arguments["session_id"], arguments["context_lines"]))
+        return make_structured_tool_result(
+            f"Updated context for session {arguments['session_id']} with {payload.get('context_line_count', 0)} line(s).",
+            payload,
+        )
     elif name == "xcos_add_blocks":
         payload = parse_mcp_text_json_response(await xcos_add_blocks(arguments["session_id"], arguments["blocks_xml"]))
         return make_structured_tool_result(

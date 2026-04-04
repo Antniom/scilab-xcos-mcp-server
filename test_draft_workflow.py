@@ -34,6 +34,17 @@ CONST_BLOCK_XML = """
 """.strip()
 
 
+def build_phase2_content(blocks, context_vars, omissions=None, synthetic_blocks=None):
+    manifest = {
+        "blocks": blocks,
+        "links": [],
+        "context_vars": context_vars,
+        "omissions": omissions or [],
+        "synthetic_blocks_planned": synthetic_blocks or [],
+    }
+    return "Architecture plan\n```json\n" + json.dumps(manifest) + "\n```"
+
+
 class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.created_sessions = []
@@ -212,6 +223,174 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(payload["payload"]["workflow_id"], workflow.workflow_id)
         self.assertEqual(payload["payload"]["phases"][0]["label"], "Phase 1: Mathematical Analysis & Calculus")
         self.assertEqual(payload["payload"]["phases"][0]["status"], "awaiting_approval")
+
+    async def test_workflow_creation_derives_generation_requirements(self):
+        response = await server.xcos_create_workflow(
+            "Build a pendulum with MUX, BARXY, CMSCOPE, CANIMXY and g=10, L=1, theta0=0, omega0=0",
+            autopilot=True,
+        )
+        payload = json.loads(response[0].text)
+        workflow = payload["workflow"]
+
+        self.created_workflows.append(workflow["workflow_id"])
+        self.assertTrue(workflow["autopilot"])
+        self.assertEqual(
+            workflow["generation_requirements"]["required_blocks"],
+            ["BARXY", "CANIMXY", "CMSCOPE", "MUX"],
+        )
+        self.assertEqual(
+            workflow["generation_requirements"]["required_context_vars"],
+            ["L", "g", "omega0", "theta0"],
+        )
+        self.assertTrue(workflow["generation_requirements"]["must_use_context"])
+        self.assertEqual(
+            workflow["generation_context_lines"],
+            ["g=10", "L=1", "theta0=0", "omega0=0"],
+        )
+
+    async def test_workflow_creation_rejects_unsupported_required_blocks(self):
+        response = await server.xcos_create_workflow("Use MUX and TOTALLYUNSUPPORTEDBLOCK.")
+        self.assertIn("Unsupported required block", response[0].text)
+
+    async def test_phase2_manifest_enforces_required_blocks_and_context_vars(self):
+        create_response = await server.xcos_create_workflow(
+            "Build with MUX, BARXY, CMSCOPE and g=10, L=1.",
+            autopilot=True,
+        )
+        create_payload = json.loads(create_response[0].text)
+        workflow_id = create_payload["workflow"]["workflow_id"]
+        self.created_workflows.append(workflow_id)
+
+        await server.xcos_submit_phase(workflow_id, "phase1_math_model", "Math derivation")
+
+        rejected = await server.xcos_submit_phase(
+            workflow_id,
+            "phase2_architecture",
+            build_phase2_content(["MUX"], ["g"]),
+        )
+        self.assertIn("missing required blocks", rejected[0].text)
+        self.assertIn("missing required context vars", rejected[0].text)
+
+        accepted = await server.xcos_submit_phase(
+            workflow_id,
+            "phase2_architecture",
+            build_phase2_content(["MUX", "BARXY", "CMSCOPE"], ["g", "L"]),
+        )
+        accepted_payload = json.loads(accepted[0].text)
+        self.assertEqual(
+            accepted_payload["workflow"]["phases"]["phase2_architecture"]["status"],
+            "approved",
+        )
+
+    async def test_xcos_set_context_injects_top_level_context(self):
+        session_id = await self.start_session()
+        set_response = await server.xcos_set_context(session_id, ["g=10", "L=1", "theta0=0"])
+        set_payload = json.loads(set_response[0].text)
+
+        self.assertEqual(set_payload["context_line_count"], 3)
+
+        xml_response = await server.xcos_get_draft_xml(session_id, pretty_print=True)
+        xml_text = xml_response[0].text
+        self.assertIn('<Array as="context" scilabClass="String[]">', xml_text)
+        self.assertIn('value="g=10"', xml_text)
+        self.assertIn('value="theta0=0"', xml_text)
+
+    async def test_start_draft_inherits_required_context_lines(self):
+        create_response = await server.xcos_create_workflow(
+            "Pendulum with MUX and g=10, L=2, theta0=0, omega0=0",
+            autopilot=True,
+        )
+        create_payload = json.loads(create_response[0].text)
+        workflow_id = create_payload["workflow"]["workflow_id"]
+        self.created_workflows.append(workflow_id)
+
+        await server.xcos_submit_phase(workflow_id, "phase1_math_model", "Math derivation")
+        await server.xcos_submit_phase(
+            workflow_id,
+            "phase2_architecture",
+            build_phase2_content(["MUX"], ["g", "L", "theta0", "omega0"]),
+        )
+
+        draft_response = await server.xcos_start_draft(workflow_id=workflow_id)
+        draft_payload = json.loads(draft_response[0].text)
+        session_id = draft_payload["session_id"]
+        self.created_sessions.append(session_id)
+
+        xml_response = await server.xcos_get_draft_xml(session_id, pretty_print=True)
+        xml_text = xml_response[0].text
+        self.assertIn('value="g=10"', xml_text)
+        self.assertIn('value="L=2"', xml_text)
+        self.assertIn('value="omega0=0"', xml_text)
+
+    def test_normalize_fanout_to_split_blocks_inserts_explicit_split(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<XcosDiagram background="-1" gridEnabled="1" title="Test">
+  <Array as="context" scilabClass="String[]"></Array>
+  <mxGraphModel as="model">
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <BasicBlock id="src" parent="0:2:0" interfaceFunctionName="CONST_m">
+        <mxGeometry as="geometry" x="0" y="0" width="40" height="40"/>
+      </BasicBlock>
+      <ExplicitOutputPort id="src:out" parent="src" ordering="1"/>
+      <BasicBlock id="dst1" parent="0:2:0" interfaceFunctionName="GAINBLK_f">
+        <mxGeometry as="geometry" x="100" y="0" width="40" height="40"/>
+      </BasicBlock>
+      <ExplicitInputPort id="dst1:in" parent="dst1" ordering="1"/>
+      <BasicBlock id="dst2" parent="0:2:0" interfaceFunctionName="GAINBLK_f">
+        <mxGeometry as="geometry" x="100" y="100" width="40" height="40"/>
+      </BasicBlock>
+      <ExplicitInputPort id="dst2:in" parent="dst2" ordering="1"/>
+      <ExplicitLink id="l1" parent="0:2:0" source="src:out" target="dst1:in" style="" value=""><mxGeometry as="geometry"/></ExplicitLink>
+      <ExplicitLink id="l2" parent="0:2:0" source="src:out" target="dst2:in" style="" value=""><mxGeometry as="geometry"/></ExplicitLink>
+    </root>
+  </mxGraphModel>
+</XcosDiagram>"""
+        tree = server.etree.fromstring(xml.encode("utf-8"), server.etree.XMLParser(remove_blank_text=True))
+
+        normalization = server.normalize_fanout_to_split_blocks(tree)
+        validation = server.validate_diagram_structure(tree, auto_fixed=False)
+
+        self.assertTrue(normalization["normalized"])
+        self.assertIn("SPLIT_f", normalization["warnings"][0])
+        self.assertTrue(validation["success"])
+        self.assertEqual(len(tree.xpath("//SplitBlock[@interfaceFunctionName='SPLIT_f']")), 1)
+
+    def test_normalize_fanout_to_split_blocks_inserts_event_split(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<XcosDiagram background="-1" gridEnabled="1" title="Event Test">
+  <Array as="context" scilabClass="String[]"></Array>
+  <mxGraphModel as="model">
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <BasicBlock id="clk" parent="0:2:0" interfaceFunctionName="CLOCK_c">
+        <mxGeometry as="geometry" x="0" y="0" width="40" height="40"/>
+      </BasicBlock>
+      <CommandPort id="clk:cmd" parent="clk" ordering="1"/>
+      <BasicBlock id="scope1" parent="0:2:0" interfaceFunctionName="CMSCOPE">
+        <mxGeometry as="geometry" x="120" y="0" width="40" height="40"/>
+      </BasicBlock>
+      <ControlPort id="scope1:ctrl" parent="scope1" ordering="1"/>
+      <BasicBlock id="scope2" parent="0:2:0" interfaceFunctionName="BARXY">
+        <mxGeometry as="geometry" x="120" y="100" width="40" height="40"/>
+      </BasicBlock>
+      <ControlPort id="scope2:ctrl" parent="scope2" ordering="1"/>
+      <CommandControlLink id="e1" parent="0:2:0" source="clk:cmd" target="scope1:ctrl" style="" value=""><mxGeometry as="geometry"/></CommandControlLink>
+      <CommandControlLink id="e2" parent="0:2:0" source="clk:cmd" target="scope2:ctrl" style="" value=""><mxGeometry as="geometry"/></CommandControlLink>
+    </root>
+  </mxGraphModel>
+</XcosDiagram>"""
+        tree = server.etree.fromstring(xml.encode("utf-8"), server.etree.XMLParser(remove_blank_text=True))
+
+        normalization = server.normalize_fanout_to_split_blocks(tree)
+        validation = server.validate_diagram_structure(tree, auto_fixed=False)
+
+        self.assertTrue(normalization["normalized"])
+        self.assertIn("CLKSPLIT_f", normalization["warnings"][0])
+        self.assertTrue(validation["success"])
+        self.assertEqual(len(tree.xpath("//SplitBlock[@interfaceFunctionName='CLKSPLIT_f']")), 1)
 
     async def test_persistence_hydrates_workflow_and_draft_state(self):
         workflow = server.create_workflow_session("persistent workflow")

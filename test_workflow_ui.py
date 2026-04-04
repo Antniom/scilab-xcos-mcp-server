@@ -6,6 +6,17 @@ import unittest
 import server
 
 
+def build_phase2_content(blocks, context_vars=None):
+    manifest = {
+        "blocks": blocks,
+        "links": [],
+        "context_vars": context_vars or [],
+        "omissions": [],
+        "synthetic_blocks_planned": [],
+    }
+    return "Blocks planned.\n```json\n" + json.dumps(manifest) + "\n```"
+
+
 class WorkflowUiTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.tempdir = tempfile.TemporaryDirectory()
@@ -74,7 +85,7 @@ class WorkflowUiTests(unittest.IsolatedAsyncioTestCase):
         phase2_response = await server.xcos_submit_phase(
             workflow_id,
             "phase2_architecture",
-            "Blocks: SUM_f -> PID -> plant -> CSCOPE with SPLIT_f on the feedback branch.",
+            build_phase2_content(["PID", "SUM_f", "CSCOPE", "SPLIT_f"]),
         )
         phase2_payload = json.loads(phase2_response[0].text)
         self.assertEqual(
@@ -95,6 +106,43 @@ class WorkflowUiTests(unittest.IsolatedAsyncioTestCase):
             workflow_payload["workflow"]["phases"]["phase3_implementation"]["status"],
             "in_progress",
         )
+
+    async def test_autopilot_auto_advances_reviewable_phases(self):
+        create_response = await server.xcos_create_workflow(
+            "Design a PID loop with SUM_f, CSCOPE, and Kp=1, Ki=2.",
+            autopilot=True,
+        )
+        create_payload = json.loads(create_response[0].text)
+        workflow_id = create_payload["workflow"]["workflow_id"]
+
+        self.assertEqual(create_payload["approval_required_phases"], [])
+        self.assertIn("auto-advance", create_payload["next_required_action"].lower())
+
+        phase1_response = await server.xcos_submit_phase(
+            workflow_id,
+            "phase1_math_model",
+            "Derived the transfer function G(s) = 1 / (s (s + 1)).",
+        )
+        phase1_payload = json.loads(phase1_response[0].text)
+        self.assertEqual(
+            phase1_payload["workflow"]["phases"]["phase1_math_model"]["status"],
+            "approved",
+        )
+
+        phase2_response = await server.xcos_submit_phase(
+            workflow_id,
+            "phase2_architecture",
+            build_phase2_content(["PID", "SUM_f", "CSCOPE"], ["Kp", "Ki"]),
+        )
+        phase2_payload = json.loads(phase2_response[0].text)
+        self.assertEqual(
+            phase2_payload["workflow"]["phases"]["phase2_architecture"]["status"],
+            "approved",
+        )
+
+        draft_response = await server.xcos_start_draft(workflow_id=workflow_id)
+        draft_payload = json.loads(draft_response[0].text)
+        self.assertEqual(draft_payload["workflow_id"], workflow_id)
 
     async def test_ui_resource_is_readable(self):
         resources = await server.handle_list_resources()

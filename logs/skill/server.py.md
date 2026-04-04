@@ -47,3 +47,10 @@
 - Session validation and commit/file-path payloads now include `/api/sessions/{session_id}/diagram.xcos` so clients can present a direct download link for the verified `.xcos` artifact.
 - **Files:** server.py, test_widgets.py, test_draft_workflow.py
 
+### 2026-04-04 15:00:00 UTC â€” Note
+- **Summary:** Added strict workflow fidelity contracts, persisted draft context, and validation-time fanout normalization
+- Workflows now persist `generation_requirements`, derived context lines, and optional `autopilot`; `xcos_create_workflow` rejects unsupported explicitly named blocks before Phase 2 begins.
+- Phase 2 submissions now require a fenced JSON manifest and fail closed when required blocks or context vars are omitted without explicit approved omissions.
+- Draft sessions now persist top-level context through `xcos_set_context`, automatically inherit required context lines from the linked workflow, and write them into `<Array as="context" scilabClass="String[]">`.
+- Validation now rewrites explicit and event fan-out through synthetic `SPLIT_f` and `CLKSPLIT_f` blocks before final checks, then reports the normalization back in validation payloads.
+- **Files:** server.py, test_draft_workflow.py, test_workflow_ui.py
