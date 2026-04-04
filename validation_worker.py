@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
 
 import server
@@ -27,6 +27,7 @@ class WorkerJob:
     finished_at: str | None = None
     result: dict | None = None
     error: str | None = None
+    progress: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -39,6 +40,7 @@ class WorkerJob:
             "timeout_seconds": self.timeout_seconds,
             "result": self.result,
             "error": self.error,
+            "progress": server.snapshot_validation_progress_tracker(self.progress),
         }
 
 
@@ -65,6 +67,8 @@ async def run_worker_job(job_id: str, xml_content: str, validation_profile: str,
     job.status = "running"
     job.started_at = server.now_iso()
     progress_tracker = server.create_validation_progress_tracker(validation_profile)
+    server.update_validation_progress_tracker(progress_tracker, validator_phase="worker-verification-started")
+    job.progress = progress_tracker
     try:
         result = await asyncio.wait_for(
             server._run_verification_local(
@@ -109,6 +113,14 @@ async def http_healthz(_: Request):
             "role": "validation_worker",
             "timestamp": server.now_iso(),
         }
+    )
+
+
+async def http_root(_: Request):
+    return HTMLResponse(
+        "<html><body><h1>Xcos Validation Worker</h1>"
+        "<p>Worker is running. Use <code>/healthz</code>, <code>/validate</code>, and <code>/jobs/{job_id}</code>.</p>"
+        "</body></html>"
     )
 
 
@@ -177,6 +189,7 @@ def build_app() -> Starlette:
     return Starlette(
         debug=False,
         routes=[
+            Route("/", http_root, methods=["GET"]),
             Route("/healthz", http_healthz, methods=["GET"]),
             Route("/validate", http_create_validation_job, methods=["POST"]),
             Route("/jobs/{job_id:str}", http_get_validation_job, methods=["GET"]),

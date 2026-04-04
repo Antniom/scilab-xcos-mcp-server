@@ -60,6 +60,7 @@ class ValidationWorkerTests(unittest.IsolatedAsyncioTestCase):
             job.result["scilab_stage_trace"][-1],
             {"stage": "SCICOS_SIMULATE", "status": "BEGIN"},
         )
+        self.assertEqual(job.to_dict()["progress"]["validator_phase"], "scilab-poll-fallback")
 
 
 if __name__ == "__main__":

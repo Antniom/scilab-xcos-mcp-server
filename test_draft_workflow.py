@@ -789,6 +789,11 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
                 "created_at": "2026-04-04T00:00:00",
                 "started_at": "2026-04-04T00:00:01",
                 "finished_at": "2026-04-04T00:11:45",
+                "progress": {
+                    "validator_phase": "scilab-poll-fallback",
+                    "scilab_active_stage": "SCICOS_SIMULATE",
+                    "scilab_last_completed_stage": "VALIDATE_LINK_CONNECTIVITY",
+                },
                 "result": {
                     "success": False,
                     "origin": "validation-worker",
@@ -820,6 +825,8 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(posted_payloads[0][1]["timeout_seconds"], 705.0)
         self.assertEqual(posted_payloads[0][3], "secret-token")
         self.assertFalse(result["success"])
+        self.assertEqual(result["validator_phase"], "scilab-poll-fallback")
+        self.assertEqual(result["scilab_active_stage"], "SCICOS_SIMULATE")
         self.assertEqual(result["remote_worker"]["timeout_seconds"], 705.0)
 
     async def test_xcos_start_validation_uses_configured_timeout_by_default(self):

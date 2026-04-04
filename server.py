@@ -47,6 +47,7 @@ HOSTED_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 720.0
 DEFAULT_VALIDATION_TIMEOUT_SECONDS = LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
 DEFAULT_VALIDATION_WORKER_POLL_INTERVAL_SECONDS = 2.0
+DEFAULT_VALIDATION_WORKER_MAX_POLL_INTERVAL_SECONDS = 10.0
 REMOTE_VALIDATION_WORKER_RESULT_MARGIN_SECONDS = 15.0
 VALIDATION_PROGRESS_UNSET = object()
 VALIDATION_PROFILE_FULL_RUNTIME = "full_runtime"
@@ -2517,10 +2518,21 @@ def get_validation_worker_token() -> str:
 
 
 def get_validation_worker_poll_interval_seconds() -> float:
-    return get_positive_timeout_env(
+    configured = get_positive_timeout_env(
         "XCOS_VALIDATION_WORKER_POLL_INTERVAL_SECONDS",
         DEFAULT_VALIDATION_WORKER_POLL_INTERVAL_SECONDS,
     )
+    # Guardrail: very small poll intervals generate excessive worker traffic/logs
+    # on long-running full-runtime validations in hosted environments.
+    return max(1.0, configured)
+
+
+def get_validation_worker_max_poll_interval_seconds() -> float:
+    configured = get_positive_timeout_env(
+        "XCOS_VALIDATION_WORKER_MAX_POLL_INTERVAL_SECONDS",
+        DEFAULT_VALIDATION_WORKER_MAX_POLL_INTERVAL_SECONDS,
+    )
+    return max(get_validation_worker_poll_interval_seconds(), configured)
 
 
 def get_remote_validation_worker_timeout_seconds(timeout_seconds: float) -> float:
@@ -3589,8 +3601,11 @@ async def run_remote_validation_worker(
     if not job_id:
         raise RuntimeError(f"Validation worker did not return a job_id: {create_payload}")
 
-    poll_interval_seconds = get_validation_worker_poll_interval_seconds()
+    base_poll_interval_seconds = get_validation_worker_poll_interval_seconds()
+    max_poll_interval_seconds = get_validation_worker_max_poll_interval_seconds()
+    poll_interval_seconds = base_poll_interval_seconds
     deadline = asyncio.get_running_loop().time() + timeout_seconds
+    latest_progress = None
     while True:
         if asyncio.get_running_loop().time() > deadline:
             raise TimeoutError(
@@ -3603,7 +3618,10 @@ async def run_remote_validation_worker(
             request_timeout_seconds,
             token,
         )
+        if isinstance(status_payload.get("progress"), dict):
+            latest_progress = status_payload.get("progress")
         if status_payload.get("status") in {"queued", "running"}:
+            poll_interval_seconds = min(max_poll_interval_seconds, poll_interval_seconds * 1.25)
             continue
 
         result = status_payload.get("result")
@@ -3612,6 +3630,19 @@ async def run_remote_validation_worker(
 
         result = dict(result)
         result["validation_profile"] = normalize_validation_profile(result.get("validation_profile"))
+        if isinstance(latest_progress, dict):
+            if latest_progress.get("validator_phase") and "validator_phase" not in result:
+                result["validator_phase"] = latest_progress.get("validator_phase")
+            if latest_progress.get("poll_task_id") and "poll_task_id" not in result:
+                result["poll_task_id"] = latest_progress.get("poll_task_id")
+            if latest_progress.get("scilab_stage_trace") and not result.get("scilab_stage_trace"):
+                result["scilab_stage_trace"] = [
+                    dict(item) for item in latest_progress.get("scilab_stage_trace") or []
+                ]
+            if latest_progress.get("scilab_active_stage") and not result.get("scilab_active_stage"):
+                result["scilab_active_stage"] = latest_progress.get("scilab_active_stage")
+            if latest_progress.get("scilab_last_completed_stage") and not result.get("scilab_last_completed_stage"):
+                result["scilab_last_completed_stage"] = latest_progress.get("scilab_last_completed_stage")
         result["remote_worker"] = {
             "url": worker_url,
             "job_id": job_id,
@@ -3620,6 +3651,7 @@ async def run_remote_validation_worker(
             "created_at": status_payload.get("created_at"),
             "started_at": status_payload.get("started_at"),
             "finished_at": status_payload.get("finished_at"),
+            "progress": latest_progress,
         }
         return result
 
