@@ -1192,10 +1192,24 @@ def parse_mcp_text_json_response(response):
         return response
     if not response:
         raise ValueError("Empty response")
-    text = response[0].text
-    if text.startswith("Error:"):
-        raise ValueError(text[6:].strip())
-    return json.loads(text)
+    last_text = None
+    for item in response:
+        text = getattr(item, "text", "")
+        if not isinstance(text, str):
+            continue
+        stripped = text.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("Error:"):
+            raise ValueError(stripped[6:].strip())
+        try:
+            return json.loads(stripped)
+        except json.JSONDecodeError:
+            last_text = stripped
+            continue
+    if last_text is not None:
+        raise ValueError(f"Response did not contain JSON text. First non-JSON item: {last_text[:200]}")
+    raise ValueError("Response did not contain text content")
 
 
 def get_session_dir(session_id: str) -> str:
@@ -1499,7 +1513,8 @@ def resolve_windows_scilab_from_registry_file() -> str | None:
     if not os.path.exists(path_file):
         return None
 
-    raw_root = open(path_file, "r", encoding="utf-8").read().strip()
+    with open(path_file, "r", encoding="utf-8") as f:
+        raw_root = f.read().strip()
     root = os.path.abspath(os.path.join(BASE_DIR, raw_root))
     candidates = [
         os.path.join(root, "bin", "WScilex-cli.exe"),
@@ -2470,6 +2485,22 @@ async def xcos_create_workflow(problem_statement: str):
         "status": "success",
         "workflow_id": workflow.workflow_id,
         "workflow": workflow.to_dict(),
+        "phase_order": WORKFLOW_PHASE_ORDER,
+        "approval_required_phases": [
+            phase_key for phase_key in WORKFLOW_PHASE_ORDER
+            if phase_key in REVIEWABLE_PHASES
+        ],
+        "phase_start_requirements": {
+            "phase3_implementation": {
+                "tool": "xcos_start_draft",
+                "requires_approved_phases": WORKFLOW_PHASE_ORDER[:2],
+                "message": "Phase 2 must be approved before Phase 3 implementation can start.",
+            }
+        },
+        "next_required_action": (
+            f"Submit {WORKFLOW_PHASE_LABELS[workflow.current_phase]} and wait for approval "
+            "before starting implementation."
+        ),
     })
 
 
@@ -2693,9 +2724,14 @@ async def xcos_get_block_catalogue_widget(category: str = None):
             except Exception:
                 pass
                 
+    categories = []
     if category:
-        cat_lower = category.lower()
-        blocks = [b for b in blocks if cat_lower in b.get("category", "").lower()]
+        categories = [part.strip() for part in category.split(",") if part.strip()]
+        lowered_categories = [part.lower() for part in categories]
+        blocks = [
+            b for b in blocks
+            if any(cat in b.get("category", "").lower() for cat in lowered_categories)
+        ]
         
     formatted_blocks = []
     for b in blocks:
@@ -2712,6 +2748,7 @@ async def xcos_get_block_catalogue_widget(category: str = None):
         "widget_type": "catalogue",
         "payload": {
             "category": category,
+            "categories": categories,
             "blocks": formatted_blocks
         }
     })
@@ -3035,8 +3072,8 @@ async def xcos_get_topology_widget(session_id: str):
 
     try:
         svg_out, block_count, link_count = _generate_topology_svg(session_id)
-        
-        json_payload = json.dumps({
+
+        payload = {
             "widget_type": "topology",
             "payload": {
                 "session_id": session_id,
@@ -3044,8 +3081,8 @@ async def xcos_get_topology_widget(session_id: str):
                 "link_count": link_count,
                 "svg": svg_out
             }
-        })
-        
+        }
+
         markdown_str = f"""### Xcos Topology Visual
 
 ![Topology]({base_url}/api/topology/{session_id}/svg)
@@ -3053,10 +3090,10 @@ async def xcos_get_topology_widget(session_id: str):
 [Open Interactive UI]({base_url}/workflow-ui/)
 
 """
-        
+
         return [
+            mcp_types.TextContent(type="text", text=json.dumps(payload, indent=2)),
             mcp_types.TextContent(type="text", text=markdown_str),
-            mcp_types.TextContent(type="text", text=json_payload)
         ]
     except Exception as e:
         return make_json_response({
@@ -3236,6 +3273,7 @@ async def xcos_list_sessions():
 async def xcos_add_blocks(session_id: str, blocks_xml: str):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
+    before_counts = summarize_draft(state.drafts[session_id])
     state.drafts[session_id].add_blocks(blocks_xml)
     workflow_id = state.draft_to_workflow.get(session_id)
     if workflow_id and workflow_id in state.workflows:
@@ -3245,11 +3283,20 @@ async def xcos_add_blocks(session_id: str, blocks_xml: str):
         workflow.phases["phase3_implementation"].status = "in_progress"
         persist_workflow_session(workflow_id)
     persist_draft_session(session_id)
-    return make_text_response(f"Successfully added blocks to session {session_id}")
+    after_counts = summarize_draft(state.drafts[session_id])
+    return make_json_response({
+        "status": "success",
+        "session_id": session_id,
+        "message": f"Successfully added blocks to session {session_id}",
+        "added_block_count": after_counts["block_count"] - before_counts["block_count"],
+        "block_count": after_counts["block_count"],
+        "link_count": after_counts["link_count"],
+    })
 
 async def xcos_add_links(session_id: str, links_xml: str):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
+    before_counts = summarize_draft(state.drafts[session_id])
     state.drafts[session_id].add_links(links_xml)
     workflow_id = state.draft_to_workflow.get(session_id)
     if workflow_id and workflow_id in state.workflows:
@@ -3259,7 +3306,15 @@ async def xcos_add_links(session_id: str, links_xml: str):
         workflow.phases["phase3_implementation"].status = "in_progress"
         persist_workflow_session(workflow_id)
     persist_draft_session(session_id)
-    return make_text_response(f"Successfully added links to session {session_id}")
+    after_counts = summarize_draft(state.drafts[session_id])
+    return make_json_response({
+        "status": "success",
+        "session_id": session_id,
+        "message": f"Successfully added links to session {session_id}",
+        "added_link_count": after_counts["link_count"] - before_counts["link_count"],
+        "block_count": after_counts["block_count"],
+        "link_count": after_counts["link_count"],
+    })
 
 async def _legacy_xcos_verify_draft(session_id: str):
     if session_id not in state.drafts:
@@ -3634,7 +3689,7 @@ async def http_api_start_draft(request: Request) -> Response:
 async def http_api_topology_svg(request: Request) -> Response:
     session_id = request.path_params.get("session_id")
     try:
-        svg_out, block_count, link_count = generate_topology_svg(session_id)
+        svg_out, _, _ = _generate_topology_svg(session_id)
         return Response(svg_out, media_type="image/svg+xml")
     except Exception as e:
         return http_json({"error": str(e)}, status_code=400)
@@ -4306,9 +4361,17 @@ async def handle_call_tool(name: str, arguments: dict | None):
             msg += f" Registered {payload.get('phase_count')} phases."
         return make_structured_tool_result(msg, payload)
     elif name == "xcos_add_blocks":
-        return await xcos_add_blocks(arguments["session_id"], arguments["blocks_xml"])
+        payload = parse_mcp_text_json_response(await xcos_add_blocks(arguments["session_id"], arguments["blocks_xml"]))
+        return make_structured_tool_result(
+            f"Added {payload.get('added_block_count', 0)} block(s) to session {arguments['session_id']}.",
+            payload,
+        )
     elif name == "xcos_add_links":
-        return await xcos_add_links(arguments["session_id"], arguments["links_xml"])
+        payload = parse_mcp_text_json_response(await xcos_add_links(arguments["session_id"], arguments["links_xml"]))
+        return make_structured_tool_result(
+            f"Added {payload.get('added_link_count', 0)} link(s) to session {arguments['session_id']}.",
+            payload,
+        )
     elif name == "xcos_start_validation":
         payload = parse_mcp_text_json_response(await xcos_start_validation(
             arguments["session_id"],

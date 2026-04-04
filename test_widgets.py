@@ -63,20 +63,47 @@ class WidgetTests(unittest.IsolatedAsyncioTestCase):
         start_payload = json.loads(start_response[0].text)
         self.assertTrue(start_payload["created"])
 
-        await server.xcos_add_blocks("widget-session", BLOCKS_XML)
+        add_blocks_response = await server.xcos_add_blocks("widget-session", BLOCKS_XML)
+        add_blocks_payload = json.loads(add_blocks_response[0].text)
+        self.assertEqual(add_blocks_payload["added_block_count"], 2)
+        self.assertEqual(add_blocks_payload["block_count"], 2)
+        self.assertEqual(add_blocks_payload["link_count"], 0)
+
         blocks_response = await server.xcos_get_topology_widget("widget-session")
         blocks_payload = json.loads(blocks_response[0].text)
         self.assertEqual(blocks_payload["payload"]["session_id"], "widget-session")
         self.assertEqual(blocks_payload["payload"]["block_count"], 2)
         self.assertEqual(blocks_payload["payload"]["link_count"], 0)
         self.assertIn("<svg", blocks_payload["payload"]["svg"])
+        self.assertIn("/api/topology/widget-session/svg", blocks_response[1].text)
 
-        await server.xcos_add_links("widget-session", LINKS_XML)
+        add_links_response = await server.xcos_add_links("widget-session", LINKS_XML)
+        add_links_payload = json.loads(add_links_response[0].text)
+        self.assertEqual(add_links_payload["added_link_count"], 1)
+        self.assertEqual(add_links_payload["block_count"], 2)
+        self.assertEqual(add_links_payload["link_count"], 1)
+
         links_response = await server.xcos_get_topology_widget("widget-session")
         links_payload = json.loads(links_response[0].text)
         self.assertEqual(links_payload["payload"]["block_count"], 2)
         self.assertEqual(links_payload["payload"]["link_count"], 1)
         self.assertIn('marker-end="url(#arrow)"', links_payload["payload"]["svg"])
+
+    async def test_parse_mcp_text_json_response_scans_for_json_text(self):
+        response = [
+            server.mcp_types.TextContent(type="text", text="Summary only"),
+            server.mcp_types.TextContent(type="text", text='{"ok": true}')
+        ]
+        payload = server.parse_mcp_text_json_response(response)
+        self.assertTrue(payload["ok"])
+
+    async def test_block_catalogue_widget_accepts_multiple_categories(self):
+        response = await server.xcos_get_block_catalogue_widget("Sources, Continuous")
+        payload = json.loads(response[0].text)
+        self.assertEqual(payload["payload"]["categories"], ["Sources", "Continuous"])
+        names = {block["name"] for block in payload["payload"]["blocks"]}
+        self.assertIn("CONST_m", names)
+        self.assertIn("INTEGRAL_m", names)
 
 
 if __name__ == "__main__":

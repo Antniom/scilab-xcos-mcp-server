@@ -7,10 +7,12 @@
     "DERIV"
   ],
   "criticalRules": [
-    "Uses polynomial representation in exprs (numerator/denominator)",
-    "Converts to state-space internally (4 realParameters)",
-    "Time-dependent but not directly input-dependent (internal dynamics)",
-    "Standard SISO transfer function block"
+    "MUST remain a continuous BasicBlock with blockType='c', simulationFunctionName='csslti4', simulationFunctionType='C_OR_FORTRAN', dependsOnU='0', and dependsOnT='1'.",
+    "exprs MUST be a ScilabString with height=2 and width=1: line 0 is the numerator polynomial, line 1 is the denominator polynomial.",
+    "Transfer function must be proper: degree(numerator) <= degree(denominator). Scilab rejects improper transfer functions for CLR.",
+    "realParameters do NOT store the raw polynomial coefficients. They store the flattened state-space data [A(:); B(:); C(:); D] generated from the transfer function.",
+    "state vector length must match the system order implied by the state-space conversion. The default first-order example uses one state and 4 realParameters.",
+    "Geometry in the reference XML is 60x60 and both explicit ports include rotation=0 in their style; preserve the reference port structure when cloning."
   ],
   "description": "Continuous Linear System Representation - Transfer function block with polynomial coefficients",
   "anomalies": [

@@ -50,6 +50,11 @@ class WorkflowUiTests(unittest.IsolatedAsyncioTestCase):
         create_response = await server.xcos_create_workflow("Design a PID loop for a DC motor.")
         create_payload = json.loads(create_response[0].text)
         workflow_id = create_payload["workflow"]["workflow_id"]
+        self.assertEqual(
+            create_payload["phase_start_requirements"]["phase3_implementation"]["requires_approved_phases"],
+            ["phase1_math_model", "phase2_architecture"],
+        )
+        self.assertIn("approval", create_payload["next_required_action"].lower())
 
         draft_error = await server.xcos_start_draft(workflow_id=workflow_id)
         self.assertIn("Phase 2 must be approved", draft_error[0].text)
