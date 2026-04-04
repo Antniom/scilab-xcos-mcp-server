@@ -60,9 +60,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a remote Hugging Face MCP smoke test.")
     parser.add_argument("--mcp-url", default=DEFAULT_MCP_URL)
     parser.add_argument("--fixture-path", default=DEFAULT_FIXTURE)
-    parser.add_argument("--verify-timeout-seconds", type=float, default=180.0)
+    parser.add_argument("--verify-timeout-seconds", type=float, default=360.0)
     parser.add_argument("--poll-interval-seconds", type=float, default=2.0)
-    parser.add_argument("--strict-runtime", action="store_true")
+    parser.add_argument("--allow-degraded-runtime", action="store_true")
     return parser.parse_args()
 
 
@@ -180,14 +180,21 @@ async def wait_for_validation(
         return status
 
 
-def is_degraded_runtime_timeout(validation: dict[str, Any], strict_runtime: bool) -> bool:
-    if strict_runtime:
+def is_degraded_runtime_timeout(validation: dict[str, Any], allow_degraded_runtime: bool) -> bool:
+    if not allow_degraded_runtime:
         return False
     if validation.get("code") != "SCILAB_RUNTIME_TIMEOUT":
         return False
     debug = validation.get("debug") or {}
     structural = debug.get("structural_check") or {}
     return bool(structural.get("success"))
+
+
+def ensure_validation_succeeded(validation: dict[str, Any], allow_degraded_runtime: bool) -> bool:
+    degraded_runtime_timeout = is_degraded_runtime_timeout(validation, allow_degraded_runtime)
+    if not validation.get("success") and not degraded_runtime_timeout:
+        raise RuntimeError(json.dumps(validation, indent=2))
+    return degraded_runtime_timeout
 
 
 async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
@@ -280,9 +287,7 @@ async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
                 args.verify_timeout_seconds,
                 args.poll_interval_seconds,
             )
-            degraded_runtime_timeout = is_degraded_runtime_timeout(validation, args.strict_runtime)
-            if not validation.get("success") and not degraded_runtime_timeout:
-                raise RuntimeError(json.dumps(validation, indent=2))
+            degraded_runtime_timeout = ensure_validation_succeeded(validation, args.allow_degraded_runtime)
 
             file_info = await call_tool_json(session, "xcos_get_file_path", {"session_id": session_id})
             file_content = await call_tool_json(

@@ -33,6 +33,8 @@ CONST_BLOCK_XML = """
 <ExplicitOutputPort id="const1:out" parent="const1" ordering="1" dataType="REAL_MATRIX" dataColumns="1" dataLines="1" initialState="0.0" style="ExplicitOutputPort;align=right;verticalAlign=middle;spacing=10.0" value=""/>
 """.strip()
 
+MINIMAL_DIAGRAM_XML = "<XcosDiagram><mxGraphModel><root /></mxGraphModel></XcosDiagram>"
+
 
 def build_phase2_content(blocks, context_vars, omissions=None, synthetic_blocks=None):
     manifest = {
@@ -536,6 +538,143 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         reloaded_payload = json.loads(reloaded[0].text)
         self.assertEqual(reloaded_payload["status"], "succeeded")
         self.assertEqual(reloaded_payload["task_id"], "slow-task")
+
+    def test_validation_timeout_config_defaults_and_env_overrides(self):
+        with patch.object(server, "detect_validation_mode", return_value="poll"), patch.object(server.os, "name", "posix"):
+            self.assertEqual(server.get_configured_subprocess_timeout_seconds(), 90.0)
+            self.assertEqual(server.get_configured_poll_timeout_seconds(), 120.0)
+            self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 120.0)
+
+        with patch.object(server, "detect_validation_mode", return_value="subprocess"), patch.object(server.os, "name", "posix"):
+            self.assertEqual(server.get_configured_subprocess_timeout_seconds(), 180.0)
+            self.assertEqual(server.get_configured_poll_timeout_seconds(), 180.0)
+            self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 240.0)
+
+        with (
+            patch.dict(
+                server.os.environ,
+                {
+                    "XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS": "222",
+                    "XCOS_POLL_VALIDATION_TIMEOUT_SECONDS": "333",
+                    "XCOS_VALIDATION_JOB_TIMEOUT_SECONDS": "444",
+                },
+                clear=False,
+            ),
+            patch.object(server, "detect_validation_mode", return_value="subprocess"),
+            patch.object(server.os, "name", "posix"),
+        ):
+            self.assertEqual(server.get_configured_subprocess_timeout_seconds(), 222.0)
+            self.assertEqual(server.get_configured_poll_timeout_seconds(), 333.0)
+            self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 444.0)
+
+    def test_should_retry_with_poll_fallback_on_runtime_timeout(self):
+        self.assertTrue(
+            server.should_retry_with_poll_fallback(
+                {
+                    "success": False,
+                    "error": "Structural validation passed, but Scilab runtime validation timed out after 180 seconds.",
+                }
+            )
+        )
+        self.assertFalse(
+            server.should_retry_with_poll_fallback(
+                {"success": False, "error": "Structural validation passed, but Scilab reported a parameter mismatch."}
+            )
+        )
+
+    async def test_run_verification_retries_poll_fallback_after_subprocess_timeout_and_returns_success(self):
+        subprocess_result = {
+            "success": False,
+            "origin": "scilab-subprocess",
+            "error": "Structural validation passed, but Scilab runtime validation timed out after 180 seconds.",
+        }
+        poll_result = {
+            "success": True,
+            "origin": "scilab-poll-fallback",
+            "warnings": ["poll worker warning"],
+            "scilab_verdict": "Scilab import and simulation passed via long-lived poll worker.",
+        }
+        python_result = {"success": True, "warnings": ["structural warning"]}
+
+        with (
+            patch.object(server, "detect_validation_mode", return_value="subprocess"),
+            patch.object(server, "auto_fix_mux_to_scalar", return_value=False),
+            patch.object(server, "normalize_fanout_to_split_blocks", return_value={"normalized": False, "warnings": ["fanout warning"]}),
+            patch.object(server, "validate_port_sizes", return_value=[]),
+            patch.object(server, "validate_diagram_structure", return_value=python_result),
+            patch.object(server, "run_headless_scilab_validation", AsyncMock(return_value=subprocess_result)),
+            patch.object(server, "run_poll_validation", AsyncMock(return_value=poll_result)),
+        ):
+            result = await server.run_verification(MINIMAL_DIAGRAM_XML)
+
+        self.assertTrue(result["success"])
+        self.assertTrue(result["fallback_used"])
+        self.assertEqual(result["subprocess_result"], subprocess_result)
+        self.assertEqual(result["poll_fallback_result"], poll_result)
+        self.assertIn("timed out", result["fallback_reason"].lower())
+        self.assertEqual(result["origin"], "hybrid (structural-python + scilab-subprocess + scilab-poll-fallback)")
+
+    async def test_run_verification_returns_poll_failure_as_top_level_after_subprocess_timeout(self):
+        subprocess_result = {
+            "success": False,
+            "origin": "scilab-subprocess",
+            "error": "Structural validation passed, but Scilab runtime validation timed out after 180 seconds.",
+        }
+        poll_result = {
+            "success": False,
+            "origin": "scilab-poll-fallback",
+            "error": "Scilab verification timed out for fallback-task after 180 seconds",
+            "file_path": os.path.join(self.tempdir.name, "fallback.xcos"),
+            "file_size_bytes": 1234,
+        }
+        python_result = {"success": True, "warnings": []}
+
+        with (
+            patch.object(server, "detect_validation_mode", return_value="subprocess"),
+            patch.object(server, "auto_fix_mux_to_scalar", return_value=False),
+            patch.object(server, "normalize_fanout_to_split_blocks", return_value={"normalized": False, "warnings": []}),
+            patch.object(server, "validate_port_sizes", return_value=[]),
+            patch.object(server, "validate_diagram_structure", return_value=python_result),
+            patch.object(server, "run_headless_scilab_validation", AsyncMock(return_value=subprocess_result)),
+            patch.object(server, "run_poll_validation", AsyncMock(return_value=poll_result)),
+        ):
+            result = await server.run_verification(MINIMAL_DIAGRAM_XML)
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["error"], poll_result["error"])
+        self.assertEqual(result["file_path"], poll_result["file_path"])
+        self.assertEqual(result["subprocess_result"], subprocess_result)
+        self.assertEqual(result["poll_fallback_result"], poll_result)
+        self.assertTrue(result["fallback_used"])
+        self.assertEqual(server.infer_validation_code(result), "SCILAB_RUNTIME_TIMEOUT")
+
+    async def test_xcos_start_validation_uses_configured_timeout_by_default(self):
+        session_id = await self.start_session()
+        with (
+            patch.object(server, "get_configured_validation_job_timeout_seconds", return_value=321.0),
+            patch.object(server, "_schedule_validation_job", return_value=None),
+        ):
+            response = await server.xcos_start_validation(session_id)
+
+        payload = json.loads(response[0].text)
+        self.assertEqual(payload["timeout_seconds"], 321.0)
+        self.assertEqual(server.state.validation_jobs[payload["job_id"]].timeout_seconds, 321.0)
+
+    async def test_xcos_verify_draft_uses_configured_timeout_by_default(self):
+        session_id = await self.start_session()
+        start_response = server.make_json_response({"job_id": "job-123", "status": "queued"})
+        status_response = server.make_json_response({"job_id": "job-123", "status": "queued"})
+
+        with (
+            patch.object(server, "get_configured_validation_job_timeout_seconds", return_value=654.0),
+            patch.object(server, "xcos_start_validation", AsyncMock(return_value=start_response)) as start_mock,
+            patch.object(server, "xcos_get_validation_status", AsyncMock(return_value=status_response)),
+        ):
+            response = await server.xcos_verify_draft(session_id)
+
+        payload = json.loads(response[0].text)
+        self.assertEqual(payload["status"], "queued")
+        start_mock.assert_awaited_once_with(session_id, 654.0)
 
     async def test_workflow_summary_view_omits_full_phase_content(self):
         workflow = server.create_workflow_session("compact workflow")

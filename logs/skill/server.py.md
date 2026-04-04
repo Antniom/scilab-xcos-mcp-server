@@ -61,3 +61,10 @@
 - Fidelity failures now append the accepted manifest schema and explicitly say when block objects contained no recognized block-name field, which makes the contract debuggable from the tool response.
 - Requirement derivation now treats all-uppercase ambiguous block names case-sensitively, so ordinary lowercase prose like `from the image` no longer injects a false required `FROM` block.
 - **Files:** server.py, test_draft_workflow.py
+
+### 2026-04-04 16:45:00 UTC - Fix
+- **Summary:** Hosted validation now uses larger timeouts, retries runtime timeouts through the poll worker, and treats remote smoke timeouts as real failures by default
+- Linux/Space subprocess validation now uses configurable hosted defaults of `180s` for the subprocess and poll fallback plus `240s` for async validation jobs, with env overrides for all three timeout budgets.
+- Poll fallback is no longer limited to premature EOF; subprocess runtime timeouts now trigger a single retry through the long-lived Scilab poll worker, and the returned payload keeps both `subprocess_result` and `poll_fallback_result`.
+- `tools/remote_hf_smoke_test.py` is now strict by default and only accepts degraded structural-only success when `--allow-degraded-runtime` is passed explicitly.
+- **Files:** server.py, tools/remote_hf_smoke_test.py, test_draft_workflow.py, test_remote_hf_smoke_test.py, README.md, DEPLOY_TO_HUGGINGFACE_SPACES.md

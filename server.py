@@ -35,7 +35,13 @@ POLL_WORKER_IDLE_SECONDS = 5.0
 POLL_WORKER_STARTUP_TIMEOUT_SECONDS = 20.0
 VALIDATION_CACHE_LIMIT = 64
 ASYNC_VALIDATION_BRIEF_WAIT_SECONDS = 1.0
-DEFAULT_VALIDATION_TIMEOUT_SECONDS = 120.0
+LOCAL_DEFAULT_SCILAB_SUBPROCESS_TIMEOUT_SECONDS = 90.0
+HOSTED_DEFAULT_SCILAB_SUBPROCESS_TIMEOUT_SECONDS = 180.0
+LOCAL_DEFAULT_POLL_VALIDATION_TIMEOUT_SECONDS = 120.0
+HOSTED_DEFAULT_POLL_VALIDATION_TIMEOUT_SECONDS = 180.0
+LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 120.0
+HOSTED_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 240.0
+DEFAULT_VALIDATION_TIMEOUT_SECONDS = LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
 
 # Shared State
@@ -857,7 +863,7 @@ class ValidationJob:
             created_at=payload.get("created_at", now_iso()),
             started_at=payload.get("started_at"),
             finished_at=payload.get("finished_at"),
-            timeout_seconds=float(payload.get("timeout_seconds", DEFAULT_VALIDATION_TIMEOUT_SECONDS)),
+            timeout_seconds=float(payload.get("timeout_seconds", get_configured_validation_job_timeout_seconds())),
             result=payload.get("result"),
             error=payload.get("error"),
         )
@@ -2433,6 +2439,48 @@ def detect_validation_mode() -> str:
     return "poll"
 
 
+def is_hosted_validation_runtime() -> bool:
+    return os.name != "nt" and detect_validation_mode() == "subprocess"
+
+
+def get_positive_timeout_env(name: str, default: float) -> float:
+    raw_value = os.environ.get(name)
+    if raw_value is None or not raw_value.strip():
+        return default
+    try:
+        value = float(raw_value)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+def get_configured_subprocess_timeout_seconds() -> float:
+    default = (
+        HOSTED_DEFAULT_SCILAB_SUBPROCESS_TIMEOUT_SECONDS
+        if is_hosted_validation_runtime()
+        else LOCAL_DEFAULT_SCILAB_SUBPROCESS_TIMEOUT_SECONDS
+    )
+    return get_positive_timeout_env("XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS", default)
+
+
+def get_configured_poll_timeout_seconds() -> float:
+    default = (
+        HOSTED_DEFAULT_POLL_VALIDATION_TIMEOUT_SECONDS
+        if is_hosted_validation_runtime()
+        else LOCAL_DEFAULT_POLL_VALIDATION_TIMEOUT_SECONDS
+    )
+    return get_positive_timeout_env("XCOS_POLL_VALIDATION_TIMEOUT_SECONDS", default)
+
+
+def get_configured_validation_job_timeout_seconds() -> float:
+    default = (
+        HOSTED_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
+        if is_hosted_validation_runtime()
+        else LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
+    )
+    return get_positive_timeout_env("XCOS_VALIDATION_JOB_TIMEOUT_SECONDS", default)
+
+
 def resolve_windows_scilab_from_registry_file() -> str | None:
     path_file = os.path.join(BASE_DIR, ".scilab_path")
     if not os.path.exists(path_file):
@@ -2825,11 +2873,12 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
     xvfb-run is not available (e.g. during local Windows testing with SCILAB_BIN
     set explicitly).
 
-    Timeout: 90 seconds.  Full Scilab stdout/stderr is captured and returned
+    Timeout is configurable. Full Scilab stdout/stderr is captured and returned
     on failure so the caller can debug without re-running manually.
     """
     scilab_bin = resolve_scilab_binary()
     memory_diag = build_xml_text_diagnostics(xml_content)
+    subprocess_timeout_seconds = get_configured_subprocess_timeout_seconds()
     if not scilab_bin:
         return {
             "success": False,
@@ -2879,7 +2928,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
     else:
         cmd = [scilab_bin] + scilab_args
     xml_diagnostics["subprocess_command"] = cmd
-    xml_diagnostics["timeout_seconds"] = 90.0
+    xml_diagnostics["timeout_seconds"] = subprocess_timeout_seconds
 
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -2895,7 +2944,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             },
         )
         try:
-            stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=90.0)
+            stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=subprocess_timeout_seconds)
         except asyncio.TimeoutError:
             try:
                 proc.kill()
@@ -2904,7 +2953,7 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             return {
                 "success": False,
                 "origin": "scilab-subprocess",
-                "error": "Structural validation passed, but Scilab runtime validation timed out after 90 seconds.",
+                "error": f"Structural validation passed, but Scilab runtime validation timed out after {subprocess_timeout_seconds:.0f} seconds.",
                 "auto_fixed_mux_to_scalar": auto_fixed,
                 "scilab_log": None,
                 "scilab_log_tail": None,
@@ -2972,8 +3021,27 @@ def should_retry_with_poll_fallback(scilab_result: dict) -> bool:
     lowered = error_text.lower()
     return (
         not scilab_result.get("success")
-        and ("premature end of file" in lowered or "fatal error" in lowered)
+        and (
+            "premature end of file" in lowered
+            or "fatal error" in lowered
+            or "timed out" in lowered
+            or "runtime timeout" in lowered
+        )
     )
+
+
+def describe_poll_fallback_reason(scilab_result: dict) -> str:
+    error_text = "\n".join([
+        str(scilab_result.get("error") or ""),
+        str(scilab_result.get("scilab_log") or ""),
+    ]).lower()
+    if "timed out" in error_text or "runtime timeout" in error_text:
+        return "Subprocess validator timed out; retried with long-lived Scilab poll worker."
+    if "premature end of file" in error_text:
+        return "Subprocess validator reported premature EOF; retried with long-lived Scilab poll worker."
+    if "fatal error" in error_text:
+        return "Subprocess validator reported a fatal error; retried with long-lived Scilab poll worker."
+    return "Subprocess validator failed in a fallback-eligible way; retried with long-lived Scilab poll worker."
 
 
 async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
@@ -2998,9 +3066,10 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
     state.results[task_id] = {"success": False, "error": "", "details": {}, "event": event}
 
     await state.task_queue.put({"task_id": task_id, "zcos_path": temp_path})
+    poll_timeout_seconds = get_configured_poll_timeout_seconds()
 
     try:
-        await asyncio.wait_for(event.wait(), timeout=120.0)
+        await asyncio.wait_for(event.wait(), timeout=poll_timeout_seconds)
         res = state.results.pop(task_id)
         result_payload = {
             "success": res["success"],
@@ -3030,7 +3099,7 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
             "task_id": task_id,
             "file_path": temp_meta["path"],
             "file_size_bytes": temp_meta["size_bytes"],
-            "error": f"Scilab verification timed out for {task_id}",
+            "error": f"Scilab verification timed out for {task_id} after {poll_timeout_seconds:.0f} seconds",
             "origin": "scilab-poll-fallback",
             "poll_worker": worker_state,
         }
@@ -3318,18 +3387,21 @@ async def run_verification(xml_content: str):
         poll_fallback_result = None
 
         if should_retry_with_poll_fallback(scilab_result):
+            fallback_reason = describe_poll_fallback_reason(scilab_result)
             poll_fallback_result = await run_poll_validation(xml_content, auto_fixed)
+            merged_warnings = (
+                (fanout_normalization.get("warnings") or [])
+                + (python_result.get("warnings") or [])
+                + (scilab_result.get("warnings") or [])
+                + (poll_fallback_result.get("warnings") or [])
+            )
             if poll_fallback_result.get("success"):
-                merged_warnings = (
-                    (fanout_normalization.get("warnings") or [])
-                    + (python_result.get("warnings") or [])
-                    + (poll_fallback_result.get("warnings") or [])
-                )
                 return {
                     **poll_fallback_result,
                     "fallback_used": True,
-                    "fallback_reason": "Subprocess validator reported premature EOF; retried with long-lived Scilab poll worker.",
+                    "fallback_reason": fallback_reason,
                     "subprocess_result": scilab_result,
+                    "poll_fallback_result": poll_fallback_result,
                     "fanout_normalization": fanout_normalization,
                     "structural_check": {
                         "success": python_result["success"],
@@ -3338,6 +3410,21 @@ async def run_verification(xml_content: str):
                     "warnings": merged_warnings if merged_warnings else None,
                     "origin": "hybrid (structural-python + scilab-subprocess + scilab-poll-fallback)",
                 }
+
+            return {
+                **poll_fallback_result,
+                "fallback_used": True,
+                "fallback_reason": fallback_reason,
+                "subprocess_result": scilab_result,
+                "poll_fallback_result": poll_fallback_result,
+                "fanout_normalization": fanout_normalization,
+                "structural_check": {
+                    "success": python_result["success"],
+                    "warnings": python_result.get("warnings"),
+                },
+                "warnings": merged_warnings if merged_warnings else None,
+                "origin": "hybrid (structural-python + scilab-subprocess + scilab-poll-fallback)",
+            }
 
         # Merge warnings from both stages
         merged_warnings = (
@@ -3359,7 +3446,7 @@ async def run_verification(xml_content: str):
         }
         if poll_fallback_result:
             result["fallback_used"] = True
-            result["fallback_reason"] = "Subprocess validator reported premature EOF; poll fallback did not clear the failure."
+            result["fallback_reason"] = describe_poll_fallback_reason(scilab_result)
             result["poll_fallback_result"] = poll_fallback_result
         return result
 
@@ -3451,10 +3538,12 @@ async def _run_validation_job(job_id: str):
         persist_validation_job(job_id)
 
 
-async def xcos_start_validation(session_id: str, timeout_seconds: float = DEFAULT_VALIDATION_TIMEOUT_SECONDS):
+async def xcos_start_validation(session_id: str, timeout_seconds: float | None = None):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
 
+    if timeout_seconds is None:
+        timeout_seconds = get_configured_validation_job_timeout_seconds()
     if timeout_seconds <= 0:
         return make_text_response("Error: timeout_seconds must be greater than 0")
 
@@ -4407,7 +4496,7 @@ async def xcos_verify_draft(session_id: str):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
     start_payload = parse_mcp_text_json_response(
-        await xcos_start_validation(session_id, DEFAULT_VALIDATION_TIMEOUT_SECONDS)
+        await xcos_start_validation(session_id, get_configured_validation_job_timeout_seconds())
     )
     job_id = start_payload["job_id"]
     task = state.validation_tasks.get(job_id)
@@ -5251,11 +5340,12 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             description=(
                 "Start asynchronous validation for a draft session. Use this when validation "
                 "may exceed stream limits, then poll xcos_get_validation_status until the "
-                "job reaches a terminal state."
+                "job reaches a terminal state. If timeout_seconds is omitted, the server "
+                "uses its configured validation-job timeout."
             ),
             inputSchema={"type": "object", "properties": {
                 "session_id": {"type": "string"},
-                "timeout_seconds": {"type": "number", "default": DEFAULT_VALIDATION_TIMEOUT_SECONDS}
+                "timeout_seconds": {"type": "number", "default": get_configured_validation_job_timeout_seconds()}
             }, "required": ["session_id"]},
         ),
         mcp_types.Tool(
@@ -5462,7 +5552,7 @@ async def handle_call_tool(name: str, arguments: dict | None):
     elif name == "xcos_start_validation":
         payload = parse_mcp_text_json_response(await xcos_start_validation(
             arguments["session_id"],
-            arguments.get("timeout_seconds", DEFAULT_VALIDATION_TIMEOUT_SECONDS),
+            arguments.get("timeout_seconds"),
         ))
         return make_structured_tool_result(
             f"Validation job {payload['job_id']} started for session {arguments['session_id']}.",

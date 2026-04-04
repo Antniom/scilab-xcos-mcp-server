@@ -26,6 +26,20 @@ The Space runs in hosted mode:
 
 Validation is performed headlessly by launching Scilab as a subprocess inside the container.
 
+Hosted timeout defaults:
+
+- subprocess validation: `180s`
+- poll fallback validation: `180s`
+- async validation jobs: `240s`
+
+Optional overrides:
+
+```text
+XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS=180
+XCOS_POLL_VALIDATION_TIMEOUT_SECONDS=180
+XCOS_VALIDATION_JOB_TIMEOUT_SECONDS=240
+```
+
 ## Deployment
 
 This repository is intended to be deployed as a Docker Space.
@@ -72,6 +86,14 @@ XCOS_DEBUG_TOOL_OUTPUT=1
 Then restart the Space.
 
 When enabled, `verify_xcos_xml` and `xcos_verify_draft` include a `debug` object in their payloads.
+
+## Remote Smoke Test
+
+`tools/remote_hf_smoke_test.py` is strict by default:
+
+- structural success alone is not enough
+- `SCILAB_RUNTIME_TIMEOUT` now fails the smoke test unless you explicitly pass `--allow-degraded-runtime`
+- the client-side wait budget defaults to `360s` to cover hosted validation plus fallback
 
 ## Notes
 

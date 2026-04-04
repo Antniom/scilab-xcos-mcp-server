@@ -18,6 +18,12 @@ The repository does not need to vendor the Scilab distribution.
 - `XCOS_SERVER_MODE=http`
 - `XCOS_VALIDATION_MODE=subprocess`
 
+Hosted validation defaults:
+
+- `XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS=180`
+- `XCOS_POLL_VALIDATION_TIMEOUT_SECONDS=180`
+- `XCOS_VALIDATION_JOB_TIMEOUT_SECONDS=240`
+
 ## Local Notes
 
 Local Windows development can still use `.scilab_path` or `SCILAB_BIN`.
@@ -59,8 +65,9 @@ That smoke test:
 - loads the pendulum `.xcos` fixture in chunked block and link batches
 - runs `xcos_verify_draft`
 - commits the verified phase when runtime validation succeeds
-- still returns success in the known Hugging Face case where structural validation passes but Scilab runtime validation times out, while surfacing that timeout in the output as `degraded_runtime_timeout=true`
-- checks that the session file is available even in the degraded timeout case
+- fails by default if hosted runtime validation still ends in `SCILAB_RUNTIME_TIMEOUT`
+- only allows degraded structural-only success when you explicitly pass `--allow-degraded-runtime`
+- checks that the session file is available when validation succeeds
 
 This avoids the large single-payload `verify_xcos_xml` transport failure seen on the Space by using chunked draft assembly instead.
 
@@ -71,4 +78,5 @@ Useful flags:
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestMcpUrl "https://<space>.hf.space/mcp"
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestFixturePath "C:\path\to\diagram.xcos"
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestDelaySeconds 300
+.\.venv\Scripts\python.exe .\tools\remote_hf_smoke_test.py --allow-degraded-runtime
 ```
