@@ -4161,6 +4161,65 @@ def build_compact_reference_payload(xml_text: str | None) -> dict | None:
     except Exception:
         return None
 
+
+def resolve_xcos_block_name(name: str) -> str:
+    raw_name = (name or "").strip()
+    if not raw_name:
+        return raw_name
+
+    block_dir = os.path.join(DATA_DIR, "blocks")
+    reference_dir = os.path.join(DATA_DIR, "reference_blocks")
+
+    block_names = set()
+    reference_names = set()
+    if os.path.isdir(block_dir):
+        block_names = {
+            os.path.splitext(file_name)[0]
+            for file_name in os.listdir(block_dir)
+            if file_name.endswith(".json")
+        }
+    if os.path.isdir(reference_dir):
+        reference_names = {
+            os.path.splitext(file_name)[0]
+            for file_name in os.listdir(reference_dir)
+            if file_name.endswith(".xcos")
+        }
+
+    available_names = block_names | reference_names
+    if not available_names:
+        return raw_name
+
+    candidate_names = []
+
+    def add_candidate(candidate: str):
+        if candidate and candidate not in candidate_names:
+            candidate_names.append(candidate)
+
+    add_candidate(raw_name)
+    upper_name = raw_name.upper()
+    add_candidate(upper_name)
+
+    if not upper_name.endswith("_f"):
+        add_candidate(f"{upper_name}_f")
+    if not upper_name.endswith("BLK"):
+        add_candidate(f"{upper_name}BLK")
+    if not upper_name.endswith("BLK_f"):
+        add_candidate(f"{upper_name}BLK_f")
+    if upper_name.endswith("_f"):
+        add_candidate(upper_name[:-2])
+
+    for candidate in candidate_names:
+        if candidate in available_names:
+            return candidate
+
+    lowered_map = {item.lower(): item for item in available_names}
+    for candidate in candidate_names:
+        resolved = lowered_map.get(candidate.lower())
+        if resolved:
+            return resolved
+
+    return raw_name
+
 async def get_xcos_block_data(
     name: str,
     include_help: bool = False,
@@ -4168,8 +4227,10 @@ async def get_xcos_block_data(
     include_reference_xml: bool = False,
 ):
     """Returns compact block metadata and optional reference XML for an Xcos block."""
+    resolved_name = resolve_xcos_block_name(name)
     data = {
         "name": name,
+        "resolved_name": resolved_name,
         "info": None,
         "warnings": [],
         "has_example": False,
@@ -4178,9 +4239,13 @@ async def get_xcos_block_data(
         "compact_reference": None,
         "reference_xml": None,
     }
+    if resolved_name != name:
+        data["warnings"].append(
+            f"Resolved block name '{name}' to '{resolved_name}' based on available catalog files."
+        )
 
     # 1. INFO
-    info_path = os.path.join(DATA_DIR, "blocks", f"{name}.json")
+    info_path = os.path.join(DATA_DIR, "blocks", f"{resolved_name}.json")
     if os.path.exists(info_path):
         with open(info_path, 'r', encoding='utf-8') as f:
             try:
@@ -4188,10 +4253,10 @@ async def get_xcos_block_data(
             except json.JSONDecodeError:
                 data["info"] = f.read()
     else:
-        data["warnings"].append(f"Block info for '{name}' not found at data/blocks/{name}.json")
+        data["warnings"].append(f"Block info for '{resolved_name}' not found at data/blocks/{resolved_name}.json")
 
     # 2. EXAMPLE
-    example_path = os.path.join(DATA_DIR, "reference_blocks", f"{name}.xcos")
+    example_path = os.path.join(DATA_DIR, "reference_blocks", f"{resolved_name}.xcos")
     example_xml = None
     if os.path.exists(example_path):
         data["has_example"] = True
@@ -4201,11 +4266,11 @@ async def get_xcos_block_data(
         if include_reference_xml:
             data["reference_xml"] = example_xml
     else:
-        data["warnings"].append(f"Reference block '{name}' not found at data/reference_blocks/{name}.xcos")
+        data["warnings"].append(f"Reference block '{resolved_name}' not found at data/reference_blocks/{resolved_name}.xcos")
 
     if include_extra_examples:
         data["extra_examples"] = {}
-        extra_example_prefix = f"{name}__"
+        extra_example_prefix = f"{resolved_name}__"
         reference_dir = os.path.join(DATA_DIR, "reference_blocks")
         if os.path.exists(reference_dir):
             extra_example_files = sorted(
@@ -4225,32 +4290,32 @@ async def get_xcos_block_data(
     search_dir = os.path.join(DATA_DIR, "help")
     if os.path.exists(search_dir):
         for root, dirs, files in os.walk(search_dir):
-            if f"{name}.xml" in files:
-                help_file = os.path.join(root, f"{name}.xml")
+            if f"{resolved_name}.xml" in files:
+                help_file = os.path.join(root, f"{resolved_name}.xml")
                 break
 
     data["has_help"] = bool(help_file)
     if include_help:
         data["help"] = None
         if not help_file:
-            data["warnings"].append(f"Help file for '{name}' not found. Attempting to extract from MACRO source...")
+            data["warnings"].append(f"Help file for '{resolved_name}' not found. Attempting to extract from MACRO source...")
             macros_dir = os.path.join(DATA_DIR, "macros")
             sci_path = None
             if os.path.exists(macros_dir):
                 for root, dirs, files in os.walk(macros_dir):
-                    if f"{name}.sci" in files:
-                        sci_path = os.path.join(root, f"{name}.sci")
+                    if f"{resolved_name}.sci" in files:
+                        sci_path = os.path.join(root, f"{resolved_name}.sci")
                         break
             if sci_path:
                 try:
                     with open(sci_path, 'r', encoding='utf-8') as f:
                         lines = f.readlines()
                         preview = "".join(lines[:100])
-                        data["help"] = f"--- AUTO-EXTRACTED FROM {name}.sci (First 100 lines) ---\n{preview}\n..."
+                        data["help"] = f"--- AUTO-EXTRACTED FROM {resolved_name}.sci (First 100 lines) ---\n{preview}\n..."
                 except Exception as e:
                     data["warnings"].append(f"Could not read macro file: {str(e)}")
             else:
-                data["warnings"].append(f"Macro source for '{name}' not found either.")
+                data["warnings"].append(f"Macro source for '{resolved_name}' not found either.")
         else:
             try:
                 parser = etree.XMLParser(remove_blank_text=True)

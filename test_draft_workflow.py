@@ -183,6 +183,15 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("1 input", cmscope_payload["extra_examples"])
         self.assertIn('realParameters" height="1" width="5"', cmscope_payload["extra_examples"]["1 input"])
 
+    async def test_block_data_resolves_common_alias_name(self):
+        gain_response = await server.get_xcos_block_data("GAIN")
+        gain_payload = json.loads(gain_response[0].text)
+
+        self.assertEqual(gain_payload["name"], "GAIN")
+        self.assertEqual(gain_payload["resolved_name"], "GAIN_f")
+        self.assertIsNotNone(gain_payload["info"])
+        self.assertTrue(gain_payload["has_example"])
+
     async def test_build_xcos_diagram_prompt_is_listed_with_required_argument(self):
         prompts = await server.handle_list_prompts()
         build_prompt = next(item for item in prompts if item.name == server.BUILD_XCOS_DIAGRAM_PROMPT_NAME)
