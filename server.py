@@ -47,6 +47,7 @@ HOSTED_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 720.0
 DEFAULT_VALIDATION_TIMEOUT_SECONDS = LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
 DEFAULT_VALIDATION_WORKER_POLL_INTERVAL_SECONDS = 2.0
+REMOTE_VALIDATION_WORKER_RESULT_MARGIN_SECONDS = 15.0
 VALIDATION_PROFILE_FULL_RUNTIME = "full_runtime"
 VALIDATION_PROFILE_HOSTED_SMOKE = "hosted_smoke"
 VALIDATION_PROFILES = {
@@ -2521,6 +2522,15 @@ def get_validation_worker_poll_interval_seconds() -> float:
     )
 
 
+def get_remote_validation_worker_timeout_seconds(timeout_seconds: float) -> float:
+    requested_timeout = float(timeout_seconds)
+    if requested_timeout <= 1.0:
+        return 1.0
+    if requested_timeout <= REMOTE_VALIDATION_WORKER_RESULT_MARGIN_SECONDS:
+        return max(1.0, requested_timeout - 1.0)
+    return requested_timeout - REMOTE_VALIDATION_WORKER_RESULT_MARGIN_SECONDS
+
+
 def should_offload_full_runtime_validation(validation_profile: str) -> bool:
     return (
         normalize_validation_profile(validation_profile) == VALIDATION_PROFILE_FULL_RUNTIME
@@ -3414,13 +3424,14 @@ async def run_remote_validation_worker(
 
     token = get_validation_worker_token()
     request_timeout_seconds = max(10.0, timeout_seconds)
+    worker_timeout_seconds = get_remote_validation_worker_timeout_seconds(timeout_seconds)
     create_payload = await asyncio.to_thread(
         http_post_json,
         f"{worker_url}/validate",
         {
             "xml_content": xml_content,
             "validation_profile": normalize_validation_profile(validation_profile),
-            "timeout_seconds": timeout_seconds,
+            "timeout_seconds": worker_timeout_seconds,
         },
         request_timeout_seconds,
         token,
@@ -3457,6 +3468,7 @@ async def run_remote_validation_worker(
             "url": worker_url,
             "job_id": job_id,
             "status": status_payload.get("status"),
+            "timeout_seconds": worker_timeout_seconds,
             "created_at": status_payload.get("created_at"),
             "started_at": status_payload.get("started_at"),
             "finished_at": status_payload.get("finished_at"),

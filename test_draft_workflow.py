@@ -762,6 +762,66 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         remote_mock.assert_not_awaited()
         local_mock.assert_awaited_once()
 
+    def test_get_remote_validation_worker_timeout_seconds_reserves_margin(self):
+        self.assertEqual(
+            server.get_remote_validation_worker_timeout_seconds(720.0),
+            705.0,
+        )
+        self.assertEqual(
+            server.get_remote_validation_worker_timeout_seconds(15.0),
+            14.0,
+        )
+        self.assertEqual(
+            server.get_remote_validation_worker_timeout_seconds(1.0),
+            1.0,
+        )
+
+    async def test_run_remote_validation_worker_uses_shorter_inner_timeout(self):
+        posted_payloads = []
+
+        def fake_post(url, payload, timeout_seconds, token):
+            posted_payloads.append((url, payload, timeout_seconds, token))
+            return {"job_id": "worker-job"}
+
+        def fake_get(_url, _timeout_seconds, _token):
+            return {
+                "status": "timed_out",
+                "created_at": "2026-04-04T00:00:00",
+                "started_at": "2026-04-04T00:00:01",
+                "finished_at": "2026-04-04T00:11:45",
+                "result": {
+                    "success": False,
+                    "origin": "validation-worker",
+                    "validation_profile": server.VALIDATION_PROFILE_FULL_RUNTIME,
+                    "error": "Validation worker timed out after 705 seconds.",
+                },
+            }
+
+        with (
+            patch.dict(
+                server.os.environ,
+                {
+                    "XCOS_VALIDATION_WORKER_URL": "https://worker.example",
+                    "XCOS_VALIDATION_WORKER_TOKEN": "secret-token",
+                },
+                clear=False,
+            ),
+            patch.object(server, "http_post_json", side_effect=fake_post),
+            patch.object(server, "http_get_json", side_effect=fake_get),
+            patch.object(server.asyncio, "sleep", AsyncMock()),
+        ):
+            result = await server.run_remote_validation_worker(
+                MINIMAL_DIAGRAM_XML,
+                server.VALIDATION_PROFILE_FULL_RUNTIME,
+                720.0,
+            )
+
+        self.assertEqual(posted_payloads[0][0], "https://worker.example/validate")
+        self.assertEqual(posted_payloads[0][1]["timeout_seconds"], 705.0)
+        self.assertEqual(posted_payloads[0][3], "secret-token")
+        self.assertFalse(result["success"])
+        self.assertEqual(result["remote_worker"]["timeout_seconds"], 705.0)
+
     async def test_xcos_start_validation_uses_configured_timeout_by_default(self):
         session_id = await self.start_session()
         with (
