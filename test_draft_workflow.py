@@ -854,6 +854,43 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(parsed["success"])
         self.assertIsNone(parsed["warnings"])
 
+    def test_scilab_log_parser_tracks_stage_trace_on_success(self):
+        parsed = server.analyze_scilab_verification_output(
+            "\n".join([
+                "XCOSAI_VERIFY_STAGE:LOAD_XCOS_LIBS:BEGIN",
+                "XCOSAI_VERIFY_STAGE:LOAD_XCOS_LIBS:END",
+                "XCOSAI_VERIFY_STAGE:LOAD_SCICOS:BEGIN",
+                "XCOSAI_VERIFY_STAGE:LOAD_SCICOS:END",
+                "XCOSAI_VERIFY_STAGE:IMPORT_XCOS_DIAGRAM:BEGIN",
+                "XCOSAI_VERIFY_STAGE:IMPORT_XCOS_DIAGRAM:END",
+                "XCOSAI_VERIFY_STAGE:SCAN_BLOCKS:BEGIN",
+                "XCOSAI_VERIFY_STAGE:SCAN_BLOCKS:END",
+                "XCOSAI_VERIFY_STAGE:SCICOS_SIMULATE:BEGIN",
+                "XCOSAI_VERIFY_STAGE:SCICOS_SIMULATE:END",
+                "XCOSAI_VERIFY_OK",
+            ]),
+            0,
+        )
+        self.assertTrue(parsed["success"])
+        self.assertEqual(parsed["last_completed_stage"], "SCICOS_SIMULATE")
+        self.assertIsNone(parsed["active_stage"])
+        self.assertEqual(parsed["stage_events"][-1], {"stage": "SCICOS_SIMULATE", "status": "END"})
+
+    def test_scilab_log_parser_tracks_active_stage_on_failure(self):
+        parsed = server.analyze_scilab_verification_output(
+            "\n".join([
+                "XCOSAI_VERIFY_STAGE:LOAD_XCOS_LIBS:BEGIN",
+                "XCOSAI_VERIFY_STAGE:LOAD_XCOS_LIBS:END",
+                "XCOSAI_VERIFY_STAGE:SCICOS_SIMULATE:BEGIN",
+                "XCOSAI_VERIFY_ERROR:sim stalled",
+            ]),
+            1,
+        )
+        self.assertFalse(parsed["success"])
+        self.assertEqual(parsed["active_stage"], "SCICOS_SIMULATE")
+        self.assertEqual(parsed["last_completed_stage"], "LOAD_XCOS_LIBS")
+        self.assertEqual(parsed["stage_events"][0], {"stage": "LOAD_XCOS_LIBS", "status": "BEGIN"})
+
     async def test_widget_tool_call_wrapper_uses_structured_content_and_widget_meta(self):
         response = await server.handle_call_tool("xcos_get_status_widget", {})
         self.assertIsInstance(response, server.mcp_types.CallToolResult)

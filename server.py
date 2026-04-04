@@ -2797,6 +2797,7 @@ def build_headless_verification_script(xcos_path: str, validation_profile: str) 
     if normalized_profile == VALIDATION_PROFILE_HOSTED_SMOKE:
         verification_body = textwrap.dedent(
             """
+            xcosai_stage("SCAN_BLOCKS", "BEGIN");
             n_objs = length(scs_m.objs);
             n_blocks_found = 0;
 
@@ -2819,11 +2820,13 @@ def build_headless_verification_script(xcos_path: str, validation_profile: str) 
             if n_blocks_found == 0 then
                 xcosai_fail("Empty diagram after importXcosDiagram; Scilab found no Block objects.");
             end
+            xcosai_stage("SCAN_BLOCKS", "END");
             """
         ).strip()
     else:
         verification_body = textwrap.dedent(
             """
+            xcosai_stage("SCAN_BLOCKS", "BEGIN");
             n_objs = length(scs_m.objs);
             n_blocks_found = 0;
             replaced_list = "";
@@ -2850,11 +2853,15 @@ def build_headless_verification_script(xcos_path: str, validation_profile: str) 
                 xcosai_fail("Empty diagram after importXcosDiagram; Scilab found no Block objects.");
             end
 
+            xcosai_stage("SCAN_BLOCKS", "END");
+
             if replaced_list <> "" then
                 mprintf("XCOSAI_VERIFY_WARN:Graphical blocks substituted for headless validation: %s\\n", replaced_list);
             end
 
+            xcosai_stage("SCICOS_SIMULATE", "BEGIN");
             scicos_simulate(scs_m, list(), "nw");
+            xcosai_stage("SCICOS_SIMULATE", "END");
             """
         ).strip()
 
@@ -2871,9 +2878,17 @@ def build_headless_verification_script(xcos_path: str, validation_profile: str) 
             exit(1);
         endfunction
 
+        function xcosai_stage(stage_name, stage_status)
+            mprintf("XCOSAI_VERIFY_STAGE:%s:%s\\n", string(stage_name), string(stage_status));
+        endfunction
+
         try
+            xcosai_stage("LOAD_XCOS_LIBS", "BEGIN");
             loadXcosLibs();
+            xcosai_stage("LOAD_XCOS_LIBS", "END");
+            xcosai_stage("LOAD_SCICOS", "BEGIN");
             loadScicos();
+            xcosai_stage("LOAD_SCICOS", "END");
             mprintf("XCOSAI_VERIFY_INPUT_PATH:%s\\n", "{escaped_xcos_path}");
             try
                 xcosai_file_info = fileinfo("{escaped_xcos_path}");
@@ -2892,7 +2907,9 @@ def build_headless_verification_script(xcos_path: str, validation_profile: str) 
                 [xcosai_text_error, xcosai_text_id] = lasterror();
                 mprintf("XCOSAI_VERIFY_TEXT_READ_ERROR:%s\\n", string(xcosai_text_error));
             end
+            xcosai_stage("IMPORT_XCOS_DIAGRAM", "BEGIN");
             importXcosDiagram("{escaped_xcos_path}");
+            xcosai_stage("IMPORT_XCOS_DIAGRAM", "END");
             scs_m.props.tf = 0.1;
 
             {verification_body}
@@ -2921,6 +2938,7 @@ SCILAB_VERIFICATION_INFO_PREFIXES = (
     "XCOSAI_VERIFY_TEXT_LAST_LINE:",
     "XCOSAI_VERIFY_TEXT_READ_ERROR:",
 )
+SCILAB_VERIFICATION_STAGE_PREFIX = "XCOSAI_VERIFY_STAGE:"
 
 
 def is_ignorable_scilab_log_line(line: str) -> bool:
@@ -2936,6 +2954,9 @@ def analyze_scilab_verification_output(scilab_log: str, returncode: int) -> dict
     unexpected_lines: list[str] = []
     explicit_error: str | None = None
     found_ok = False
+    stage_events: list[dict[str, str]] = []
+    active_stage: str | None = None
+    last_completed_stage: str | None = None
 
     for raw_line in (scilab_log or "").splitlines():
         line = raw_line.strip()
@@ -2952,16 +2973,42 @@ def analyze_scilab_verification_output(scilab_log: str, returncode: int) -> dict
         if line.startswith("XCOSAI_VERIFY_ERROR:"):
             explicit_error = line[len("XCOSAI_VERIFY_ERROR:"):].strip()
             continue
+        if line.startswith(SCILAB_VERIFICATION_STAGE_PREFIX):
+            remainder = line[len(SCILAB_VERIFICATION_STAGE_PREFIX):].strip()
+            stage_name, separator, stage_status = remainder.partition(":")
+            if stage_name and separator and stage_status:
+                normalized_name = stage_name.strip()
+                normalized_status = stage_status.strip().upper()
+                stage_events.append({"stage": normalized_name, "status": normalized_status})
+                if normalized_status == "BEGIN":
+                    active_stage = normalized_name
+                elif normalized_status == "END":
+                    last_completed_stage = normalized_name
+                    if active_stage == normalized_name:
+                        active_stage = None
+                continue
         if line.startswith(SCILAB_VERIFICATION_INFO_PREFIXES):
             info_lines.append(line)
             continue
         unexpected_lines.append(line)
 
     if found_ok and returncode == 0:
-        return {"success": True, "warnings": warnings if warnings else None}
+        return {
+            "success": True,
+            "warnings": warnings if warnings else None,
+            "stage_events": stage_events,
+            "active_stage": active_stage,
+            "last_completed_stage": last_completed_stage,
+        }
 
     if returncode == 0 and explicit_error is None and not unexpected_lines:
-        return {"success": True, "warnings": warnings if warnings else None}
+        return {
+            "success": True,
+            "warnings": warnings if warnings else None,
+            "stage_events": stage_events,
+            "active_stage": active_stage,
+            "last_completed_stage": last_completed_stage,
+        }
 
     error = explicit_error or f"Scilab exited with code {returncode}."
     tail_source = unexpected_lines or info_lines
@@ -2973,7 +3020,22 @@ def analyze_scilab_verification_output(scilab_log: str, returncode: int) -> dict
         "success": False,
         "error": error,
         "warnings": warnings if warnings else None,
+        "stage_events": stage_events,
+        "active_stage": active_stage,
+        "last_completed_stage": last_completed_stage,
     }
+
+
+async def read_subprocess_stdout(stream) -> bytes:
+    if stream is None:
+        return b""
+    chunks: list[bytes] = []
+    while True:
+        chunk = await stream.read(4096)
+        if not chunk:
+            break
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 async def run_headless_scilab_check(
@@ -3079,21 +3141,43 @@ async def run_headless_scilab_check(
                 "LANGUAGE": "C",
             },
         )
+        stdout_task = asyncio.create_task(read_subprocess_stdout(proc.stdout))
         try:
-            stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=subprocess_timeout_seconds)
+            await asyncio.wait_for(proc.wait(), timeout=subprocess_timeout_seconds)
+            stdout_bytes = await stdout_task
         except asyncio.TimeoutError:
             try:
                 proc.kill()
             except Exception:
                 pass
+            try:
+                await proc.wait()
+            except Exception:
+                pass
+            try:
+                stdout_bytes = await asyncio.wait_for(stdout_task, timeout=5.0)
+            except Exception:
+                stdout_task.cancel()
+                stdout_bytes = b""
+            scilab_log = stdout_bytes.decode("utf-8", errors="replace").strip()
+            scilab_log_tail = "\n".join(scilab_log.splitlines()[-40:]) if scilab_log else ""
+            log_analysis = analyze_scilab_verification_output(scilab_log, proc.returncode or -1)
+            stage_suffix = ""
+            if log_analysis.get("active_stage"):
+                stage_suffix = f" Last observed stage: {log_analysis['active_stage']} (in progress)."
+            elif log_analysis.get("last_completed_stage"):
+                stage_suffix = f" Last completed stage: {log_analysis['last_completed_stage']}."
             return {
                 "success": False,
                 "origin": origin,
-                "error": timeout_error,
+                "error": f"{timeout_error}{stage_suffix}",
                 "auto_fixed_mux_to_scalar": auto_fixed,
                 "validation_profile": normalized_profile,
-                "scilab_log": None,
-                "scilab_log_tail": None,
+                "scilab_log": scilab_log or None,
+                "scilab_log_tail": scilab_log_tail or None,
+                "scilab_stage_trace": log_analysis.get("stage_events"),
+                "scilab_active_stage": log_analysis.get("active_stage"),
+                "scilab_last_completed_stage": log_analysis.get("last_completed_stage"),
                 "file_path": temp_meta["path"],
                 "file_size_bytes": temp_meta["size_bytes"],
                 "xml_diagnostics": xml_diagnostics,
@@ -3114,6 +3198,9 @@ async def run_headless_scilab_check(
                 "scilab_verdict": success_verdict,
                 "scilab_log": scilab_log,
                 "scilab_log_tail": scilab_log_tail,
+                "scilab_stage_trace": log_analysis.get("stage_events"),
+                "scilab_active_stage": log_analysis.get("active_stage"),
+                "scilab_last_completed_stage": log_analysis.get("last_completed_stage"),
                 "file_path": temp_meta["path"],
                 "file_size_bytes": temp_meta["size_bytes"],
                 "xml_diagnostics": xml_diagnostics,
@@ -3128,6 +3215,9 @@ async def run_headless_scilab_check(
             "warnings": log_analysis.get("warnings"),
             "scilab_log": scilab_log,
             "scilab_log_tail": scilab_log_tail,
+            "scilab_stage_trace": log_analysis.get("stage_events"),
+            "scilab_active_stage": log_analysis.get("active_stage"),
+            "scilab_last_completed_stage": log_analysis.get("last_completed_stage"),
             "file_path": temp_meta["path"],
             "file_size_bytes": temp_meta["size_bytes"],
             "xml_diagnostics": xml_diagnostics,

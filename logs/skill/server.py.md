@@ -76,3 +76,10 @@
 - The new hosted-smoke path reuses XML auto-fix, fan-out normalization, port-size checks, and Python structural validation, then runs a Scilab load/import-only subprocess check without `scicos_simulate(...)` or poll-worker fallback.
 - `tools/remote_hf_smoke_test.py` now defaults to `--validation-profile hosted_smoke`, `tools/deploy_huggingface_clean.ps1` invokes that profile automatically after the 210-second rebuild wait, and the degraded-timeout escape hatch was removed in favor of explicit profile selection.
 - **Files:** server.py, tools/remote_hf_smoke_test.py, tools/deploy_huggingface_clean.ps1, test_draft_workflow.py, test_remote_hf_smoke_test.py, README.md, DEPLOY_TO_HUGGINGFACE_SPACES.md
+
+### 2026-04-04 18:35:00 UTC - Fix
+- **Summary:** Full-runtime subprocess validation now emits stage markers and preserves partial Scilab output on timeout
+- The generated Scilab verification script now prints `XCOSAI_VERIFY_STAGE:<stage>:BEGIN|END` markers around `loadXcosLibs`, `loadScicos`, `importXcosDiagram`, block scanning, and `scicos_simulate`.
+- Subprocess validation no longer drops stdout on timeout; Python now collects partial Scilab output while the process runs, so timeout results include `scilab_stage_trace`, `scilab_active_stage`, and `scilab_last_completed_stage`.
+- Timeout errors now append the last observed stage, which makes live Hugging Face `full_runtime` failures attributable to import versus simulation instead of looking like generic runtime stalls.
+- **Files:** server.py, test_draft_workflow.py
