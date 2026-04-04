@@ -1,4 +1,5 @@
 import asyncio
+import os
 import unittest
 from unittest.mock import patch
 
@@ -69,6 +70,46 @@ class ValidationWorkerTests(unittest.IsolatedAsyncioTestCase):
             {"stage": "SCICOS_SIMULATE", "status": "BEGIN"},
         )
         self.assertEqual(job.to_dict()["progress"]["validator_phase"], "scilab-poll-fallback")
+
+    def test_require_auth_is_disabled_by_default(self):
+        class DummyRequest:
+            headers = {}
+
+        with patch.dict(os.environ, {}, clear=False):
+            self.assertIsNone(validation_worker.require_auth(DummyRequest()))
+
+    def test_require_auth_rejects_missing_bearer_when_enabled(self):
+        class DummyRequest:
+            headers = {}
+
+        with patch.dict(
+            os.environ,
+            {
+                "XCOS_VALIDATION_WORKER_REQUIRE_AUTH": "1",
+                "XCOS_VALIDATION_WORKER_TOKEN": "secret",
+            },
+            clear=False,
+        ):
+            response = validation_worker.require_auth(DummyRequest())
+
+        self.assertIsNotNone(response)
+        self.assertEqual(response.status_code, 401)
+
+    def test_require_auth_accepts_matching_bearer_when_enabled(self):
+        class DummyRequest:
+            headers = {"authorization": "Bearer secret"}
+
+        with patch.dict(
+            os.environ,
+            {
+                "XCOS_VALIDATION_WORKER_REQUIRE_AUTH": "true",
+                "XCOS_VALIDATION_WORKER_TOKEN": "secret",
+            },
+            clear=False,
+        ):
+            response = validation_worker.require_auth(DummyRequest())
+
+        self.assertIsNone(response)
 
 
 if __name__ == "__main__":

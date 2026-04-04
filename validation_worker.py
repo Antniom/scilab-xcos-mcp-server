@@ -52,10 +52,16 @@ def worker_token() -> str:
     return os.environ.get("XCOS_VALIDATION_WORKER_TOKEN", "").strip()
 
 
+def worker_auth_required() -> bool:
+    return server.parse_bool_env("XCOS_VALIDATION_WORKER_REQUIRE_AUTH", False)
+
+
 def require_auth(request: Request) -> JSONResponse | None:
+    if not worker_auth_required():
+        return None
     expected = worker_token()
     if not expected:
-        return None
+        return JSONResponse({"error": "Worker auth is required but XCOS_VALIDATION_WORKER_TOKEN is not set."}, status_code=500)
     actual = request.headers.get("authorization", "").strip()
     if actual == f"Bearer {expected}":
         return None
