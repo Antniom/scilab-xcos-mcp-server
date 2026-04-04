@@ -48,6 +48,7 @@ DEFAULT_VALIDATION_TIMEOUT_SECONDS = LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECOND
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
 DEFAULT_VALIDATION_WORKER_POLL_INTERVAL_SECONDS = 2.0
 REMOTE_VALIDATION_WORKER_RESULT_MARGIN_SECONDS = 15.0
+VALIDATION_PROGRESS_UNSET = object()
 VALIDATION_PROFILE_FULL_RUNTIME = "full_runtime"
 VALIDATION_PROFILE_HOSTED_SMOKE = "hosted_smoke"
 VALIDATION_PROFILES = {
@@ -2531,6 +2532,108 @@ def get_remote_validation_worker_timeout_seconds(timeout_seconds: float) -> floa
     return requested_timeout - REMOTE_VALIDATION_WORKER_RESULT_MARGIN_SECONDS
 
 
+def create_validation_progress_tracker(validation_profile: str | None = None) -> dict:
+    tracker = {
+        "validator_phase": None,
+        "poll_task_id": None,
+        "scilab_stage_trace": [],
+        "scilab_active_stage": None,
+        "scilab_last_completed_stage": None,
+    }
+    if validation_profile is not None:
+        tracker["validation_profile"] = normalize_validation_profile(validation_profile)
+    return tracker
+
+
+def update_validation_progress_tracker(
+    tracker: dict | None,
+    *,
+    validator_phase: str | None = None,
+    poll_task_id: str | None = None,
+    scilab_stage_trace=None,
+    scilab_active_stage=VALIDATION_PROGRESS_UNSET,
+    scilab_last_completed_stage=VALIDATION_PROGRESS_UNSET,
+):
+    if tracker is None:
+        return
+    if validator_phase is not None:
+        tracker["validator_phase"] = validator_phase
+    if poll_task_id is not None:
+        tracker["poll_task_id"] = poll_task_id
+    if scilab_stage_trace is not None:
+        tracker["scilab_stage_trace"] = [dict(item) for item in scilab_stage_trace]
+    if scilab_active_stage is not VALIDATION_PROGRESS_UNSET:
+        tracker["scilab_active_stage"] = scilab_active_stage
+    if scilab_last_completed_stage is not VALIDATION_PROGRESS_UNSET:
+        tracker["scilab_last_completed_stage"] = scilab_last_completed_stage
+
+
+def merge_validation_progress_tracker(tracker: dict | None, payload: dict | None):
+    if tracker is None or not isinstance(payload, dict):
+        return
+    stage_trace = payload.get("scilab_stage_trace")
+    if stage_trace is None:
+        stage_trace = payload.get("stage_events")
+    active_stage = (
+        payload["scilab_active_stage"]
+        if "scilab_active_stage" in payload
+        else payload.get("active_stage", VALIDATION_PROGRESS_UNSET)
+    )
+    last_completed_stage = (
+        payload["scilab_last_completed_stage"]
+        if "scilab_last_completed_stage" in payload
+        else payload.get("last_completed_stage", VALIDATION_PROGRESS_UNSET)
+    )
+    update_validation_progress_tracker(
+        tracker,
+        scilab_stage_trace=stage_trace,
+        scilab_active_stage=active_stage,
+        scilab_last_completed_stage=last_completed_stage,
+    )
+
+
+def snapshot_validation_progress_tracker(tracker: dict | None) -> dict:
+    if tracker is None:
+        return {}
+    payload = {}
+    for key in (
+        "validator_phase",
+        "poll_task_id",
+        "scilab_stage_trace",
+        "scilab_active_stage",
+        "scilab_last_completed_stage",
+    ):
+        if key not in tracker:
+            continue
+        value = tracker.get(key)
+        if value is None:
+            continue
+        if key == "scilab_stage_trace":
+            payload[key] = [dict(item) for item in value]
+        else:
+            payload[key] = value
+    if tracker.get("validation_profile"):
+        payload["validation_profile"] = tracker["validation_profile"]
+    return payload
+
+
+def apply_validation_progress_update(details: dict | None, stage_name: str, stage_status: str) -> dict:
+    progress = dict(details or {})
+    trace = [dict(item) for item in (progress.get("scilab_stage_trace") or [])]
+    normalized_stage = str(stage_name or "").strip()
+    normalized_status = str(stage_status or "").strip().upper()
+    if not normalized_stage or normalized_status not in {"BEGIN", "END"}:
+        return progress
+    trace.append({"stage": normalized_stage, "status": normalized_status})
+    progress["scilab_stage_trace"] = trace
+    if normalized_status == "BEGIN":
+        progress["scilab_active_stage"] = normalized_stage
+    elif normalized_status == "END":
+        progress["scilab_last_completed_stage"] = normalized_stage
+        progress["scilab_active_stage"] = None
+    return progress
+
+
 def should_offload_full_runtime_validation(validation_profile: str) -> bool:
     return (
         normalize_validation_profile(validation_profile) == VALIDATION_PROFILE_FULL_RUNTIME
@@ -3087,7 +3190,7 @@ def analyze_scilab_verification_output(scilab_log: str, returncode: int) -> dict
     }
 
 
-async def read_subprocess_stdout(stream) -> bytes:
+async def read_subprocess_stdout(stream, progress_tracker: dict | None = None) -> bytes:
     if stream is None:
         return b""
     chunks: list[bytes] = []
@@ -3096,6 +3199,10 @@ async def read_subprocess_stdout(stream) -> bytes:
         if not chunk:
             break
         chunks.append(chunk)
+        if progress_tracker is not None:
+            partial_text = b"".join(chunks).decode("utf-8", errors="replace")
+            partial_analysis = analyze_scilab_verification_output(partial_text, 1)
+            merge_validation_progress_tracker(progress_tracker, partial_analysis)
     return b"".join(chunks)
 
 
@@ -3104,6 +3211,7 @@ async def run_headless_scilab_check(
     auto_fixed: bool,
     *,
     validation_profile: str,
+    progress_tracker: dict | None = None,
 ) -> dict:
     """Runs a Scilab import/runtime check headlessly (subprocess mode).
 
@@ -3126,6 +3234,10 @@ async def run_headless_scilab_check(
     scilab_bin = resolve_scilab_binary()
     memory_diag = build_xml_text_diagnostics(xml_content)
     subprocess_timeout_seconds = get_configured_subprocess_timeout_seconds()
+    update_validation_progress_tracker(
+        progress_tracker,
+        validator_phase="scilab-import-check" if is_hosted_smoke else "scilab-subprocess",
+    )
     timeout_error = (
         f"Structural validation passed, but Scilab import validation timed out after {subprocess_timeout_seconds:.0f} seconds."
         if is_hosted_smoke
@@ -3202,7 +3314,7 @@ async def run_headless_scilab_check(
                 "LANGUAGE": "C",
             },
         )
-        stdout_task = asyncio.create_task(read_subprocess_stdout(proc.stdout))
+        stdout_task = asyncio.create_task(read_subprocess_stdout(proc.stdout, progress_tracker))
         try:
             await asyncio.wait_for(proc.wait(), timeout=subprocess_timeout_seconds)
             stdout_bytes = await stdout_task
@@ -3223,6 +3335,7 @@ async def run_headless_scilab_check(
             scilab_log = stdout_bytes.decode("utf-8", errors="replace").strip()
             scilab_log_tail = "\n".join(scilab_log.splitlines()[-40:]) if scilab_log else ""
             log_analysis = analyze_scilab_verification_output(scilab_log, proc.returncode or -1)
+            merge_validation_progress_tracker(progress_tracker, log_analysis)
             stage_suffix = ""
             if log_analysis.get("active_stage"):
                 stage_suffix = f" Last observed stage: {log_analysis['active_stage']} (in progress)."
@@ -3248,6 +3361,7 @@ async def run_headless_scilab_check(
         scilab_log_tail = "\n".join(scilab_log.splitlines()[-40:]) if scilab_log else ""
         returncode = proc.returncode
         log_analysis = analyze_scilab_verification_output(scilab_log, returncode)
+        merge_validation_progress_tracker(progress_tracker, log_analysis)
 
         if log_analysis["success"]:
             return {
@@ -3336,7 +3450,11 @@ def describe_poll_fallback_reason(scilab_result: dict) -> str:
     return "Subprocess validator failed in a fallback-eligible way; retried with long-lived Scilab poll worker."
 
 
-async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
+async def run_poll_validation(
+    xml_content: str,
+    auto_fixed: bool,
+    progress_tracker: dict | None = None,
+) -> dict:
     worker_state = await ensure_poll_worker_running()
     if not worker_state.get("active"):
         return {
@@ -3355,7 +3473,18 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
     temp_meta = get_file_metadata(temp_path)
 
     event = asyncio.Event()
-    state.results[task_id] = {"success": False, "error": "", "details": {}, "event": event}
+    update_validation_progress_tracker(
+        progress_tracker,
+        validator_phase="scilab-poll-fallback",
+        poll_task_id=task_id,
+    )
+    state.results[task_id] = {
+        "success": False,
+        "error": "",
+        "details": snapshot_validation_progress_tracker(progress_tracker),
+        "event": event,
+        "progress_tracker": progress_tracker,
+    }
 
     await state.task_queue.put({"task_id": task_id, "zcos_path": temp_path})
     poll_timeout_seconds = get_configured_poll_timeout_seconds()
@@ -3363,6 +3492,7 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
     try:
         await asyncio.wait_for(event.wait(), timeout=poll_timeout_seconds)
         res = state.results.pop(task_id)
+        merge_validation_progress_tracker(progress_tracker, res.get("details"))
         result_payload = {
             "success": res["success"],
             "task_id": task_id,
@@ -3384,8 +3514,15 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
             result_payload["hint"] = "Use xcos_get_draft_xml(session_id) to inspect the final XML. Scilab errors often relate to parameter size mismatches or missing SplitBlocks."
         return result_payload
 
+    except asyncio.CancelledError:
+        pending = state.results.pop(task_id, None)
+        if pending:
+            merge_validation_progress_tracker(progress_tracker, pending.get("details"))
+        raise
     except asyncio.TimeoutError:
-        state.results.pop(task_id, None)
+        pending = state.results.pop(task_id, None)
+        if pending:
+            merge_validation_progress_tracker(progress_tracker, pending.get("details"))
         return {
             "success": False,
             "task_id": task_id,
@@ -3394,22 +3531,33 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
             "error": f"Scilab verification timed out for {task_id} after {poll_timeout_seconds:.0f} seconds",
             "origin": "scilab-poll-fallback",
             "poll_worker": worker_state,
+            **snapshot_validation_progress_tracker(progress_tracker),
         }
 
 
-async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> dict:
+async def run_headless_scilab_validation(
+    xml_content: str,
+    auto_fixed: bool,
+    progress_tracker: dict | None = None,
+) -> dict:
     return await run_headless_scilab_check(
         xml_content,
         auto_fixed,
         validation_profile=VALIDATION_PROFILE_FULL_RUNTIME,
+        progress_tracker=progress_tracker,
     )
 
 
-async def run_headless_scilab_import_validation(xml_content: str, auto_fixed: bool) -> dict:
+async def run_headless_scilab_import_validation(
+    xml_content: str,
+    auto_fixed: bool,
+    progress_tracker: dict | None = None,
+) -> dict:
     return await run_headless_scilab_check(
         xml_content,
         auto_fixed,
         validation_profile=VALIDATION_PROFILE_HOSTED_SMOKE,
+        progress_tracker=progress_tracker,
     )
 
 
@@ -3714,8 +3862,13 @@ async def _run_verification_local(
     xml_content: str,
     validation_profile: str = VALIDATION_PROFILE_FULL_RUNTIME,
     worker_timeout_seconds: float | None = None,
+    progress_tracker: dict | None = None,
 ):
     normalized_profile = normalize_validation_profile(validation_profile)
+    update_validation_progress_tracker(
+        progress_tracker,
+        validator_phase="pre-validation",
+    )
     # --- Integration of Auto-fix and Validator ---
     try:
         parser = etree.XMLParser(remove_blank_text=True)
@@ -3759,7 +3912,11 @@ async def _run_verification_local(
         return python_result
 
     if normalized_profile == VALIDATION_PROFILE_HOSTED_SMOKE:
-        scilab_result = await run_headless_scilab_import_validation(xml_content, auto_fixed)
+        scilab_result = await run_headless_scilab_import_validation(
+            xml_content,
+            auto_fixed,
+            progress_tracker=progress_tracker,
+        )
         merged_warnings = (
             (fanout_normalization.get("warnings") or [])
             + (python_result.get("warnings") or [])
@@ -3778,12 +3935,24 @@ async def _run_verification_local(
         }
 
     if validation_mode == "subprocess":
-        scilab_result = await run_headless_scilab_validation(xml_content, auto_fixed)
+        scilab_result = await run_headless_scilab_validation(
+            xml_content,
+            auto_fixed,
+            progress_tracker=progress_tracker,
+        )
         poll_fallback_result = None
 
         if should_retry_with_poll_fallback(scilab_result):
             fallback_reason = describe_poll_fallback_reason(scilab_result)
-            poll_fallback_result = await run_poll_validation(xml_content, auto_fixed)
+            update_validation_progress_tracker(
+                progress_tracker,
+                validator_phase="poll-fallback-pending",
+            )
+            poll_fallback_result = await run_poll_validation(
+                xml_content,
+                auto_fixed,
+                progress_tracker=progress_tracker,
+            )
             merged_warnings = (
                 (fanout_normalization.get("warnings") or [])
                 + (python_result.get("warnings") or [])
@@ -3824,7 +3993,7 @@ async def _run_verification_local(
             "fanout_normalization": fanout_normalization,
         }
 
-    result = await run_poll_validation(xml_content, auto_fixed)
+    result = await run_poll_validation(xml_content, auto_fixed, progress_tracker=progress_tracker)
     result["validation_profile"] = normalized_profile
     result["fanout_normalization"] = fanout_normalization
     result["warnings"] = (result.get("warnings") or []) + (fanout_normalization.get("warnings") or [])
@@ -5116,7 +5285,16 @@ async def http_handle_post_result(request: Request) -> Response:
     if task_id in state.results:
         state.results[task_id]["success"] = success
         state.results[task_id]["error"] = error
+        details = dict(state.results[task_id].get("details") or {})
+        if data.get("scilab_active_stage") or data.get("scilab_last_completed_stage") or data.get("scilab_stage_trace"):
+            details["scilab_active_stage"] = data.get("scilab_active_stage")
+            details["scilab_last_completed_stage"] = data.get("scilab_last_completed_stage")
+            details["scilab_stage_trace"] = [
+                dict(item)
+                for item in (data.get("scilab_stage_trace") or details.get("scilab_stage_trace") or [])
+            ]
         state.results[task_id]["details"] = {
+            **details,
             "scilab_import_passed": data.get("scilab_import_passed"),
             "scilab_block_validation_passed": data.get("scilab_block_validation_passed"),
             "scilab_link_validation_passed": data.get("scilab_link_validation_passed"),
@@ -5125,9 +5303,41 @@ async def http_handle_post_result(request: Request) -> Response:
             "substituted_blocks": data.get("substituted_blocks"),
             "diary_path": data.get("diary_path"),
         }
+        merge_validation_progress_tracker(
+            state.results[task_id].get("progress_tracker"),
+            state.results[task_id]["details"],
+        )
         state.results[task_id]["event"].set()
         return http_json({"status": "received"})
     return http_json({"status": "error", "message": "Task ID not found"}, status_code=404)
+
+
+async def http_handle_post_progress(request: Request) -> Response:
+    try:
+        data = await read_request_json_lenient(request)
+    except json.JSONDecodeError as exc:
+        return http_json(
+            {"status": "error", "message": f"Invalid JSON body: {exc.msg}"},
+            status_code=400,
+        )
+
+    task_id = data.get("task_id")
+    if task_id not in state.results:
+        return http_json({"status": "error", "message": "Task ID not found"}, status_code=404)
+
+    stage_name = str(data.get("stage") or "").strip()
+    stage_status = str(data.get("status") or "").strip().upper()
+    if not stage_name or stage_status not in {"BEGIN", "END"}:
+        return http_json(
+            {"status": "error", "message": "stage and status (BEGIN/END) are required"},
+            status_code=400,
+        )
+
+    current_details = state.results[task_id].get("details") or {}
+    updated_details = apply_validation_progress_update(current_details, stage_name, stage_status)
+    state.results[task_id]["details"] = updated_details
+    merge_validation_progress_tracker(state.results[task_id].get("progress_tracker"), updated_details)
+    return http_json({"status": "received"})
 
 
 async def http_healthz(_: Request) -> Response:
@@ -5356,6 +5566,7 @@ def build_starlette_app() -> Starlette:
         Route("/api/sessions/{session_id:str}/diagram.xcos", http_api_session_file, methods=["GET"]),
         Route("/block_images/{asset_name:str}", http_block_image, methods=["GET"]),
         Route("/task", http_handle_get_task, methods=["GET"]),
+        Route("/progress", http_handle_post_progress, methods=["POST"]),
         Route("/result", http_handle_post_result, methods=["POST"]),
         Route("/block_images/{image_name:str}", http_block_image, methods=["GET"]),
         Route("/api/topology/{session_id}/svg", http_api_topology_svg, methods=["GET"]),

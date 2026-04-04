@@ -3,6 +3,22 @@ function block=xcosai_nop_sim(block, flag)
 endfunction
 
 
+function xcosai_post_stage(url_base, task_id, stage_name, stage_status)
+    if task_id == '' then
+        return;
+    end
+    payload = struct( ..
+        'task_id', task_id, ..
+        'stage', stage_name, ..
+        'status', stage_status ..
+    );
+    try
+        [r, s] = http_post(url_base + '/progress', payload);
+    catch
+    end
+endfunction
+
+
 function xcosai_poll_loop()
     // xcosai_poll_loop.sci
     // Polls the Python server for new Xcos diagrams to validate.
@@ -93,6 +109,8 @@ function xcosai_poll_loop()
                         link_validation_passed = %f;
                         graphical_blocks_substituted = %f;
                         substituted_blocks = '';
+                        current_stage = '';
+                        last_completed_stage = '';
                         
                         diary_path = zcos_path + '.log';
                         diary(diary_path);
@@ -101,21 +119,37 @@ function xcosai_poll_loop()
                             // Official Scilab 2026.0.1 load order:
                             // loadXcosLibs() first, then loadScicos().
                             // Source: help.scilab.org/docs/2026.0.1/en_US/scicos_simulate.html
+                            current_stage = 'LOAD_XCOS_LIBS';
+                            xcosai_post_stage(url_base, task_id, current_stage, 'BEGIN');
                             disp('[XcosAI][' + string(LoopID) + '] Loading Xcos libraries...');
                             loadXcosLibs();
+                            xcosai_post_stage(url_base, task_id, current_stage, 'END');
+                            last_completed_stage = current_stage;
+                            current_stage = '';
                             
+                            current_stage = 'LOAD_SCICOS';
+                            xcosai_post_stage(url_base, task_id, current_stage, 'BEGIN');
                             disp('[XcosAI][' + string(LoopID) + '] Loading Scicos simulation engine...');
                             loadScicos();
+                            xcosai_post_stage(url_base, task_id, current_stage, 'END');
+                            last_completed_stage = current_stage;
+                            current_stage = '';
                             
-                            
+                            current_stage = 'IMPORT_XCOS_DIAGRAM';
+                            xcosai_post_stage(url_base, task_id, current_stage, 'BEGIN');
                             disp('[XcosAI][' + string(LoopID) + '] Importing diagram...');
                             importXcosDiagram(zcos_path);
                             import_passed = %t;
+                            xcosai_post_stage(url_base, task_id, current_stage, 'END');
+                            last_completed_stage = current_stage;
+                            current_stage = '';
                             
                             // Shorten simulation time for rapid parameter validation
                             scs_m.props.tf = 0.1;
                             
                             // ── STEP 0: Graphical Block Substitution ─────────────
+                            current_stage = 'SCAN_BLOCKS';
+                            xcosai_post_stage(url_base, task_id, current_stage, 'BEGIN');
                             disp('[XcosAI][' + string(LoopID) + '] Checking for graphical blocks (SCILAB macros)...');
                             n_replaced = 0;
                             replaced_list = '';
@@ -166,6 +200,9 @@ function xcosai_poll_loop()
                             if n_blocks_found == 0 then
                                 error('Empty diagram: importXcosDiagram loaded the file but scs_m contains no Block objects. The XML is structurally invalid. Check: (1) all blocks use correct XML tags (BasicBlock/RoundBlock/SplitBlock), (2) parent/id attributes are correctly set, (3) the mxGraphModel root structure matches the required skeleton.');
                             end
+                            xcosai_post_stage(url_base, task_id, current_stage, 'END');
+                            last_completed_stage = current_stage;
+                            current_stage = '';
                             
                             // ── STEP 1: Per-block parameter validation ────────────────
                             // xcosValidateBlockSet runs define+set on each block's
@@ -173,6 +210,8 @@ function xcosai_poll_loop()
                             // funcprot(0) suppresses "redefining function" warnings that
                             // xcosValidateBlockSet triggers internally (harmless but noisy).
                             // Source: help.scilab.org/docs/2026.0.1/en_US/xcosValidateBlockSet.html
+                            current_stage = 'VALIDATE_BLOCK_PARAMETERS';
+                            xcosai_post_stage(url_base, task_id, current_stage, 'BEGIN');
                             disp('[XcosAI][' + string(LoopID) + '] Validating block parameters...');
                             prev_funcprot = funcprot();
                             funcprot(0);
@@ -212,6 +251,9 @@ function xcosai_poll_loop()
                                 disp('[XcosAI][' + string(LoopID) + '] BLOCK VALIDATION ERRORS:');
                                 disp(block_errors);
                             else
+                                xcosai_post_stage(url_base, task_id, current_stage, 'END');
+                                last_completed_stage = current_stage;
+                                current_stage = '';
                                 // ── STEP 2: Link/port connectivity validation ─────────
                                 // "Invalid index" from scicos_simulate means a link
                                 // references a port index that doesn't exist on a block
@@ -219,6 +261,8 @@ function xcosai_poll_loop()
                                 // has 1 output port). Walk every link and cross-check
                                 // against actual block port counts to get specific errors.
                                 block_validation_passed = %t;
+                                current_stage = 'VALIDATE_LINK_CONNECTIVITY';
+                                xcosai_post_stage(url_base, task_id, current_stage, 'BEGIN');
                                 disp('[XcosAI][' + string(LoopID) + '] Validating link connectivity...');
                                 link_errors = '';
                                 
@@ -316,10 +360,17 @@ function xcosai_poll_loop()
                                     // Signature: scicos_simulate(scs_m, Info [,context] [,flag])
                                     // Source: help.scilab.org/docs/2026.0.1/en_US/scicos_simulate.html
                                     link_validation_passed = %t;
+                                    xcosai_post_stage(url_base, task_id, current_stage, 'END');
+                                    last_completed_stage = current_stage;
+                                    current_stage = 'SCICOS_SIMULATE';
+                                    xcosai_post_stage(url_base, task_id, current_stage, 'BEGIN');
                                     disp('[XcosAI][' + string(LoopID) + '] Starting simulation (nw mode)...');
                                     scicos_simulate(scs_m, list(), 'nw');
                                     success = %t;
                                     simulation_passed = %t;
+                                    xcosai_post_stage(url_base, task_id, current_stage, 'END');
+                                    last_completed_stage = current_stage;
+                                    current_stage = '';
                                     disp('[XcosAI][' + string(LoopID) + '] Simulation COMPLETED.');
                                 end
                             end
@@ -369,6 +420,8 @@ function xcosai_poll_loop()
                             'task_id', task_id, ..
                             'success', success, ..
                             'error', err_msg, ..
+                            'scilab_active_stage', current_stage, ..
+                            'scilab_last_completed_stage', last_completed_stage, ..
                             'scilab_import_passed', import_passed, ..
                             'scilab_block_validation_passed', block_validation_passed, ..
                             'scilab_link_validation_passed', link_validation_passed, ..

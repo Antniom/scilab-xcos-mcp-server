@@ -64,12 +64,14 @@ async def run_worker_job(job_id: str, xml_content: str, validation_profile: str,
     job = jobs[job_id]
     job.status = "running"
     job.started_at = server.now_iso()
+    progress_tracker = server.create_validation_progress_tracker(validation_profile)
     try:
         result = await asyncio.wait_for(
             server._run_verification_local(
                 xml_content,
                 validation_profile=validation_profile,
                 worker_timeout_seconds=timeout_seconds,
+                progress_tracker=progress_tracker,
             ),
             timeout=timeout_seconds,
         )
@@ -82,6 +84,7 @@ async def run_worker_job(job_id: str, xml_content: str, validation_profile: str,
             "origin": "validation-worker",
             "validation_profile": validation_profile,
             "error": f"Validation worker timed out after {timeout_seconds:.0f} seconds.",
+            **server.snapshot_validation_progress_tracker(progress_tracker),
         }
         job.error = job.result["error"]
         job.status = "timed_out"
@@ -91,6 +94,7 @@ async def run_worker_job(job_id: str, xml_content: str, validation_profile: str,
             "origin": "validation-worker",
             "validation_profile": validation_profile,
             "error": f"Validation worker failed: {exc}",
+            **server.snapshot_validation_progress_tracker(progress_tracker),
         }
         job.error = job.result["error"]
         job.status = "failed"

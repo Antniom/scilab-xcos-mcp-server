@@ -1000,6 +1000,22 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(parsed["last_completed_stage"], "LOAD_XCOS_LIBS")
         self.assertEqual(parsed["stage_events"][0], {"stage": "LOAD_XCOS_LIBS", "status": "BEGIN"})
 
+    def test_apply_validation_progress_update_tracks_stage_transitions(self):
+        details = server.apply_validation_progress_update({}, "LOAD_XCOS_LIBS", "BEGIN")
+        self.assertEqual(details["scilab_active_stage"], "LOAD_XCOS_LIBS")
+        self.assertEqual(
+            details["scilab_stage_trace"],
+            [{"stage": "LOAD_XCOS_LIBS", "status": "BEGIN"}],
+        )
+
+        details = server.apply_validation_progress_update(details, "LOAD_XCOS_LIBS", "END")
+        self.assertIsNone(details["scilab_active_stage"])
+        self.assertEqual(details["scilab_last_completed_stage"], "LOAD_XCOS_LIBS")
+        self.assertEqual(
+            details["scilab_stage_trace"][-1],
+            {"stage": "LOAD_XCOS_LIBS", "status": "END"},
+        )
+
     async def test_widget_tool_call_wrapper_uses_structured_content_and_widget_meta(self):
         response = await server.handle_call_tool("xcos_get_status_widget", {})
         self.assertIsInstance(response, server.mcp_types.CallToolResult)
@@ -1027,6 +1043,40 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(payload["status"], "received")
             self.assertEqual(server.state.results[task_id]["error"], "line1\nline2\tbad\rvalue")
             self.assertTrue(server.state.results[task_id]["event"].is_set())
+        finally:
+            server.state.results.pop(task_id, None)
+
+    async def test_http_post_progress_updates_task_details_and_tracker(self):
+        task_id = "task-progress"
+        progress_tracker = server.create_validation_progress_tracker(server.VALIDATION_PROFILE_FULL_RUNTIME)
+        state_entry = {
+            "success": None,
+            "error": "",
+            "details": {},
+            "event": asyncio.Event(),
+            "progress_tracker": progress_tracker,
+        }
+        server.state.results[task_id] = state_entry
+
+        class DummyRequest:
+            async def body(self):
+                return b'{"task_id":"task-progress","stage":"SCICOS_SIMULATE","status":"BEGIN"}'
+
+        try:
+            response = await server.http_handle_post_progress(DummyRequest())
+            payload = json.loads(response.body.decode("utf-8"))
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(payload["status"], "received")
+            self.assertEqual(
+                server.state.results[task_id]["details"]["scilab_active_stage"],
+                "SCICOS_SIMULATE",
+            )
+            self.assertEqual(progress_tracker["scilab_active_stage"], "SCICOS_SIMULATE")
+            self.assertEqual(
+                progress_tracker["scilab_stage_trace"][-1],
+                {"stage": "SCICOS_SIMULATE", "status": "BEGIN"},
+            )
         finally:
             server.state.results.pop(task_id, None)
 
