@@ -34,6 +34,31 @@ See [DEPLOY_TO_HUGGINGFACE_SPACES.md](./DEPLOY_TO_HUGGINGFACE_SPACES.md).
 
 The Docker build downloads the official Scilab `2026.0.1` Linux archive during image build, so the repository does not need to vendor the Scilab distribution.
 
+## Cross-Platform MCP App Metadata
+
+The server now publishes MCP App metadata intended to work in both Claude and ChatGPT from the same `/mcp` endpoint:
+
+- Widget tools return compact `structuredContent` plus full widget payloads in `_meta.widget`
+- Widget tools advertise both `_meta.ui.resourceUri` and `openai/outputTemplate`
+- The workflow UI resource publishes `_meta.ui.csp` and `_meta.ui.domain`
+
+Optional environment variables for marketplace deployment:
+
+```text
+XCOS_PUBLIC_BASE_URL=https://your-host.example
+XCOS_PUBLIC_MCP_URL=https://your-host.example/mcp
+XCOS_UI_RESOURCE_DOMAINS=https://esm.sh
+XCOS_UI_CONNECT_DOMAINS=
+XCOS_UI_FRAME_DOMAINS=
+XCOS_UI_BASE_URI_DOMAINS=
+```
+
+Notes:
+
+- `XCOS_PUBLIC_MCP_URL` takes precedence when computing the Claude app domain hash
+- If unset, the server derives the public MCP URL from `XCOS_PUBLIC_BASE_URL` plus `/mcp`
+- `XCOS_UI_RESOURCE_DOMAINS` defaults to `https://esm.sh` because the UI bridge client is currently loaded from that origin
+
 ## Developer Debug Output
 
 Normal users receive compact validation results only.

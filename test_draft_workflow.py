@@ -305,7 +305,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIn("PHASE 2 (block diagram preview):", by_name["xcos_get_status_widget"].description)
         self.assertIn(
-            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            "The host client can render the associated widget using the attached app resource.",
             by_name["xcos_get_status_widget"].description,
         )
         self.assertIn(
@@ -313,22 +313,23 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             by_name["xcos_get_workflow_widget"].description,
         )
         self.assertIn(
-            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            "The host client can render the associated widget using the attached app resource.",
             by_name["xcos_get_workflow_widget"].description,
         )
         self.assertIn(
-            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            "The host client can render the associated widget using the attached app resource.",
             by_name["xcos_get_block_catalogue_widget"].description,
         )
         self.assertIn(
-            "After receiving this tool's response, you MUST call the visualize:show_widget tool",
+            "The host client can render the associated widget using the attached app resource.",
             by_name["xcos_get_topology_widget"].description,
         )
         self.assertIn("asynchronous validation", by_name["xcos_start_validation"].description)
-        self.assertNotIn("_meta", dumps["xcos_get_status_widget"])
-        self.assertNotIn("_meta", dumps["xcos_get_workflow_widget"])
-        self.assertNotIn("_meta", dumps["xcos_get_block_catalogue_widget"])
-        self.assertNotIn("_meta", dumps["xcos_get_topology_widget"])
+        self.assertIn("meta", dumps["xcos_get_status_widget"])
+        self.assertIn("meta", dumps["xcos_get_workflow_widget"])
+        self.assertIn("meta", dumps["xcos_get_block_catalogue_widget"])
+        self.assertIn("meta", dumps["xcos_get_topology_widget"])
+        self.assertIn("annotations", dumps["xcos_get_status_widget"])
         self.assertIn(
             "phase_label='phase3_implementation'",
             by_name["xcos_commit_phase"].description,
@@ -347,12 +348,12 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(parsed["success"])
         self.assertIsNone(parsed["warnings"])
 
-    async def test_widget_tool_call_wrapper_includes_visualizer_instruction(self):
+    async def test_widget_tool_call_wrapper_uses_structured_content_and_widget_meta(self):
         response = await server.handle_call_tool("xcos_get_status_widget", {})
-        text = response[0].text
-
-        self.assertIn("// Render this using visualize:show_widget.", text)
-        self.assertIn("// Do not display raw JSON to the user.", text)
+        self.assertIsInstance(response, server.mcp_types.CallToolResult)
+        self.assertEqual(response.structuredContent["widget_type"], "status")
+        self.assertIn("widget", response.meta)
+        self.assertEqual(response.meta["widget"]["widget_type"], "status")
 
     async def test_http_post_result_accepts_control_characters_in_error_text(self):
         task_id = "task-with-control-chars"

@@ -5,6 +5,8 @@ const app = new App({
     version: "1.0.0"
 });
 
+const locale = document.documentElement.lang || navigator.language || "en-US";
+
 const hideAllWidgets = () => {
     document.querySelectorAll('.widget-container').forEach(el => {
         el.classList.remove('active');
@@ -40,6 +42,10 @@ const extractJsonPayload = (text) => {
 };
 
 const getToolPayload = (result) => {
+    if (result?._meta?.widget?.widget_type) {
+        return result._meta.widget;
+    }
+
     if (result?.structuredContent?.widget_type) {
         return result.structuredContent;
     }
@@ -58,6 +64,28 @@ const getToolPayload = (result) => {
 
     return null;
 };
+
+const canRequestDisplayMode = () => typeof window.openai?.requestDisplayMode === "function";
+
+const syncHostControls = () => {
+    const topologyExpand = document.getElementById("topology-expand");
+    if (topologyExpand) {
+        topologyExpand.hidden = !canRequestDisplayMode();
+    }
+};
+
+const requestFullscreenDisplay = async () => {
+    if (!canRequestDisplayMode()) return;
+
+    try {
+        await window.openai.requestDisplayMode({ mode: "fullscreen" });
+    } catch (error) {
+        console.warn("Unable to request fullscreen display mode.", error);
+    }
+};
+
+const formatTime = (date) =>
+    new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(date);
 
 const showAppError = (message, detail = "") => {
     showWidget("waiting");
@@ -139,7 +167,7 @@ app.ontoolresult = (result) => {
 
         if (widgetType === "status") {
             showWidget('status');
-            document.getElementById('status-time').textContent = `Fetched at: ${new Date().toLocaleTimeString()}`;
+            document.getElementById('status-time').textContent = `Fetched at: ${formatTime(new Date())}`;
             
             // Scilab Engine
             const scilabSuccess = payload.scilab_success;
@@ -175,9 +203,7 @@ app.ontoolresult = (result) => {
             if (payload.phases) {
                 payload.phases.forEach(phase => {
                     const phaseEl = document.createElement('div');
-                    phaseEl.style.padding = '16px';
-                    phaseEl.style.border = '1px solid var(--panel-border)';
-                    phaseEl.style.borderRadius = 'var(--radius-sm)';
+                    phaseEl.className = 'phase-card';
                     
                     let statusColor = 'var(--text-tertiary)';
                     let statusText = 'Pending';
@@ -186,7 +212,7 @@ app.ontoolresult = (result) => {
                     else if (phase.status === 'awaiting_approval') { statusColor = 'var(--warning)'; statusText = 'Awaiting Review'; }
                     
                     phaseEl.innerHTML = `
-                        <div class="flex-row space-between">
+                        <div class="phase-card__header">
                             <strong>${escapeHtml(phase.label)}</strong>
                             <span class="badge" style="color: ${statusColor}; background: ${statusColor}22">${statusText}</span>
                         </div>
@@ -214,16 +240,18 @@ app.ontoolresult = (result) => {
 
         } else if (widgetType === "topology") {
             showWidget('topology');
-            document.getElementById('topology-stats').textContent = 
-                `${payload.block_count || 0} blocks, ${payload.link_count || 0} links (Session: ${payload.session_id})`;
+            document.getElementById('topology-stats').textContent =
+                payload.error
+                    ? 'Unable to render topology preview'
+                    : `${payload.block_count || 0} blocks, ${payload.link_count || 0} links (Session: ${payload.session_id})`;
             
             const svgContainer = document.getElementById('topology-svg');
-            // If the server provides SVG we can just inject it
-            if (payload.svg) {
+            if (payload.error) {
+                svgContainer.innerHTML = `<div class="validation-message validation-message--error">${escapeHtml(payload.error)}</div>`;
+            } else if (payload.svg) {
                 svgContainer.innerHTML = payload.svg;
             } else if (payload.mermaid) {
-                // Future expansion: render mermaid text client-side if needed
-                svgContainer.innerHTML = `<pre style="text-align:left; font-size:12px;">${payload.mermaid}</pre>`;
+                svgContainer.innerHTML = `<pre class="validation-message">${escapeHtml(payload.mermaid)}</pre>`;
             } else {
                 svgContainer.innerHTML = '<p class="text-muted">No visualization available.</p>';
             }
@@ -236,13 +264,13 @@ app.ontoolresult = (result) => {
             if (payload.success) {
                 badge.className = 'badge badge-success';
                 badge.textContent = 'Success';
-                details.innerHTML = `<h3 style="color:var(--success)">Validation Passed</h3>
+                details.innerHTML = `<h3 class="validation-title validation-title--success">Validation Passed</h3>
                                      <p>The Xcos XML syntax is valid and ready for the next phase.</p>`;
             } else {
                 badge.className = 'badge badge-danger';
                 badge.textContent = 'Failed';
-                details.innerHTML = `<h3 style="color:var(--danger)">Validation Errors</h3>
-                                     <pre style="background:#f9f9f9; padding:12px; border-radius:var(--radius-sm); border:1px solid #eee; overflow-x:auto;">${escapeHtml(payload.error || 'Unknown syntactic error')}</pre>`;
+                details.innerHTML = `<h3 class="validation-title validation-title--error">Validation Errors</h3>
+                                     <pre class="validation-message validation-message--error">${escapeHtml(payload.error || 'Unknown syntactic error')}</pre>`;
             }
         } else {
             showAppError(`Unsupported widget type: ${widgetType || "unknown"}`);
@@ -251,9 +279,15 @@ app.ontoolresult = (result) => {
         console.error("Error processing tool result:", err);
         showAppError("The widget failed to render.", err?.stack || String(err));
     }
+    syncHostControls();
 };
 
+document.getElementById("topology-expand")?.addEventListener("click", () => {
+    void requestFullscreenDisplay();
+});
+
 app.connect().then(() => {
+    syncHostControls();
     console.log("Xcos MCP App Connected via Ext Apps protocol.");
 }).catch(err => {
     console.error("Failed to connect App:", err);

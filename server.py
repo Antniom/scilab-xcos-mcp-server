@@ -77,6 +77,44 @@ SERVER_PORT = int(os.environ.get("PORT", os.environ.get("XCOS_SERVER_PORT", "800
 MCP_HTTP_PATH = os.environ.get("XCOS_MCP_HTTP_PATH", "/mcp")
 MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
 WORKFLOW_UI_RESOURCE_URI = "ui://xcos/index.html"
+DEFAULT_UI_RESOURCE_DOMAINS = ["https://esm.sh"]
+
+WIDGET_TOOL_NAMES = {
+    "xcos_get_status_widget",
+    "xcos_get_workflow_widget",
+    "xcos_get_validation_widget",
+    "xcos_get_block_catalogue_widget",
+    "xcos_get_topology_widget",
+}
+
+TOOL_DESCRIPTOR_OVERRIDES = {
+    "xcos_get_status_widget": {"title": "Get Xcos Status Widget", "read_only": True, "idempotent": True, "render_widget": True},
+    "xcos_get_workflow_widget": {"title": "Get Workflow Widget", "read_only": True, "idempotent": True, "render_widget": True},
+    "xcos_get_validation_widget": {"title": "Get Validation Widget", "read_only": True, "idempotent": True, "render_widget": True},
+    "xcos_get_block_catalogue_widget": {"title": "Get Block Catalogue Widget", "read_only": True, "idempotent": True, "render_widget": True},
+    "xcos_get_topology_widget": {"title": "Get Topology Widget", "read_only": True, "idempotent": True, "render_widget": True},
+    "xcos_create_workflow": {"title": "Create Workflow", "read_only": False, "idempotent": False},
+    "xcos_list_workflows": {"title": "List Workflows", "read_only": True, "idempotent": True},
+    "xcos_get_workflow": {"title": "Get Workflow", "read_only": True, "idempotent": True},
+    "xcos_submit_phase": {"title": "Submit Workflow Phase", "read_only": False, "idempotent": False},
+    "xcos_review_phase": {"title": "Review Workflow Phase", "read_only": False, "idempotent": False},
+    "get_xcos_block_data": {"title": "Get Xcos Block Data", "read_only": True, "idempotent": True},
+    "get_xcos_block_source": {"title": "Get Xcos Block Source", "read_only": True, "idempotent": True},
+    "search_related_xcos_files": {"title": "Search Related Xcos Files", "read_only": True, "idempotent": True},
+    "verify_xcos_xml": {"title": "Verify Xcos XML", "read_only": True, "idempotent": True},
+    "xcos_start_draft": {"title": "Start Draft Session", "read_only": False, "idempotent": False},
+    "xcos_add_blocks": {"title": "Add Blocks To Draft", "read_only": False, "idempotent": False},
+    "xcos_add_links": {"title": "Add Links To Draft", "read_only": False, "idempotent": False},
+    "xcos_start_validation": {"title": "Start Draft Validation", "read_only": True, "idempotent": False},
+    "xcos_get_validation_status": {"title": "Get Validation Status", "read_only": True, "idempotent": True},
+    "xcos_verify_draft": {"title": "Verify Draft", "read_only": True, "idempotent": False},
+    "xcos_commit_phase": {"title": "Commit Workflow Phase", "read_only": False, "idempotent": False},
+    "xcos_get_draft_xml": {"title": "Get Draft XML", "read_only": True, "idempotent": True},
+    "xcos_get_file_path": {"title": "Get Session File Path", "read_only": True, "idempotent": True},
+    "xcos_get_file_content": {"title": "Get Session File Content", "read_only": True, "idempotent": True},
+    "xcos_list_sessions": {"title": "List Sessions", "read_only": True, "idempotent": True},
+    "ping": {"title": "Ping Server", "read_only": True, "idempotent": True},
+}
 
 WORKFLOW_PHASE_ORDER = [
     "phase1_math_model",
@@ -93,7 +131,7 @@ REVIEWABLE_PHASES = {"phase1_math_model", "phase2_architecture"}
 BUILD_XCOS_DIAGRAM_PROMPT_NAME = "build_xcos_diagram"
 BUILD_XCOS_DIAGRAM_PROMPT_TITLE = "Build Xcos Diagram"
 BUILD_XCOS_DIAGRAM_PROMPT_DESCRIPTION = (
-    "Guides Claude through a 3-phase gated workflow to model, plan, and build "
+    "Guides an MCP-compatible assistant through a 3-phase gated workflow to model, plan, and build "
     "a Scilab Xcos diagram. Each phase requires explicit user approval before proceeding."
 )
 BUILD_XCOS_DIAGRAM_PROMPT_RESULT_DESCRIPTION = (
@@ -200,7 +238,7 @@ BUILD_XCOS_DIAGRAM_PROMPT_TEMPLATE = textwrap.dedent(
     - Never proceed past a STOP gate without the user explicitly typing 'approve'.
     - Never write block XML from memory â€” always call `get_xcos_block_data` first.
     - Never skip `get_xcos_block_source` or `search_related_xcos_files` if a block's parameters or dependencies are unclear.
-    - Every diagram must be generated using Claude's custom visual interactive capabilities. Ensure layouts are completely clean without overlapping text, broken arrow paths, or ASCII art.
+    - Every diagram must be generated as a clean visual layout. Avoid overlapping text, broken arrow paths, or ASCII art.
     - Always call `xcos_get_workflow_widget` after every `xcos_submit_phase` call.
     - Always display every widget inline immediately after it is returned.
     - If the user requests changes at any approval gate, go back and revise â€” never push forward.
@@ -1164,27 +1202,225 @@ def make_json_response(payload):
     return make_text_response(json.dumps(payload, indent=2))
 
 
-def make_structured_tool_result(summary: str, payload: dict):
-    return [
-        mcp_types.TextContent(
-            type="text",
-            text=f"{summary}\n\n{json.dumps(payload, indent=2)}"
-        )
-    ]
+def parse_csv_env(name: str, default: list[str] | None = None) -> list[str]:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return list(default or [])
+    return [item.strip() for item in raw.split(",") if item.strip()]
 
 
-def make_widget_tool_result(summary: str, payload: dict):
-    return [
-        mcp_types.TextContent(
-            type="text",
-            text=(
-                f"{summary}\n"
-                "// Render this using visualize:show_widget.\n"
-                "// Do not display raw JSON to the user.\n\n"
-                f"{json.dumps(payload, indent=2)}"
-            )
-        )
-    ]
+def deep_merge_dicts(base: dict | None, extra: dict | None) -> dict | None:
+    if not base and not extra:
+        return None
+
+    merged = dict(base or {})
+    for key, value in (extra or {}).items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = deep_merge_dicts(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def get_public_base_url() -> str:
+    override = os.environ.get("XCOS_PUBLIC_BASE_URL", "").strip()
+    if override:
+        return override.rstrip("/")
+    return get_server_base_url().rstrip("/")
+
+
+def get_public_mcp_url() -> str:
+    override = os.environ.get("XCOS_PUBLIC_MCP_URL", "").strip()
+    if override:
+        return override.rstrip("/")
+    return f"{get_public_base_url()}{MCP_HTTP_PATH}"
+
+
+def compute_claude_app_domain(mcp_server_url: str) -> str:
+    normalized = mcp_server_url.rstrip("/")
+    digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:32]
+    return f"{digest}.claudemcpcontent.com"
+
+
+def build_ui_resource_meta() -> dict:
+    csp = {}
+    resource_domains = parse_csv_env("XCOS_UI_RESOURCE_DOMAINS", DEFAULT_UI_RESOURCE_DOMAINS)
+    connect_domains = parse_csv_env("XCOS_UI_CONNECT_DOMAINS", [])
+    frame_domains = parse_csv_env("XCOS_UI_FRAME_DOMAINS", [])
+    base_uri_domains = parse_csv_env("XCOS_UI_BASE_URI_DOMAINS", [])
+
+    if resource_domains:
+        csp["resourceDomains"] = resource_domains
+    if connect_domains:
+        csp["connectDomains"] = connect_domains
+    if frame_domains:
+        csp["frameDomains"] = frame_domains
+    if base_uri_domains:
+        csp["baseUriDomains"] = base_uri_domains
+
+    ui_meta = {"prefersBorder": True}
+    public_mcp_url = get_public_mcp_url()
+    if public_mcp_url.startswith(("http://", "https://")):
+        ui_meta["domain"] = compute_claude_app_domain(public_mcp_url)
+    if csp:
+        ui_meta["csp"] = csp
+    return {"ui": ui_meta}
+
+
+def build_render_tool_meta() -> dict:
+    return {
+        "ui": {"resourceUri": WORKFLOW_UI_RESOURCE_URI},
+        "openai/outputTemplate": WORKFLOW_UI_RESOURCE_URI,
+    }
+
+
+def sanitize_public_description(description: str | None) -> str | None:
+    if not description:
+        return description
+
+    return description.replace(
+        "After receiving this tool's response, you MUST call the visualize:show_widget tool to render the data as an HTML widget. Do not display raw JSON to the user.",
+        "The host client can render the associated widget using the attached app resource. Do not echo raw JSON to the user.",
+    )
+
+
+def build_tool_annotations(
+    *,
+    title: str,
+    read_only: bool,
+    destructive: bool = False,
+    idempotent: bool = False,
+    open_world: bool = False,
+) -> mcp_types.ToolAnnotations:
+    return mcp_types.ToolAnnotations(
+        title=title,
+        readOnlyHint=read_only,
+        destructiveHint=destructive,
+        idempotentHint=idempotent,
+        openWorldHint=open_world,
+    )
+
+
+def normalize_tool_descriptor(tool: mcp_types.Tool) -> mcp_types.Tool:
+    config = TOOL_DESCRIPTOR_OVERRIDES.get(tool.name, {})
+    title = config.get("title") or tool.title or tool.name.replace("_", " ").title()
+    meta = tool.meta
+    if config.get("render_widget"):
+        meta = deep_merge_dicts(meta, build_render_tool_meta())
+
+    return tool.model_copy(
+        update={
+            "title": title,
+            "description": sanitize_public_description(tool.description),
+            "annotations": build_tool_annotations(
+                title=title,
+                read_only=config.get("read_only", False),
+                destructive=config.get("destructive", False),
+                idempotent=config.get("idempotent", False),
+                open_world=config.get("open_world", False),
+            ),
+            "meta": meta,
+        }
+    )
+
+
+def build_widget_structured_payload(widget_payload: dict) -> dict:
+    widget_type = widget_payload.get("widget_type")
+    payload = widget_payload.get("payload", {})
+
+    if widget_type == "catalogue":
+        blocks = payload.get("blocks", [])
+        compact_payload = {
+            "category": payload.get("category"),
+            "categories": payload.get("categories", []),
+            "block_count": len(blocks),
+            "blocks": [
+                {
+                    "name": block.get("name"),
+                    "type": block.get("type"),
+                    "description": block.get("description"),
+                }
+                for block in blocks[:20]
+            ],
+        }
+    elif widget_type == "topology":
+        compact_payload = {
+            "session_id": payload.get("session_id"),
+            "block_count": payload.get("block_count", 0),
+            "link_count": payload.get("link_count", 0),
+            "error": payload.get("error"),
+        }
+    elif widget_type == "workflow":
+        if payload.get("phases"):
+            compact_payload = {
+                "workflow_id": payload.get("workflow_id"),
+                "phases": payload.get("phases", []),
+            }
+        else:
+            workflows = payload.get("all_workflows", [])
+            compact_payload = {
+                "workflow_id": payload.get("workflow_id"),
+                "workflow_count": len(workflows),
+                "all_workflows": [
+                    {
+                        "workflow_id": workflow.get("workflow_id"),
+                        "current_phase": workflow.get("current_phase"),
+                        "current_phase_label": workflow.get("current_phase_label"),
+                        "status": workflow.get("status"),
+                    }
+                    for workflow in workflows[:10]
+                ],
+            }
+    elif widget_type == "status":
+        compact_payload = {
+            "scilab_success": payload.get("scilab_success", False),
+            "scilab_output": payload.get("scilab_output"),
+            "env_context": payload.get("env_context"),
+            "active_drafts": payload.get("active_drafts", 0),
+        }
+    elif widget_type == "validation":
+        compact_payload = {
+            "success": payload.get("success", False),
+            "error": payload.get("error"),
+        }
+    else:
+        compact_payload = payload
+
+    return {
+        "widget_type": widget_type,
+        "payload": compact_payload,
+    }
+
+
+def make_structured_tool_result(
+    summary: str,
+    payload: dict,
+    *,
+    meta: dict | None = None,
+    is_error: bool = False,
+) -> mcp_types.CallToolResult:
+    return mcp_types.CallToolResult(
+        content=[mcp_types.TextContent(type="text", text=summary)],
+        structuredContent=payload,
+        _meta=meta,
+        isError=is_error,
+    )
+
+
+def make_widget_tool_result(summary: str, payload: dict) -> mcp_types.CallToolResult:
+    return make_structured_tool_result(
+        summary,
+        build_widget_structured_payload(payload),
+        meta={"widget": payload},
+    )
+
+
+def make_error_tool_result(message: str, payload: dict | None = None) -> mcp_types.CallToolResult:
+    return make_structured_tool_result(
+        message,
+        payload or {"error": message},
+        is_error=True,
+    )
 
 
 def get_server_base_url() -> str:
@@ -4009,8 +4245,10 @@ async def handle_list_resources() -> list[mcp_types.Resource]:
         mcp_types.Resource(
             uri=WORKFLOW_UI_RESOURCE_URI,
             name="Xcos Workflow UI",
+            title="Xcos Workflow UI",
             description="Embedded workflow UI for the MCP app.",
             mimeType=MCP_APP_MIME_TYPE,
+            _meta=build_ui_resource_meta(),
         )
     ]
 
@@ -4036,11 +4274,12 @@ async def handle_read_resource(uri):
         mime_type = "text/javascript"
         
     with open(ui_path, "r", encoding="utf-8") as f:
-        return [ReadResourceContents(content=f.read(), mime_type=mime_type)]
+        meta = build_ui_resource_meta() if filename.endswith(".html") else None
+        return [ReadResourceContents(content=f.read(), mime_type=mime_type, meta=meta)]
 
 @mcp_server.list_tools()
 async def handle_list_tools() -> list[mcp_types.Tool]:
-    return [
+    tools = [
         mcp_types.Tool(
             name="xcos_get_status_widget",
             description=(
@@ -4348,6 +4587,7 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
             inputSchema={"type": "object", "properties": {}},
         ),
     ]
+    return [normalize_tool_descriptor(tool) for tool in tools]
 
 @mcp_server.call_tool()
 async def handle_call_tool(name: str, arguments: dict | None):
@@ -4363,7 +4603,7 @@ async def handle_call_tool(name: str, arguments: dict | None):
         return make_widget_tool_result("Workflow Widget Generated", payload)
     elif name == "xcos_get_validation_widget":
         payload = parse_mcp_text_json_response(await xcos_get_validation_widget(arguments["xml_content"]))
-        return make_structured_tool_result("Validation Widget Generated", payload)
+        return make_widget_tool_result("Validation Widget Generated", payload)
     elif name == "xcos_get_block_catalogue_widget":
         payload = parse_mcp_text_json_response(await xcos_get_block_catalogue_widget(arguments.get("category")))
         return make_widget_tool_result("Block Catalogue Widget Generated", payload)
@@ -4500,12 +4740,16 @@ async def handle_call_tool(name: str, arguments: dict | None):
             arguments.get("encoding", "text"),
         )
     elif name == "xcos_list_sessions":
-        return await xcos_list_sessions()
+        payload = parse_mcp_text_json_response(await xcos_list_sessions())
+        return make_structured_tool_result(
+            f"Found {len(payload.get('sessions', []))} draft session(s).",
+            payload,
+        )
     elif name == "ping":
         return make_structured_tool_result("Pong", {"status": "ok", "timestamp": now_iso()})
 
     else:
-        return [mcp_types.TextContent(type="text", text=f"Unknown tool: {name}")]
+        return make_error_tool_result(f"Unknown tool: {name}")
 
 async def main():
     ensure_state_dirs()

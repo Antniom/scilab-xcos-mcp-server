@@ -99,9 +99,12 @@ class WorkflowUiTests(unittest.IsolatedAsyncioTestCase):
     async def test_ui_resource_is_readable(self):
         resources = await server.handle_list_resources()
         self.assertEqual(str(resources[0].uri), server.WORKFLOW_UI_RESOURCE_URI)
+        self.assertIn("ui", resources[0].meta)
+        self.assertIn("csp", resources[0].meta["ui"])
 
         contents = await server.handle_read_resource(server.WORKFLOW_UI_RESOURCE_URI)
         self.assertEqual(contents[0].mime_type, server.MCP_APP_MIME_TYPE)
+        self.assertIn("ui", contents[0].meta)
         self.assertIn("Scilab Xcos MCP Server", contents[0].content)
 
 

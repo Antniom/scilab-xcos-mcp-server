@@ -106,6 +106,15 @@ class WidgetTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("CONST_m", names)
         self.assertIn("INTEGRAL_m", names)
 
+    async def test_widget_tool_call_returns_structured_content_and_widget_meta(self):
+        result = await server.handle_call_tool("xcos_get_block_catalogue_widget", {"category": "Sources"})
+        self.assertIsInstance(result, server.mcp_types.CallToolResult)
+        self.assertEqual(result.structuredContent["widget_type"], "catalogue")
+        self.assertIn("block_count", result.structuredContent["payload"])
+        self.assertIn("widget", result.meta)
+        self.assertEqual(result.meta["widget"]["widget_type"], "catalogue")
+        self.assertIn("blocks", result.meta["widget"]["payload"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,9 +14,13 @@
         <!-- Initial/Loading State -->
         <div id="widget-waiting" class="widget-container active">
             <div class="empty-state">
-                <div class="spinner"></div>
                 <h2>Waiting for Xcos Data...</h2>
-                <p>Execute an Xcos MCP tool to view results here.</p>
+                <p>Run an Xcos tool to render a result in this panel.</p>
+                <div class="skeleton-stack" aria-hidden="true">
+                    <div class="skeleton-line skeleton-title"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line"></div>
+                </div>
             </div>
         </div>
 
@@ -81,8 +85,13 @@
                     <h1 class="hero-title">Draft Topology Preview</h1>
                     <p class="hero-subtitle" id="topology-stats">0 blocks, 0 links</p>
                 </div>
+                <div class="topology-actions">
+                    <button id="topology-expand" class="btn-secondary" type="button" hidden>
+                        Open Fullscreen
+                    </button>
+                </div>
             </div>
-            <div class="card" style="padding: 12px; background: #fff; text-align: center; overflow-x: auto;">
+            <div class="card topology-surface">
                 <div id="topology-svg">
                     <!-- Mermaid / DOT SVG will go here -->
                 </div>
