@@ -2909,6 +2909,27 @@ def build_scilab_startup_preflight_script() -> str:
     ).strip() + "\n"
 
 
+def analyze_startup_preflight_output(output: str, returncode: int) -> tuple[bool, str | None]:
+    normalized_output = output or ""
+    if returncode != 0:
+        return False, None
+
+    error_marker = None
+    for raw_line in normalized_output.splitlines():
+        line = raw_line.strip()
+        if line.startswith("XCOS_PREFLIGHT_ERROR:"):
+            error_marker = line[len("XCOS_PREFLIGHT_ERROR:"):].strip() or "Unknown Scilab preflight error."
+            break
+
+    if error_marker:
+        return False, error_marker
+
+    # Some hosted Scilab builds exit successfully but do not flush mprintf output
+    # in short-lived startup scripts. In that case, trust return code 0 unless an
+    # explicit XCOS_PREFLIGHT_ERROR marker is present.
+    return True, None
+
+
 async def run_startup_preflight() -> dict:
     mode = detect_validation_mode()
     checks = []
@@ -2984,14 +3005,20 @@ async def run_startup_preflight() -> dict:
             stdout, _ = await asyncio.wait_for(process.communicate(), timeout=preflight_timeout_seconds)
             output = stdout.decode("utf-8", errors="replace")
             preflight_output_tail = "\n".join(output.splitlines()[-30:])
-            preflight_ok = process.returncode == 0 and "XCOS_PREFLIGHT_OK" in output
+            preflight_ok, preflight_error_marker = analyze_startup_preflight_output(output, process.returncode)
             checks.append({
                 "name": "scilab_startup_smoke",
                 "ok": preflight_ok,
                 "returncode": process.returncode,
             })
             if not preflight_ok:
-                errors.append("Scilab startup preflight smoke test failed (loadXcosLibs did not complete successfully).")
+                if preflight_error_marker:
+                    errors.append(
+                        "Scilab startup preflight reported an explicit error: "
+                        f"{preflight_error_marker}"
+                    )
+                else:
+                    errors.append("Scilab startup preflight smoke test failed (loadXcosLibs did not complete successfully).")
         except asyncio.TimeoutError:
             errors.append(
                 f"Scilab startup preflight timed out after {preflight_timeout_seconds:.0f} seconds."

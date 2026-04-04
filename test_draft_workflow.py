@@ -1192,6 +1192,23 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(parsed["success"])
         self.assertIsNone(parsed["warnings"])
 
+    def test_startup_preflight_output_accepts_empty_stdout_with_zero_returncode(self):
+        ok, marker = server.analyze_startup_preflight_output("", 0)
+        self.assertTrue(ok)
+        self.assertIsNone(marker)
+
+    def test_startup_preflight_output_fails_on_explicit_error_marker(self):
+        ok, marker = server.analyze_startup_preflight_output(
+            "XCOS_PREFLIGHT_ERROR:loadXcosLibs failed", 0
+        )
+        self.assertFalse(ok)
+        self.assertEqual(marker, "loadXcosLibs failed")
+
+    def test_startup_preflight_output_fails_on_nonzero_returncode(self):
+        ok, marker = server.analyze_startup_preflight_output("XCOS_PREFLIGHT_OK", 1)
+        self.assertFalse(ok)
+        self.assertIsNone(marker)
+
     def test_scilab_log_parser_tracks_stage_trace_on_success(self):
         parsed = server.analyze_scilab_verification_output(
             "\n".join([
