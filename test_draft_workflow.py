@@ -139,6 +139,58 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         decoded = base64.b64decode(content_payload["content"]).decode("utf-8")
 
         self.assertIn("<XcosDiagram", decoded)
+        self.assertIn('<mxCell id="0:2:0" parent="1"/>', decoded)
+
+    async def test_file_content_session_source_auto_writes_snapshot(self):
+        session_id = await self.start_session()
+        await server.xcos_add_blocks(session_id, CONST_BLOCK_XML)
+
+        # No explicit commit/snapshot before requesting session content.
+        content_response = await server.xcos_get_file_content(
+            session_id,
+            source="session",
+            encoding="text",
+        )
+        content_payload = json.loads(content_response[0].text)
+
+        self.assertTrue(content_payload["file_path"])
+        self.assertTrue(os.path.exists(content_payload["file_path"]))
+        self.assertIn("<XcosDiagram", content_payload["content"])
+
+    async def test_file_content_last_verified_falls_back_to_session_snapshot(self):
+        session_id = await self.start_session()
+        await server.xcos_add_blocks(session_id, CONST_BLOCK_XML)
+
+        session_meta = server.write_session_snapshot(session_id)
+        server.record_validation_outcome(
+            session_id,
+            {
+                "success": True,
+                "task_id": "mock-last-verified",
+                "file_path": None,
+                "file_size_bytes": None,
+                "validation_profile": server.VALIDATION_PROFILE_HOSTED_SMOKE,
+            },
+            session_meta=session_meta,
+        )
+
+        # Simulate stale/missing last_verified metadata and ensure retrieval heals itself.
+        draft = server.state.drafts[session_id]
+        draft.last_verified_file_path = None
+        draft.last_verified_file_size = None
+        server.persist_draft_session(session_id)
+
+        content_response = await server.xcos_get_file_content(
+            session_id,
+            source="last_verified",
+            encoding="text",
+        )
+        content_payload = json.loads(content_response[0].text)
+
+        self.assertEqual(content_payload["source"], "last_verified")
+        self.assertEqual(content_payload["file_path"], session_meta["path"])
+        self.assertIn("<XcosDiagram", content_payload["content"])
+        self.assertEqual(server.state.drafts[session_id].last_verified_file_path, session_meta["path"])
 
     async def test_verify_draft_updates_session_metadata(self):
         session_id = await self.start_session()
@@ -621,6 +673,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         python_result = {"success": True, "warnings": ["structural warning"]}
 
         with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": ""}, clear=False),
             patch.object(server, "detect_validation_mode", return_value="subprocess"),
             patch.object(server, "auto_fix_mux_to_scalar", return_value=False),
             patch.object(server, "normalize_fanout_to_split_blocks", return_value={"normalized": False, "warnings": ["fanout warning"]}),
@@ -654,6 +707,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         python_result = {"success": True, "warnings": []}
 
         with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": ""}, clear=False),
             patch.object(server, "detect_validation_mode", return_value="subprocess"),
             patch.object(server, "auto_fix_mux_to_scalar", return_value=False),
             patch.object(server, "normalize_fanout_to_split_blocks", return_value={"normalized": False, "warnings": []}),
@@ -1062,6 +1116,8 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         payload = json.loads(response[0].text)
         self.assertEqual(payload["timeout_seconds"], 321.0)
         self.assertEqual(payload["validation_profile"], server.VALIDATION_PROFILE_FULL_RUNTIME)
+        self.assertGreater(payload["recommended_poll_interval_seconds"], 0)
+        self.assertGreaterEqual(payload["max_poll_attempts_hint"], 1)
         self.assertEqual(server.state.validation_jobs[payload["job_id"]].timeout_seconds, 321.0)
         self.assertEqual(
             server.state.validation_jobs[payload["job_id"]].validation_profile,

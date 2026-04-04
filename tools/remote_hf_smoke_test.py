@@ -287,12 +287,6 @@ async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
             )
             ensure_validation_succeeded(validation)
 
-            file_info = await call_tool_json(session, "xcos_get_file_path", {"session_id": session_id})
-            file_content = await call_tool_json(
-                session,
-                "xcos_get_file_content",
-                {"session_id": session_id, "source": "session", "encoding": "text"},
-            )
             commit = None
             if validation.get("success"):
                 commit = await call_tool_json(
@@ -300,6 +294,18 @@ async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
                     "xcos_commit_phase",
                     {"session_id": session_id, "phase_label": "phase3_implementation", "blocks_xml": ""},
                 )
+
+            file_info = await call_tool_json(session, "xcos_get_file_path", {"session_id": session_id})
+            file_content = await call_tool_json(
+                session,
+                "xcos_get_file_content",
+                {"session_id": session_id, "source": "session", "encoding": "text"},
+            )
+            last_verified_content = await call_tool_json(
+                session,
+                "xcos_get_file_content",
+                {"session_id": session_id, "source": "last_verified", "encoding": "text"},
+            )
 
             return {
                 "ping": ping,
@@ -312,6 +318,7 @@ async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
                 "commit": commit,
                 "file_info": file_info,
                 "file_size_bytes": file_content.get("size_bytes"),
+                "last_verified_size_bytes": last_verified_content.get("size_bytes"),
             }
 
 

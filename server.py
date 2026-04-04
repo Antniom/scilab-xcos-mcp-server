@@ -1345,6 +1345,7 @@ class DraftDiagram:
         full_xml += '    <root>\n'
         full_xml += '      <mxCell id="0"/>\n'
         full_xml += '      <mxCell id="1" parent="0"/>\n'
+        full_xml += '      <mxCell id="0:2:0" parent="1"/>\n'
         
         # Append blocks and links
         for b in self.blocks:
@@ -2437,6 +2438,33 @@ def write_session_snapshot(session_id: str):
     return get_file_metadata(file_path)
 
 
+def ensure_session_snapshot(session_id: str) -> dict | None:
+    session_meta = get_file_metadata(get_session_file_path(session_id))
+    if session_meta:
+        return session_meta
+    if session_id not in state.drafts:
+        return None
+    try:
+        return write_session_snapshot(session_id)
+    except Exception:
+        return None
+
+
+def resolve_last_verified_file_metadata(session_id: str, draft: "DraftDiagram") -> dict | None:
+    file_path = draft.last_verified_file_path
+    if file_path and os.path.exists(file_path):
+        file_meta = get_file_metadata(file_path)
+        if file_meta:
+            return file_meta
+
+    # Healing fallback: successful validation should always be recoverable
+    # from the persisted session snapshot.
+    if draft.last_verified_success:
+        return ensure_session_snapshot(session_id)
+
+    return None
+
+
 def record_validation_outcome(session_id: str, result: dict, session_meta: dict | None = None):
     if session_id not in state.drafts:
         return None
@@ -2446,12 +2474,19 @@ def record_validation_outcome(session_id: str, result: dict, session_meta: dict 
     draft.last_verified_at = now_iso()
     draft.last_verified_success = result.get("success")
     draft.last_verified_task_id = result.get("task_id")
+    resolved_file_path = result.get("file_path")
+    resolved_file_size = result.get("file_size_bytes")
     if result.get("success") and session_meta:
-        draft.last_verified_file_path = session_meta["path"]
-        draft.last_verified_file_size = session_meta["size_bytes"]
-    else:
-        draft.last_verified_file_path = result.get("file_path")
-    draft.last_verified_file_size = result.get("file_size_bytes")
+        resolved_file_path = session_meta["path"]
+        resolved_file_size = session_meta["size_bytes"]
+    elif resolved_file_path:
+        resolved_meta = get_file_metadata(resolved_file_path)
+        if resolved_meta:
+            resolved_file_path = resolved_meta["path"]
+            if resolved_file_size is None:
+                resolved_file_size = resolved_meta["size_bytes"]
+    draft.last_verified_file_path = resolved_file_path
+    draft.last_verified_file_size = resolved_file_size
     draft.last_verified_error = result.get("error")
     draft.last_verified_origin = result.get("origin", "scilab-validator")
     draft.last_verified_profile = normalize_validation_profile(result.get("validation_profile"))
@@ -2468,8 +2503,8 @@ def record_validation_outcome(session_id: str, result: dict, session_meta: dict 
         workflow.last_verified = {
             "success": result.get("success"),
             "task_id": result.get("task_id"),
-            "file_path": result.get("file_path"),
-            "file_size_bytes": result.get("file_size_bytes"),
+            "file_path": resolved_file_path,
+            "file_size_bytes": resolved_file_size,
             "error": result.get("error"),
             "origin": result.get("origin", "scilab-validator"),
             "validation_profile": draft.last_verified_profile,
@@ -2493,6 +2528,10 @@ def make_validation_job_public_payload(job: ValidationJob) -> dict:
     }
     if job.status in {"queued", "running"}:
         payload["poll_with"] = "xcos_get_validation_status"
+        poll_interval_seconds = max(1.0, get_validation_worker_poll_interval_seconds())
+        max_polls_hint = max(1, int((job.timeout_seconds / poll_interval_seconds) + 0.999))
+        payload["recommended_poll_interval_seconds"] = poll_interval_seconds
+        payload["max_poll_attempts_hint"] = max_polls_hint
     if job.result:
         payload.update(
             make_public_validation_payload(
@@ -5600,44 +5639,11 @@ async def _legacy_xcos_verify_draft(session_id: str):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
     
-    draft = state.drafts[session_id]
-    xml_content = draft.to_xml()
+    xml_content = state.drafts[session_id].to_xml()
     session_meta = write_session_snapshot(session_id)
     result = await run_verification(xml_content)
 
-    draft.last_verified_at = datetime.now().isoformat()
-    draft.last_verified_success = result.get("success")
-    draft.last_verified_task_id = result.get("task_id")
-    # Point last_verified to the session snapshot (not the temp validator file)
-    # so xcos_get_file_content(source='last_verified') always returns the final file.
-    if result.get("success"):
-        draft.last_verified_file_path = session_meta["path"]
-        draft.last_verified_file_size = session_meta["size_bytes"]
-    else:
-        draft.last_verified_file_path = result.get("file_path")
-    draft.last_verified_file_size = result.get("file_size_bytes")
-    draft.last_verified_error = result.get("error")
-    draft.last_verified_origin = result.get("origin", "scilab-validator")
-    draft.last_verified_profile = normalize_validation_profile(result.get("validation_profile"))
-
-    workflow_id = state.draft_to_workflow.get(session_id)
-    if workflow_id and workflow_id in state.workflows:
-        workflow = state.workflows[workflow_id]
-        phase3 = workflow.phases["phase3_implementation"]
-        phase3.reviewed_at = now_iso()
-        phase3.last_error = result.get("error")
-        phase3.status = "completed" if result.get("success") else "failed"
-        workflow.current_phase = "phase3_implementation"
-        workflow.last_verified = {
-            "success": result.get("success"),
-            "task_id": result.get("task_id"),
-            "file_path": result.get("file_path"),
-            "file_size_bytes": result.get("file_size_bytes"),
-            "error": result.get("error"),
-            "origin": result.get("origin", "scilab-validator"),
-            "validation_profile": draft.last_verified_profile,
-        }
-        workflow.updated_at = now_iso()
+    workflow_id = record_validation_outcome(session_id, result, session_meta)
 
     result["session_file_path"] = session_meta["path"]
     result["session_file_size_bytes"] = session_meta["size_bytes"]
@@ -5743,7 +5749,7 @@ async def xcos_get_file_path(session_id: str):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
 
-    session_meta = get_file_metadata(get_session_file_path(session_id))
+    session_meta = ensure_session_snapshot(session_id)
     if not session_meta:
         return make_text_response(f"Error: Session snapshot for {session_id} doesn't exist yet.")
     draft = state.drafts[session_id]
@@ -5766,8 +5772,8 @@ async def xcos_get_file_content(
         return make_text_response(f"Error: Session {session_id} not found")
 
     draft = state.drafts[session_id]
-    source = source.lower()
-    encoding = encoding.lower()
+    source = source.strip().lower()
+    encoding = encoding.strip().lower()
     if source not in {"draft", "session", "last_verified"}:
         return make_text_response("Error: source must be one of draft, session, or last_verified")
     if encoding not in {"text", "base64"}:
@@ -5779,13 +5785,24 @@ async def xcos_get_file_content(
     elif source == "session":
         file_path = get_session_file_path(session_id)
         if not os.path.exists(file_path):
-            return make_text_response(f"Error: Session snapshot {file_path} doesn't exist yet. Commit a phase or write a snapshot first.")
+            session_meta = ensure_session_snapshot(session_id)
+            if not session_meta:
+                return make_text_response(f"Error: Session snapshot {file_path} doesn't exist yet. Commit a phase or write a snapshot first.")
+            file_path = session_meta["path"]
         with open(file_path, "rb") as f:
             raw = f.read()
     else:
-        file_path = draft.last_verified_file_path
-        if not file_path or not os.path.exists(file_path):
+        resolved_last_verified = resolve_last_verified_file_metadata(session_id, draft)
+        if not resolved_last_verified:
             return make_text_response(f"Error: No last verified file available for session {session_id}")
+        file_path = resolved_last_verified["path"]
+        if (
+            draft.last_verified_file_path != file_path
+            or draft.last_verified_file_size != resolved_last_verified["size_bytes"]
+        ):
+            draft.last_verified_file_path = file_path
+            draft.last_verified_file_size = resolved_last_verified["size_bytes"]
+            persist_draft_session(session_id)
         with open(file_path, "rb") as f:
             raw = f.read()
 
