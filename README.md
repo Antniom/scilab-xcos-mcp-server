@@ -38,6 +38,8 @@ Optional overrides:
 XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS=180
 XCOS_POLL_VALIDATION_TIMEOUT_SECONDS=420
 XCOS_VALIDATION_JOB_TIMEOUT_SECONDS=720
+XCOS_VALIDATION_WORKER_URL=
+XCOS_VALIDATION_WORKER_TOKEN=
 ```
 
 ## Deployment
@@ -102,6 +104,21 @@ Draft validation now supports two explicit profiles:
   - does not use the poll-worker fallback
 
 Successful validation payloads include `validation_profile` so callers can tell whether a result came from deploy-safe import validation or full simulation.
+
+## Optional Validation Worker Space
+
+You can keep the MCP Space on `cpu-basic` and offload only `full_runtime` validation to a separate Hugging Face Space.
+
+When the MCP Space sets:
+
+```text
+XCOS_VALIDATION_WORKER_URL=https://<worker-space>.hf.space
+XCOS_VALIDATION_WORKER_TOKEN=<shared-secret>
+```
+
+then `full_runtime` validation is delegated to the worker over HTTP, while `hosted_smoke` continues to run locally inside the MCP Space.
+
+The worker Space uses `validation_worker.py` with `Dockerfile.validation-worker`.
 
 ## Remote Smoke Test
 

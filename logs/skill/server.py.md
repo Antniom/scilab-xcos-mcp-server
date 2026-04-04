@@ -83,3 +83,10 @@
 - Subprocess validation no longer drops stdout on timeout; Python now collects partial Scilab output while the process runs, so timeout results include `scilab_stage_trace`, `scilab_active_stage`, and `scilab_last_completed_stage`.
 - Timeout errors now append the last observed stage, which makes live Hugging Face `full_runtime` failures attributable to import versus simulation instead of looking like generic runtime stalls.
 - **Files:** server.py, test_draft_workflow.py
+
+### 2026-04-04 19:05:00 UTC - Fix
+- **Summary:** Added an optional separate HTTP validation worker so `full_runtime` can be offloaded from the MCP Space
+- The MCP server now delegates `full_runtime` validation to `XCOS_VALIDATION_WORKER_URL` when configured, using a bearer token and polling `/jobs/{job_id}` on the remote worker; `hosted_smoke` remains local by design.
+- Added `validation_worker.py` as a small Starlette app with `/healthz`, `/validate`, and `/jobs/{job_id}` endpoints, plus `Dockerfile.validation-worker` and `tools/deploy_huggingface_validation_worker.ps1` for a second Hugging Face Space.
+- The worker forces `XCOS_SERVER_ROLE=validation_worker` so it runs local Scilab validation without recursively offloading again, and the MCP server reports remote-worker failures with a dedicated `VALIDATION_WORKER_FAILED` code.
+- **Files:** server.py, validation_worker.py, Dockerfile.validation-worker, tools/deploy_huggingface_validation_worker.ps1, pyproject.toml, README.md, DEPLOY_TO_HUGGINGFACE_SPACES.md, test_draft_workflow.py

@@ -514,7 +514,11 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         session_id = await self.start_session()
         await server.xcos_add_blocks(session_id, CONST_BLOCK_XML)
 
-        async def delayed_validation(_xml_content, validation_profile=server.VALIDATION_PROFILE_FULL_RUNTIME):
+        async def delayed_validation(
+            _xml_content,
+            validation_profile=server.VALIDATION_PROFILE_FULL_RUNTIME,
+            worker_timeout_seconds=None,
+        ):
             await asyncio.sleep(1.2)
             return {
                 "success": True,
@@ -712,6 +716,51 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["validation_profile"], server.VALIDATION_PROFILE_HOSTED_SMOKE)
         self.assertEqual(server.infer_validation_code(result), "SCILAB_IMPORT_FAILED")
+
+    async def test_run_verification_offloads_full_runtime_to_remote_worker_when_configured(self):
+        worker_result = {
+            "success": True,
+            "origin": "scilab-subprocess",
+            "validation_profile": server.VALIDATION_PROFILE_FULL_RUNTIME,
+        }
+        with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": "https://worker.example"}, clear=False),
+            patch.object(server, "run_remote_validation_worker", AsyncMock(return_value=worker_result)) as remote_mock,
+            patch.object(server, "_run_verification_local", AsyncMock()) as local_mock,
+        ):
+            result = await server.run_verification(
+                MINIMAL_DIAGRAM_XML,
+                validation_profile=server.VALIDATION_PROFILE_FULL_RUNTIME,
+                worker_timeout_seconds=123.0,
+            )
+
+        self.assertEqual(result, worker_result)
+        remote_mock.assert_awaited_once_with(
+            MINIMAL_DIAGRAM_XML,
+            server.VALIDATION_PROFILE_FULL_RUNTIME,
+            123.0,
+        )
+        local_mock.assert_not_awaited()
+
+    async def test_run_verification_keeps_hosted_smoke_local_even_with_worker_configured(self):
+        local_result = {
+            "success": True,
+            "origin": "hybrid (structural-python + scilab-import-check)",
+            "validation_profile": server.VALIDATION_PROFILE_HOSTED_SMOKE,
+        }
+        with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": "https://worker.example"}, clear=False),
+            patch.object(server, "run_remote_validation_worker", AsyncMock()) as remote_mock,
+            patch.object(server, "_run_verification_local", AsyncMock(return_value=local_result)) as local_mock,
+        ):
+            result = await server.run_verification(
+                MINIMAL_DIAGRAM_XML,
+                validation_profile=server.VALIDATION_PROFILE_HOSTED_SMOKE,
+            )
+
+        self.assertEqual(result, local_result)
+        remote_mock.assert_not_awaited()
+        local_mock.assert_awaited_once()
 
     async def test_xcos_start_validation_uses_configured_timeout_by_default(self):
         session_id = await self.start_session()

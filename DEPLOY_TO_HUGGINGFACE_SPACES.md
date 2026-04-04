@@ -23,12 +23,15 @@ Hosted validation defaults:
 - `XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS=180`
 - `XCOS_POLL_VALIDATION_TIMEOUT_SECONDS=420`
 - `XCOS_VALIDATION_JOB_TIMEOUT_SECONDS=720`
+- `XCOS_VALIDATION_WORKER_URL=` optional full-runtime worker Space base URL
+- `XCOS_VALIDATION_WORKER_TOKEN=` optional bearer token shared with the worker Space
 
 Validation profiles:
 
 - `full_runtime`
   - structural validation plus full Scilab simulation
   - intended for manual or on-demand verification
+  - can be offloaded to a separate validation worker Space when `XCOS_VALIDATION_WORKER_URL` is configured
 - `hosted_smoke`
   - structural validation plus Scilab load/import checks only
   - intended for Hugging Face `cpu-basic` deployment smoke tests
@@ -90,3 +93,35 @@ Useful flags:
 .\.venv\Scripts\python.exe .\tools\remote_hf_smoke_test.py --validation-profile hosted_smoke
 .\.venv\Scripts\python.exe .\tools\remote_hf_smoke_test.py --validation-profile full_runtime
 ```
+
+## Optional Validation Worker Space
+
+If you want to isolate `full_runtime` simulation from the MCP server, deploy a second Hugging Face Docker Space using `Dockerfile.validation-worker`.
+
+Recommended MCP Space variables:
+
+```text
+XCOS_VALIDATION_WORKER_URL=https://<worker-space>.hf.space
+XCOS_VALIDATION_WORKER_TOKEN=<shared-secret>
+```
+
+Recommended worker Space variables:
+
+```text
+XCOS_SERVER_ROLE=validation_worker
+XCOS_VALIDATION_WORKER_TOKEN=<shared-secret>
+XCOS_VALIDATION_MODE=subprocess
+XCOS_DEBUG_TOOL_OUTPUT=1
+```
+
+Worker deployment helper:
+
+```powershell
+.\tools\deploy_huggingface_validation_worker.ps1 -Remote huggingface-worker -HealthcheckUrl "https://<worker-space>.hf.space/healthz"
+```
+
+With that split:
+
+- MCP `hosted_smoke` stays local and remains the deploy gate
+- MCP `full_runtime` calls the worker over HTTP and polls `/jobs/{job_id}`
+- the worker runs the same Scilab validation code without recursively offloading again

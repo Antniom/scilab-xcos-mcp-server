@@ -11,6 +11,8 @@ import textwrap
 import hashlib
 import re
 import html
+import urllib.request
+import urllib.error
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -44,6 +46,7 @@ LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 120.0
 HOSTED_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 720.0
 DEFAULT_VALIDATION_TIMEOUT_SECONDS = LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
+DEFAULT_VALIDATION_WORKER_POLL_INTERVAL_SECONDS = 2.0
 VALIDATION_PROFILE_FULL_RUNTIME = "full_runtime"
 VALIDATION_PROFILE_HOSTED_SMOKE = "hosted_smoke"
 VALIDATION_PROFILES = {
@@ -2181,6 +2184,25 @@ def get_cached_validation_result(xml_text: str) -> dict | None:
     return dict(cached) if cached else None
 
 
+def http_post_json(url: str, payload: dict, timeout_seconds: float, token: str = "") -> dict:
+    body = json.dumps(payload).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, data=body, headers=headers, method="POST")
+    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def http_get_json(url: str, timeout_seconds: float, token: str = "") -> dict:
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    request = urllib.request.Request(url, headers=headers, method="GET")
+    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
 def format_validation_issue(issue) -> str:
     if isinstance(issue, str):
         return issue
@@ -2242,6 +2264,8 @@ def infer_validation_code(result: dict) -> str:
         return "PRE_SIM_VALIDATION_FAILED"
     if result.get("origin") == "structural-validator":
         return "STRUCTURAL_VALIDATION_FAILED"
+    if result.get("origin") == "validation-worker-remote":
+        return "VALIDATION_WORKER_FAILED"
     if validation_profile == VALIDATION_PROFILE_HOSTED_SMOKE and "timed out" in str(result.get("error", "")).lower():
         return "SCILAB_IMPORT_TIMEOUT"
     if (
@@ -2475,6 +2499,33 @@ def normalize_validation_profile(profile: str | None) -> str:
     raise ValueError(
         "validation_profile must be one of: "
         + ", ".join(sorted(VALIDATION_PROFILES))
+    )
+
+
+def is_validation_worker_process() -> bool:
+    return os.environ.get("XCOS_SERVER_ROLE", "").strip().lower() == "validation_worker"
+
+
+def get_validation_worker_url() -> str:
+    return os.environ.get("XCOS_VALIDATION_WORKER_URL", "").strip().rstrip("/")
+
+
+def get_validation_worker_token() -> str:
+    return os.environ.get("XCOS_VALIDATION_WORKER_TOKEN", "").strip()
+
+
+def get_validation_worker_poll_interval_seconds() -> float:
+    return get_positive_timeout_env(
+        "XCOS_VALIDATION_WORKER_POLL_INTERVAL_SECONDS",
+        DEFAULT_VALIDATION_WORKER_POLL_INTERVAL_SECONDS,
+    )
+
+
+def should_offload_full_runtime_validation(validation_profile: str) -> bool:
+    return (
+        normalize_validation_profile(validation_profile) == VALIDATION_PROFILE_FULL_RUNTIME
+        and bool(get_validation_worker_url())
+        and not is_validation_worker_process()
     )
 
 
@@ -3351,6 +3402,67 @@ async def run_headless_scilab_import_validation(xml_content: str, auto_fixed: bo
         validation_profile=VALIDATION_PROFILE_HOSTED_SMOKE,
     )
 
+
+async def run_remote_validation_worker(
+    xml_content: str,
+    validation_profile: str,
+    timeout_seconds: float,
+) -> dict:
+    worker_url = get_validation_worker_url()
+    if not worker_url:
+        raise RuntimeError("XCOS_VALIDATION_WORKER_URL is not configured.")
+
+    token = get_validation_worker_token()
+    request_timeout_seconds = max(10.0, timeout_seconds)
+    create_payload = await asyncio.to_thread(
+        http_post_json,
+        f"{worker_url}/validate",
+        {
+            "xml_content": xml_content,
+            "validation_profile": normalize_validation_profile(validation_profile),
+            "timeout_seconds": timeout_seconds,
+        },
+        request_timeout_seconds,
+        token,
+    )
+
+    job_id = create_payload.get("job_id")
+    if not job_id:
+        raise RuntimeError(f"Validation worker did not return a job_id: {create_payload}")
+
+    poll_interval_seconds = get_validation_worker_poll_interval_seconds()
+    deadline = asyncio.get_running_loop().time() + timeout_seconds
+    while True:
+        if asyncio.get_running_loop().time() > deadline:
+            raise TimeoutError(
+                f"Remote validation worker job {job_id} timed out after {timeout_seconds:.0f} seconds."
+            )
+        await asyncio.sleep(poll_interval_seconds)
+        status_payload = await asyncio.to_thread(
+            http_get_json,
+            f"{worker_url}/jobs/{job_id}",
+            request_timeout_seconds,
+            token,
+        )
+        if status_payload.get("status") in {"queued", "running"}:
+            continue
+
+        result = status_payload.get("result")
+        if not isinstance(result, dict):
+            raise RuntimeError(f"Validation worker returned no result for job {job_id}: {status_payload}")
+
+        result = dict(result)
+        result["validation_profile"] = normalize_validation_profile(result.get("validation_profile"))
+        result["remote_worker"] = {
+            "url": worker_url,
+            "job_id": job_id,
+            "status": status_payload.get("status"),
+            "created_at": status_payload.get("created_at"),
+            "started_at": status_payload.get("started_at"),
+            "finished_at": status_payload.get("finished_at"),
+        }
+        return result
+
 def validate_diagram_structure(tree: etree._Element, auto_fixed: bool) -> dict:
     """Performs structural audit of Xcos XML without needing Scilab."""
     errors = []
@@ -3586,9 +3698,10 @@ async def search_related_xcos_files(query: str):
     
     return make_text_response("\n".join(results))
 
-async def run_verification(
+async def _run_verification_local(
     xml_content: str,
     validation_profile: str = VALIDATION_PROFILE_FULL_RUNTIME,
+    worker_timeout_seconds: float | None = None,
 ):
     normalized_profile = normalize_validation_profile(validation_profile)
     # --- Integration of Auto-fix and Validator ---
@@ -3706,6 +3819,35 @@ async def run_verification(
     return result
 
 
+async def run_verification(
+    xml_content: str,
+    validation_profile: str = VALIDATION_PROFILE_FULL_RUNTIME,
+    worker_timeout_seconds: float | None = None,
+):
+    normalized_profile = normalize_validation_profile(validation_profile)
+    if should_offload_full_runtime_validation(normalized_profile):
+        timeout_seconds = (
+            float(worker_timeout_seconds)
+            if worker_timeout_seconds and worker_timeout_seconds > 0
+            else get_configured_validation_job_timeout_seconds()
+        )
+        try:
+            result = await run_remote_validation_worker(
+                xml_content,
+                normalized_profile,
+                timeout_seconds,
+            )
+        except Exception as exc:
+            return {
+                "success": False,
+                "origin": "validation-worker-remote",
+                "validation_profile": normalized_profile,
+                "error": f"Remote validation worker failed: {exc}",
+            }
+        return result
+    return await _run_verification_local(xml_content, normalized_profile, worker_timeout_seconds)
+
+
 async def verify_xcos_xml(xml_content: str):
     result = await run_verification(xml_content)
     remember_validation_result(xml_content, result)
@@ -3746,7 +3888,11 @@ async def _run_validation_job(job_id: str):
         xml_content = state.drafts[job.session_id].to_xml()
         session_meta = write_session_snapshot(job.session_id)
         result = await asyncio.wait_for(
-            run_verification(xml_content, validation_profile=job.validation_profile),
+            run_verification(
+                xml_content,
+                validation_profile=job.validation_profile,
+                worker_timeout_seconds=job.timeout_seconds,
+            ),
             timeout=job.timeout_seconds,
         )
         if draft_normalization.get("normalized"):
