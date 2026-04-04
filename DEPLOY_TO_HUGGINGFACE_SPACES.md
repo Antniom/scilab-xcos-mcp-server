@@ -37,24 +37,15 @@ What it does:
 - builds an orphan deployment branch
 - removes tracked binary assets that Hugging Face Spaces rejects
 - force-pushes the clean snapshot to `huggingface/main`
-- writes `ui/deploy_marker.json` into the deployment snapshot
-- waits until the live Space serves that exact deployment marker
+- waits 210 seconds for the Space rebuild
 - runs a remote MCP smoke test against the deployed Space using the pendulum fixture in `pendulo_simples_fiel_raw.xcos`
 
 This keeps GitHub history unchanged while letting the Space track a deployment-only branch state.
 
 ## Remote Validation
 
-After the Hugging Face push, the deploy script now polls:
-
-```powershell
-https://notsn-scilab-xcos-mcp-server.hf.space/workflow-ui/deploy_marker.json
-```
-
-The smoke test does not start until the live Space serves a marker whose `source_ref`
-and `deploy_commit` match the snapshot that was just pushed.
-
-After that confirmation, the deploy script runs:
+After the Hugging Face push, the deploy script waits 210 seconds for the Space rebuild,
+then runs:
 
 ```powershell
 .\.venv\Scripts\python.exe .\tools\remote_hf_smoke_test.py
@@ -79,6 +70,5 @@ Useful flags:
 .\tools\deploy_huggingface_clean.ps1 -SkipRemoteSmokeTest
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestMcpUrl "https://<space>.hf.space/mcp"
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestFixturePath "C:\path\to\diagram.xcos"
-.\tools\deploy_huggingface_clean.ps1 -SmokeTestReadyUrl "https://<space>.hf.space/workflow-ui/deploy_marker.json"
-.\tools\deploy_huggingface_clean.ps1 -SmokeTestWaitTimeoutSeconds 1200 -SmokeTestPollIntervalSeconds 15
+.\tools\deploy_huggingface_clean.ps1 -SmokeTestDelaySeconds 300
 ```

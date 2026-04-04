@@ -7,9 +7,7 @@ param(
     [switch]$SkipRemoteSmokeTest,
     [string]$SmokeTestMcpUrl = "https://notsn-scilab-xcos-mcp-server.hf.space/mcp",
     [string]$SmokeTestFixturePath = "",
-    [string]$SmokeTestReadyUrl = "https://notsn-scilab-xcos-mcp-server.hf.space/workflow-ui/deploy_marker.json",
-    [int]$SmokeTestWaitTimeoutSeconds = 900,
-    [int]$SmokeTestPollIntervalSeconds = 10
+    [int]$SmokeTestDelaySeconds = 210
 )
 
 $ErrorActionPreference = "Stop"
@@ -53,50 +51,6 @@ function Get-GitOutput {
     }
 }
 
-function Wait-ForDeployMarker {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Url,
-        [Parameter(Mandatory = $true)]
-        [string]$ExpectedSourceRef,
-        [Parameter(Mandatory = $true)]
-        [string]$ExpectedDeployCommit,
-        [Parameter(Mandatory = $true)]
-        [int]$TimeoutSeconds,
-        [Parameter(Mandatory = $true)]
-        [int]$PollIntervalSeconds
-    )
-
-    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
-    while ((Get-Date) -lt $deadline) {
-        try {
-            $rawResponse = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec ([Math]::Min($PollIntervalSeconds, 30))
-            $rawContent = [string]$rawResponse.Content
-            if (-not [string]::IsNullOrWhiteSpace($rawContent)) {
-                $normalizedContent = $rawContent.TrimStart([char]0xFEFF).Trim()
-                $response = $normalizedContent | ConvertFrom-Json
-                $markerSourceRef = [string]$response.source_ref
-                $markerDeployCommit = [string]$response.deploy_commit
-                if ($markerSourceRef -eq $ExpectedSourceRef -and $markerDeployCommit -eq $ExpectedDeployCommit) {
-                    Write-Host "Deployment marker is live at $Url"
-                    return
-                }
-                Write-Host ("Deployment marker not ready yet. Expected source_ref={0}, deploy_commit={1}; got source_ref={2}, deploy_commit={3}" -f $ExpectedSourceRef, $ExpectedDeployCommit, $markerSourceRef, $markerDeployCommit)
-            }
-            else {
-                Write-Host "Deployment marker endpoint returned no body yet: $Url"
-            }
-        }
-        catch {
-            Write-Host ("Deployment marker not ready yet at {0}: {1}" -f $Url, $_.Exception.Message)
-        }
-
-        Start-Sleep -Seconds $PollIntervalSeconds
-    }
-
-    throw "Timed out after $TimeoutSeconds seconds waiting for deployment marker at $Url"
-}
-
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $PythonExe = Join-Path $RepoRoot ".venv\Scripts\python.exe"
 $SmokeTestScript = Join-Path $RepoRoot "tools\remote_hf_smoke_test.py"
@@ -104,7 +58,6 @@ $TempName = "xcos-hf-clean-" + [guid]::NewGuid().ToString()
 $WorktreePath = Join-Path $TempRoot $TempName
 $CleanBranch = "hf-space-clean-" + [guid]::NewGuid().ToString("N").Substring(0, 12)
 $ResolvedSourceRef = ((Get-GitOutput -Args @("rev-parse", $SourceRef) -WorkingDirectory $RepoRoot) | Select-Object -First 1).Trim()
-$DeployIssuedAt = (Get-Date).ToUniversalTime().ToString("o")
 $ForbiddenPatterns = @(
     "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.icns",
     "*.wav", "*.ttf", "*.otf",
@@ -142,26 +95,9 @@ try {
         Write-Host "No forbidden tracked binaries found in deployment snapshot"
     }
 
-    $markerDirectory = Join-Path $WorktreePath "ui"
-    if (-not (Test-Path $markerDirectory)) {
-        New-Item -ItemType Directory -Path $markerDirectory | Out-Null
-    }
-
     Invoke-Git -Args @("add", "-A") -WorkingDirectory $WorktreePath
     Invoke-Git -Args @("commit", "-m", "Deploy Space snapshot without binary assets") -WorkingDirectory $WorktreePath
 
-    $newCommit = ((Get-GitOutput -Args @("rev-parse", "HEAD") -WorkingDirectory $WorktreePath) | Select-Object -First 1).Trim()
-    $markerPath = Join-Path $markerDirectory "deploy_marker.json"
-    $markerPayload = [ordered]@{
-        source_ref = $ResolvedSourceRef
-        deploy_commit = $newCommit
-        deployed_at_utc = $DeployIssuedAt
-        remote = $Remote
-        remote_branch = $RemoteBranch
-    } | ConvertTo-Json
-    Set-Content -Path $markerPath -Value $markerPayload -Encoding UTF8
-    Invoke-Git -Args @("add", "--", "ui/deploy_marker.json") -WorkingDirectory $WorktreePath
-    Invoke-Git -Args @("commit", "--amend", "--no-edit") -WorkingDirectory $WorktreePath
     $newCommit = ((Get-GitOutput -Args @("rev-parse", "HEAD") -WorkingDirectory $WorktreePath) | Select-Object -First 1).Trim()
 
     Write-Host "Force pushing clean snapshot $newCommit to $Remote/$RemoteBranch"
@@ -187,8 +123,8 @@ try {
         }
 
         Write-Host ""
-        Write-Host "Waiting for live deployment marker at $SmokeTestReadyUrl"
-        Wait-ForDeployMarker -Url $SmokeTestReadyUrl -ExpectedSourceRef $ResolvedSourceRef -ExpectedDeployCommit $newCommit -TimeoutSeconds $SmokeTestWaitTimeoutSeconds -PollIntervalSeconds $SmokeTestPollIntervalSeconds
+        Write-Host "Waiting $SmokeTestDelaySeconds seconds for the Hugging Face Space to rebuild"
+        Start-Sleep -Seconds $SmokeTestDelaySeconds
 
         Write-Host ""
         Write-Host "Running remote MCP smoke test against $SmokeTestMcpUrl"
