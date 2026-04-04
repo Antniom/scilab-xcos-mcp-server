@@ -30,14 +30,14 @@ Hosted timeout defaults:
 
 - subprocess validation: `180s`
 - poll fallback validation: `180s`
-- async validation jobs: `240s`
+- async validation jobs: `420s`
 
 Optional overrides:
 
 ```text
 XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS=180
 XCOS_POLL_VALIDATION_TIMEOUT_SECONDS=180
-XCOS_VALIDATION_JOB_TIMEOUT_SECONDS=240
+XCOS_VALIDATION_JOB_TIMEOUT_SECONDS=420
 ```
 
 ## Deployment
@@ -93,7 +93,7 @@ When enabled, `verify_xcos_xml` and `xcos_verify_draft` include a `debug` object
 
 - structural success alone is not enough
 - `SCILAB_RUNTIME_TIMEOUT` now fails the smoke test unless you explicitly pass `--allow-degraded-runtime`
-- the client-side wait budget defaults to `360s` to cover hosted validation plus fallback
+- the client-side wait budget defaults to `600s` to cover hosted validation plus fallback
 
 ## Notes
 
