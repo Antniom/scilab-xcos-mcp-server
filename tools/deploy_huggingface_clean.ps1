@@ -3,7 +3,10 @@ param(
     [string]$RemoteBranch = "main",
     [string]$SourceRef = "HEAD",
     [string]$TempRoot = $env:TEMP,
-    [switch]$KeepWorktree
+    [switch]$KeepWorktree,
+    [switch]$SkipRemoteSmokeTest,
+    [string]$SmokeTestMcpUrl = "https://notsn-scilab-xcos-mcp-server.hf.space/mcp",
+    [string]$SmokeTestFixturePath = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -48,6 +51,8 @@ function Get-GitOutput {
 }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$PythonExe = Join-Path $RepoRoot ".venv\Scripts\python.exe"
+$SmokeTestScript = Join-Path $RepoRoot "tools\remote_hf_smoke_test.py"
 $TempName = "xcos-hf-clean-" + [guid]::NewGuid().ToString()
 $WorktreePath = Join-Path $TempRoot $TempName
 $CleanBranch = "hf-space-clean-" + [guid]::NewGuid().ToString("N").Substring(0, 12)
@@ -100,6 +105,35 @@ try {
     Write-Host "Hugging Face deployment complete."
     Write-Host "Remote: $Remote/$RemoteBranch"
     Write-Host "Commit: $newCommit"
+
+    if (-not $SkipRemoteSmokeTest) {
+        if ([string]::IsNullOrWhiteSpace($SmokeTestFixturePath)) {
+            $SmokeTestFixturePath = Join-Path $RepoRoot "pendulo_simples_fiel_raw.xcos"
+        }
+        if (-not (Test-Path $PythonExe)) {
+            throw "Python executable not found at $PythonExe"
+        }
+        if (-not (Test-Path $SmokeTestScript)) {
+            throw "Remote smoke test script not found at $SmokeTestScript"
+        }
+        if (-not (Test-Path $SmokeTestFixturePath)) {
+            throw "Remote smoke test fixture not found at $SmokeTestFixturePath"
+        }
+
+        Write-Host ""
+        Write-Host "Running remote MCP smoke test against $SmokeTestMcpUrl"
+        Push-Location $RepoRoot
+        try {
+            & $PythonExe $SmokeTestScript --mcp-url $SmokeTestMcpUrl --fixture-path $SmokeTestFixturePath
+            if ($LASTEXITCODE -ne 0) {
+                throw "Remote smoke test failed with exit code $LASTEXITCODE"
+            }
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
     if ($KeepWorktree) {
         Write-Host "Temporary worktree preserved at: $WorktreePath"
     }
