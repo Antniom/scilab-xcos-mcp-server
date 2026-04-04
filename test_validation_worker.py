@@ -86,6 +86,7 @@ class ValidationWorkerTests(unittest.IsolatedAsyncioTestCase):
             os.environ,
             {
                 "XCOS_VALIDATION_WORKER_REQUIRE_AUTH": "1",
+                "XCOS_VALIDATION_WORKER_ENFORCE_AUTH": "1",
                 "XCOS_VALIDATION_WORKER_TOKEN": "secret",
             },
             clear=False,
@@ -103,6 +104,7 @@ class ValidationWorkerTests(unittest.IsolatedAsyncioTestCase):
             os.environ,
             {
                 "XCOS_VALIDATION_WORKER_REQUIRE_AUTH": "true",
+                "XCOS_VALIDATION_WORKER_ENFORCE_AUTH": "true",
                 "XCOS_VALIDATION_WORKER_TOKEN": "secret",
             },
             clear=False,

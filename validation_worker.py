@@ -53,7 +53,12 @@ def worker_token() -> str:
 
 
 def worker_auth_required() -> bool:
-    return server.parse_bool_env("XCOS_VALIDATION_WORKER_REQUIRE_AUTH", False)
+    # Safety default: keep worker reachable unless auth is explicitly and
+    # intentionally enabled with BOTH flags.
+    return (
+        server.parse_bool_env("XCOS_VALIDATION_WORKER_REQUIRE_AUTH", False)
+        and server.parse_bool_env("XCOS_VALIDATION_WORKER_ENFORCE_AUTH", False)
+    )
 
 
 def require_auth(request: Request) -> JSONResponse | None:
