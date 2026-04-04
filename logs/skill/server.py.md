@@ -69,3 +69,10 @@
 - Poll-worker startup now uses a larger hosted startup budget (`60s`) and restarts stale inactive worker processes instead of reusing a hung startup worker forever.
 - `tools/remote_hf_smoke_test.py` is now strict by default and only accepts degraded structural-only success when `--allow-degraded-runtime` is passed explicitly.
 - **Files:** server.py, tools/remote_hf_smoke_test.py, test_draft_workflow.py, test_remote_hf_smoke_test.py, README.md, DEPLOY_TO_HUGGINGFACE_SPACES.md
+
+### 2026-04-04 17:30:00 UTC - Fix
+- **Summary:** Added explicit validation profiles so Hugging Face deploys can use import-only hosted smoke checks on cpu-basic
+- Validation jobs, public validation payloads, workflow `last_verified`, and draft `last_verified` metadata now persist `validation_profile`, with `full_runtime` as the default and `hosted_smoke` as an explicit deploy-safe profile.
+- The new hosted-smoke path reuses XML auto-fix, fan-out normalization, port-size checks, and Python structural validation, then runs a Scilab load/import-only subprocess check without `scicos_simulate(...)` or poll-worker fallback.
+- `tools/remote_hf_smoke_test.py` now defaults to `--validation-profile hosted_smoke`, `tools/deploy_huggingface_clean.ps1` invokes that profile automatically after the 210-second rebuild wait, and the degraded-timeout escape hatch was removed in favor of explicit profile selection.
+- **Files:** server.py, tools/remote_hf_smoke_test.py, tools/deploy_huggingface_clean.ps1, test_draft_workflow.py, test_remote_hf_smoke_test.py, README.md, DEPLOY_TO_HUGGINGFACE_SPACES.md

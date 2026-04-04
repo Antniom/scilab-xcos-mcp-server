@@ -87,13 +87,31 @@ Then restart the Space.
 
 When enabled, `verify_xcos_xml` and `xcos_verify_draft` include a `debug` object in their payloads.
 
+## Validation Profiles
+
+Draft validation now supports two explicit profiles:
+
+- `full_runtime`
+  - default for `xcos_start_validation` and `xcos_verify_draft`
+  - runs structural validation plus full Scilab simulation
+  - may use the long-lived poll-worker fallback on eligible runtime failures
+- `hosted_smoke`
+  - intended for Hugging Face `cpu-basic` deploy checks
+  - runs structural validation plus Scilab load/import checks
+  - does not call `scicos_simulate(...)`
+  - does not use the poll-worker fallback
+
+Successful validation payloads include `validation_profile` so callers can tell whether a result came from deploy-safe import validation or full simulation.
+
 ## Remote Smoke Test
 
-`tools/remote_hf_smoke_test.py` is strict by default:
+`tools/remote_hf_smoke_test.py` now defaults to:
 
-- structural success alone is not enough
-- `SCILAB_RUNTIME_TIMEOUT` now fails the smoke test unless you explicitly pass `--allow-degraded-runtime`
-- the client-side wait budget defaults to `900s` to cover hosted validation plus fallback
+- `--validation-profile hosted_smoke`
+- strict success only; there is no degraded-timeout success mode
+- a client-side wait budget of `900s`
+
+Use `--validation-profile full_runtime` only for manual diagnostics when you explicitly want the live Space to attempt full simulation.
 
 ## Notes
 

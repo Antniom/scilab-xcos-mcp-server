@@ -130,7 +130,7 @@ try {
         Write-Host "Running remote MCP smoke test against $SmokeTestMcpUrl"
         Push-Location $RepoRoot
         try {
-            & $PythonExe $SmokeTestScript --mcp-url $SmokeTestMcpUrl --fixture-path $SmokeTestFixturePath
+            & $PythonExe $SmokeTestScript --mcp-url $SmokeTestMcpUrl --fixture-path $SmokeTestFixturePath --validation-profile hosted_smoke
             if ($LASTEXITCODE -ne 0) {
                 throw "Remote smoke test failed with exit code $LASTEXITCODE"
             }

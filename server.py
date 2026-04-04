@@ -44,6 +44,12 @@ LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 120.0
 HOSTED_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 720.0
 DEFAULT_VALIDATION_TIMEOUT_SECONDS = LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
+VALIDATION_PROFILE_FULL_RUNTIME = "full_runtime"
+VALIDATION_PROFILE_HOSTED_SMOKE = "hosted_smoke"
+VALIDATION_PROFILES = {
+    VALIDATION_PROFILE_FULL_RUNTIME,
+    VALIDATION_PROFILE_HOSTED_SMOKE,
+}
 
 # Shared State
 class SharedState:
@@ -832,6 +838,7 @@ class ValidationJob:
     job_id: str
     session_id: str
     workflow_id: str | None
+    validation_profile: str
     status: str
     created_at: str
     started_at: str | None = None
@@ -845,6 +852,7 @@ class ValidationJob:
             "job_id": self.job_id,
             "session_id": self.session_id,
             "workflow_id": self.workflow_id,
+            "validation_profile": self.validation_profile,
             "status": self.status,
             "created_at": self.created_at,
             "started_at": self.started_at,
@@ -860,6 +868,7 @@ class ValidationJob:
             job_id=payload["job_id"],
             session_id=payload["session_id"],
             workflow_id=payload.get("workflow_id"),
+            validation_profile=normalize_validation_profile(payload.get("validation_profile")),
             status=payload.get("status", "queued"),
             created_at=payload.get("created_at", now_iso()),
             started_at=payload.get("started_at"),
@@ -971,6 +980,7 @@ def build_session_last_verified(draft: "DraftDiagram") -> dict | None:
         "file_size_bytes": draft.last_verified_file_size,
         "error": draft.last_verified_error,
         "origin": draft.last_verified_origin,
+        "validation_profile": draft.last_verified_profile,
     }
 
 
@@ -1240,6 +1250,7 @@ class DraftDiagram:
         self.last_verified_file_size = None
         self.last_verified_error = None
         self.last_verified_origin = None
+        self.last_verified_profile = None
 
     def add_blocks(self, xml_chunk):
         self.blocks.append(xml_chunk)
@@ -1269,6 +1280,7 @@ class DraftDiagram:
                 "file_size_bytes": self.last_verified_file_size,
                 "error": self.last_verified_error,
                 "origin": self.last_verified_origin,
+                "validation_profile": self.last_verified_profile,
             },
         }
 
@@ -1295,6 +1307,7 @@ class DraftDiagram:
         draft.last_verified_file_size = last_verified.get("file_size_bytes")
         draft.last_verified_error = last_verified.get("error")
         draft.last_verified_origin = last_verified.get("origin")
+        draft.last_verified_profile = last_verified.get("validation_profile")
         return draft
 
     def to_xml(self):
@@ -2216,6 +2229,8 @@ def infer_validation_code(result: dict) -> str:
     if result.get("success"):
         return "OK"
 
+    validation_profile = normalize_validation_profile(result.get("validation_profile"))
+
     errors = result.get("errors") or []
     if errors:
         first = errors[0]
@@ -2227,6 +2242,13 @@ def infer_validation_code(result: dict) -> str:
         return "PRE_SIM_VALIDATION_FAILED"
     if result.get("origin") == "structural-validator":
         return "STRUCTURAL_VALIDATION_FAILED"
+    if validation_profile == VALIDATION_PROFILE_HOSTED_SMOKE and "timed out" in str(result.get("error", "")).lower():
+        return "SCILAB_IMPORT_TIMEOUT"
+    if (
+        result.get("origin") == "scilab-import-check"
+        or validation_profile == VALIDATION_PROFILE_HOSTED_SMOKE
+    ):
+        return "SCILAB_IMPORT_FAILED"
     if "timed out" in str(result.get("error", "")).lower():
         return "SCILAB_RUNTIME_TIMEOUT"
     if result.get("origin") == "scilab-poll-fallback":
@@ -2248,6 +2270,7 @@ def make_public_validation_payload(
         "success": success,
         "code": infer_validation_code(result),
         "message": "Diagram validation passed." if success else (messages[0] if messages else "Diagram validation failed."),
+        "validation_profile": normalize_validation_profile(result.get("validation_profile")),
     }
     if not success and messages:
         payload["issues"] = messages[:5]
@@ -2359,9 +2382,10 @@ def record_validation_outcome(session_id: str, result: dict, session_meta: dict 
         draft.last_verified_file_size = session_meta["size_bytes"]
     else:
         draft.last_verified_file_path = result.get("file_path")
-        draft.last_verified_file_size = result.get("file_size_bytes")
+    draft.last_verified_file_size = result.get("file_size_bytes")
     draft.last_verified_error = result.get("error")
     draft.last_verified_origin = result.get("origin", "scilab-validator")
+    draft.last_verified_profile = normalize_validation_profile(result.get("validation_profile"))
     persist_draft_session(session_id)
 
     workflow_id = state.draft_to_workflow.get(session_id)
@@ -2379,6 +2403,7 @@ def record_validation_outcome(session_id: str, result: dict, session_meta: dict 
             "file_size_bytes": result.get("file_size_bytes"),
             "error": result.get("error"),
             "origin": result.get("origin", "scilab-validator"),
+            "validation_profile": draft.last_verified_profile,
         }
         workflow.updated_at = now_iso()
         persist_workflow_session(workflow_id)
@@ -2390,6 +2415,7 @@ def make_validation_job_public_payload(job: ValidationJob) -> dict:
         "job_id": job.job_id,
         "session_id": job.session_id,
         "workflow_id": job.workflow_id,
+        "validation_profile": job.validation_profile,
         "status": job.status,
         "created_at": job.created_at,
         "started_at": job.started_at,
@@ -2438,6 +2464,18 @@ def detect_validation_mode() -> str:
     if os.name != "nt":
         return "subprocess"
     return "poll"
+
+
+def normalize_validation_profile(profile: str | None) -> str:
+    if profile is None:
+        return VALIDATION_PROFILE_FULL_RUNTIME
+    normalized = str(profile).strip().lower()
+    if normalized in VALIDATION_PROFILES:
+        return normalized
+    raise ValueError(
+        "validation_profile must be one of: "
+        + ", ".join(sorted(VALIDATION_PROFILES))
+    )
 
 
 def is_hosted_validation_runtime() -> bool:
@@ -2753,8 +2791,73 @@ async def ensure_poll_worker_running() -> dict:
     }
 
 
-def build_headless_verification_script(xcos_path: str) -> str:
+def build_headless_verification_script(xcos_path: str, validation_profile: str) -> str:
     escaped_xcos_path = scilab_string_literal(os.path.abspath(xcos_path))
+    normalized_profile = normalize_validation_profile(validation_profile)
+    if normalized_profile == VALIDATION_PROFILE_HOSTED_SMOKE:
+        verification_body = textwrap.dedent(
+            """
+            n_objs = length(scs_m.objs);
+            n_blocks_found = 0;
+
+            for i = 1:n_objs
+                try
+                    if typeof(scs_m.objs(i)) == "Block" then
+                        n_blocks_found = n_blocks_found + 1;
+                        gui_name = string(scs_m.objs(i).gui);
+                        sim_name = string(scs_m.objs(i).model.sim(1));
+                        if gui_name == "" & sim_name == "" then
+                            xcosai_fail(msprintf("Imported block %d is missing gui and sim metadata.", i));
+                        end
+                    end
+                catch
+                    [block_msg, block_id] = lasterror();
+                    xcosai_fail(msprintf("Imported block metadata check failed at index %d: %s", i, string(block_msg)));
+                end
+            end
+
+            if n_blocks_found == 0 then
+                xcosai_fail("Empty diagram after importXcosDiagram; Scilab found no Block objects.");
+            end
+            """
+        ).strip()
+    else:
+        verification_body = textwrap.dedent(
+            """
+            n_objs = length(scs_m.objs);
+            n_blocks_found = 0;
+            replaced_list = "";
+
+            for i = 1:n_objs
+                try
+                    if typeof(scs_m.objs(i)) == "Block" then
+                        n_blocks_found = n_blocks_found + 1;
+                        if scs_m.objs(i).model.sim(2) == 5 then
+                            gui_name = scs_m.objs(i).gui;
+                            scs_m.objs(i).model.sim(1) = "xcosai_nop_sim";
+                            if replaced_list == "" then
+                                replaced_list = gui_name;
+                            elseif isempty(strindex(replaced_list, gui_name)) then
+                                replaced_list = replaced_list + ", " + gui_name;
+                            end
+                        end
+                    end
+                catch
+                end
+            end
+
+            if n_blocks_found == 0 then
+                xcosai_fail("Empty diagram after importXcosDiagram; Scilab found no Block objects.");
+            end
+
+            if replaced_list <> "" then
+                mprintf("XCOSAI_VERIFY_WARN:Graphical blocks substituted for headless validation: %s\\n", replaced_list);
+            end
+
+            scicos_simulate(scs_m, list(), "nw");
+            """
+        ).strip()
+
     return textwrap.dedent(
         f"""
         mode(-1);
@@ -2792,37 +2895,8 @@ def build_headless_verification_script(xcos_path: str) -> str:
             importXcosDiagram("{escaped_xcos_path}");
             scs_m.props.tf = 0.1;
 
-            n_objs = length(scs_m.objs);
-            n_blocks_found = 0;
-            replaced_list = "";
+            {verification_body}
 
-            for i = 1:n_objs
-                try
-                    if typeof(scs_m.objs(i)) == "Block" then
-                        n_blocks_found = n_blocks_found + 1;
-                        if scs_m.objs(i).model.sim(2) == 5 then
-                            gui_name = scs_m.objs(i).gui;
-                            scs_m.objs(i).model.sim(1) = "xcosai_nop_sim";
-                            if replaced_list == "" then
-                                replaced_list = gui_name;
-                            elseif isempty(strindex(replaced_list, gui_name)) then
-                                replaced_list = replaced_list + ", " + gui_name;
-                            end
-                        end
-                    end
-                catch
-                end
-            end
-
-            if n_blocks_found == 0 then
-                xcosai_fail("Empty diagram after importXcosDiagram; Scilab found no Block objects.");
-            end
-
-            if replaced_list <> "" then
-                mprintf("XCOSAI_VERIFY_WARN:Graphical blocks substituted for headless validation: %s\\n", replaced_list);
-            end
-
-            scicos_simulate(scs_m, list(), "nw");
             mprintf("XCOSAI_VERIFY_OK\\n");
             exit(0);
         catch
@@ -2902,8 +2976,13 @@ def analyze_scilab_verification_output(scilab_log: str, returncode: int) -> dict
     }
 
 
-async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> dict:
-    """Runs a real Scilab compilation headlessly (subprocess mode).
+async def run_headless_scilab_check(
+    xml_content: str,
+    auto_fixed: bool,
+    *,
+    validation_profile: str,
+) -> dict:
+    """Runs a Scilab import/runtime check headlessly (subprocess mode).
 
     Uses xvfb-run on Linux so that the GUI subsystem is satisfied without a
     physical display.  Falls back to running scilab-adv-cli directly when
@@ -2913,15 +2992,34 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
     Timeout is configurable. Full Scilab stdout/stderr is captured and returned
     on failure so the caller can debug without re-running manually.
     """
+    normalized_profile = normalize_validation_profile(validation_profile)
+    is_hosted_smoke = normalized_profile == VALIDATION_PROFILE_HOSTED_SMOKE
+    origin = "scilab-import-check" if is_hosted_smoke else "scilab-subprocess"
+    success_verdict = (
+        "Scilab import/load passed without full runtime simulation."
+        if is_hosted_smoke
+        else "Scilab import and simulation passed."
+    )
     scilab_bin = resolve_scilab_binary()
     memory_diag = build_xml_text_diagnostics(xml_content)
     subprocess_timeout_seconds = get_configured_subprocess_timeout_seconds()
+    timeout_error = (
+        f"Structural validation passed, but Scilab import validation timed out after {subprocess_timeout_seconds:.0f} seconds."
+        if is_hosted_smoke
+        else f"Structural validation passed, but Scilab runtime validation timed out after {subprocess_timeout_seconds:.0f} seconds."
+    )
+    failure_prefix = (
+        "Structural validation passed, but Scilab import validation failed: "
+        if is_hosted_smoke
+        else "Structural validation passed, but Scilab runtime validation failed: "
+    )
     if not scilab_bin:
         return {
             "success": False,
-            "origin": "scilab-subprocess",
+            "origin": origin,
             "error": "Scilab binary not found. Set SCILAB_BIN or install scilab-cli in the runtime image.",
             "auto_fixed_mux_to_scalar": auto_fixed,
+            "validation_profile": normalized_profile,
             "scilab_log": None,
             "xml_diagnostics": {
                 "memory": memory_diag,
@@ -2941,11 +3039,12 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
 
     verify_script_path = os.path.join(TEMP_OUTPUT_DIR, f"{task_id}.sce")
     with open(verify_script_path, "w", encoding="utf-8") as f:
-        f.write(build_headless_verification_script(temp_path))
+        f.write(build_headless_verification_script(temp_path, normalized_profile))
     xml_diagnostics = {
         "memory": memory_diag,
         "disk": disk_diag,
         "verification_script_path": os.path.abspath(verify_script_path),
+        "validation_profile": normalized_profile,
     }
 
     # Flags depend on which Scilab binary is available:
@@ -2989,9 +3088,10 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
                 pass
             return {
                 "success": False,
-                "origin": "scilab-subprocess",
-                "error": f"Structural validation passed, but Scilab runtime validation timed out after {subprocess_timeout_seconds:.0f} seconds.",
+                "origin": origin,
+                "error": timeout_error,
                 "auto_fixed_mux_to_scalar": auto_fixed,
+                "validation_profile": normalized_profile,
                 "scilab_log": None,
                 "scilab_log_tail": None,
                 "file_path": temp_meta["path"],
@@ -3007,9 +3107,11 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
         if log_analysis["success"]:
             return {
                 "success": True,
-                "origin": "scilab-subprocess",
+                "origin": origin,
                 "warnings": log_analysis.get("warnings"),
                 "auto_fixed_mux_to_scalar": auto_fixed,
+                "validation_profile": normalized_profile,
+                "scilab_verdict": success_verdict,
                 "scilab_log": scilab_log,
                 "scilab_log_tail": scilab_log_tail,
                 "file_path": temp_meta["path"],
@@ -3019,9 +3121,10 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
 
         return {
             "success": False,
-            "origin": "scilab-subprocess",
-            "error": f"Structural validation passed, but Scilab runtime validation failed: {log_analysis['error']}",
+            "origin": origin,
+            "error": f"{failure_prefix}{log_analysis['error']}",
             "auto_fixed_mux_to_scalar": auto_fixed,
+            "validation_profile": normalized_profile,
             "warnings": log_analysis.get("warnings"),
             "scilab_log": scilab_log,
             "scilab_log_tail": scilab_log_tail,
@@ -3038,9 +3141,10 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
     except Exception as exc:
         return {
             "success": False,
-            "origin": "scilab-subprocess",
+            "origin": origin,
             "error": f"Failed to launch Scilab subprocess: {exc}",
             "auto_fixed_mux_to_scalar": auto_fixed,
+            "validation_profile": normalized_profile,
             "scilab_log": None,
             "xml_diagnostics": xml_diagnostics if "xml_diagnostics" in locals() else {
                 "memory": memory_diag,
@@ -3140,6 +3244,22 @@ async def run_poll_validation(xml_content: str, auto_fixed: bool) -> dict:
             "origin": "scilab-poll-fallback",
             "poll_worker": worker_state,
         }
+
+
+async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> dict:
+    return await run_headless_scilab_check(
+        xml_content,
+        auto_fixed,
+        validation_profile=VALIDATION_PROFILE_FULL_RUNTIME,
+    )
+
+
+async def run_headless_scilab_import_validation(xml_content: str, auto_fixed: bool) -> dict:
+    return await run_headless_scilab_check(
+        xml_content,
+        auto_fixed,
+        validation_profile=VALIDATION_PROFILE_HOSTED_SMOKE,
+    )
 
 def validate_diagram_structure(tree: etree._Element, auto_fixed: bool) -> dict:
     """Performs structural audit of Xcos XML without needing Scilab."""
@@ -3376,7 +3496,11 @@ async def search_related_xcos_files(query: str):
     
     return make_text_response("\n".join(results))
 
-async def run_verification(xml_content: str):
+async def run_verification(
+    xml_content: str,
+    validation_profile: str = VALIDATION_PROFILE_FULL_RUNTIME,
+):
+    normalized_profile = normalize_validation_profile(validation_profile)
     # --- Integration of Auto-fix and Validator ---
     try:
         parser = etree.XMLParser(remove_blank_text=True)
@@ -3396,6 +3520,7 @@ async def run_verification(xml_content: str):
                 "origin": "pre-sim-validator",
                 "errors": val_errors,
                 "auto_fixed_mux_to_scalar": auto_fixed,
+                "validation_profile": normalized_profile,
                 "fanout_normalization": fanout_normalization,
                 "warnings": fanout_normalization.get("warnings"),
             }
@@ -3404,22 +3529,40 @@ async def run_verification(xml_content: str):
         return {
             "success": False,
             "origin": "pre-sim-validator",
+            "validation_profile": normalized_profile,
             "error": f"Error during pre-validation: {str(e)}",
         }
 
     validation_mode = detect_validation_mode()
-    if validation_mode == "subprocess":
-        # Stage 1 â€” fast Python structural audit (catches broken IDs, fan-outs, etc.)
-        python_result = validate_diagram_structure(tree, auto_fixed)
-        if not python_result["success"]:
-            # Fail immediately - no point spawning Scilab if the XML is broken.
-            if fanout_normalization.get("normalized"):
-                python_result["fanout_normalization"] = fanout_normalization
-                python_result["warnings"] = (python_result.get("warnings") or []) + (fanout_normalization.get("warnings") or [])
-            return python_result
+    # Stage 1 â€” fast Python structural audit (catches broken IDs, fan-outs, etc.)
+    python_result = validate_diagram_structure(tree, auto_fixed)
+    if not python_result["success"]:
+        if fanout_normalization.get("normalized"):
+            python_result["fanout_normalization"] = fanout_normalization
+            python_result["warnings"] = (python_result.get("warnings") or []) + (fanout_normalization.get("warnings") or [])
+        python_result["validation_profile"] = normalized_profile
+        return python_result
 
-        # Stage 2 â€” deep Scilab compilation check (catches parameter mismatches,
-        # missing functions, simulation-time type errors, etc.)
+    if normalized_profile == VALIDATION_PROFILE_HOSTED_SMOKE:
+        scilab_result = await run_headless_scilab_import_validation(xml_content, auto_fixed)
+        merged_warnings = (
+            (fanout_normalization.get("warnings") or [])
+            + (python_result.get("warnings") or [])
+            + (scilab_result.get("warnings") or [])
+        )
+        return {
+            **scilab_result,
+            "validation_profile": normalized_profile,
+            "structural_check": {
+                "success": python_result["success"],
+                "warnings": python_result.get("warnings"),
+            },
+            "warnings": merged_warnings if merged_warnings else None,
+            "origin": "hybrid (structural-python + scilab-import-check)",
+            "fanout_normalization": fanout_normalization,
+        }
+
+    if validation_mode == "subprocess":
         scilab_result = await run_headless_scilab_validation(xml_content, auto_fixed)
         poll_fallback_result = None
 
@@ -3432,24 +3575,9 @@ async def run_verification(xml_content: str):
                 + (scilab_result.get("warnings") or [])
                 + (poll_fallback_result.get("warnings") or [])
             )
-            if poll_fallback_result.get("success"):
-                return {
-                    **poll_fallback_result,
-                    "fallback_used": True,
-                    "fallback_reason": fallback_reason,
-                    "subprocess_result": scilab_result,
-                    "poll_fallback_result": poll_fallback_result,
-                    "fanout_normalization": fanout_normalization,
-                    "structural_check": {
-                        "success": python_result["success"],
-                        "warnings": python_result.get("warnings"),
-                    },
-                    "warnings": merged_warnings if merged_warnings else None,
-                    "origin": "hybrid (structural-python + scilab-subprocess + scilab-poll-fallback)",
-                }
-
             return {
                 **poll_fallback_result,
+                "validation_profile": normalized_profile,
                 "fallback_used": True,
                 "fallback_reason": fallback_reason,
                 "subprocess_result": scilab_result,
@@ -3463,16 +3591,15 @@ async def run_verification(xml_content: str):
                 "origin": "hybrid (structural-python + scilab-subprocess + scilab-poll-fallback)",
             }
 
-        # Merge warnings from both stages
         merged_warnings = (
             (fanout_normalization.get("warnings") or [])
             + (python_result.get("warnings") or [])
             + (scilab_result.get("warnings") or [])
         )
 
-        result = {
+        return {
             **scilab_result,
-            # Surface both validator results so the caller has full context
+            "validation_profile": normalized_profile,
             "structural_check": {
                 "success": python_result["success"],
                 "warnings": python_result.get("warnings"),
@@ -3481,13 +3608,9 @@ async def run_verification(xml_content: str):
             "origin": "hybrid (structural-python + scilab-subprocess)",
             "fanout_normalization": fanout_normalization,
         }
-        if poll_fallback_result:
-            result["fallback_used"] = True
-            result["fallback_reason"] = describe_poll_fallback_reason(scilab_result)
-            result["poll_fallback_result"] = poll_fallback_result
-        return result
 
     result = await run_poll_validation(xml_content, auto_fixed)
+    result["validation_profile"] = normalized_profile
     result["fanout_normalization"] = fanout_normalization
     result["warnings"] = (result.get("warnings") or []) + (fanout_normalization.get("warnings") or [])
     return result
@@ -3532,7 +3655,10 @@ async def _run_validation_job(job_id: str):
         draft_normalization = normalize_draft_fanout(job.session_id)
         xml_content = state.drafts[job.session_id].to_xml()
         session_meta = write_session_snapshot(job.session_id)
-        result = await asyncio.wait_for(run_verification(xml_content), timeout=job.timeout_seconds)
+        result = await asyncio.wait_for(
+            run_verification(xml_content, validation_profile=job.validation_profile),
+            timeout=job.timeout_seconds,
+        )
         if draft_normalization.get("normalized"):
             result["fanout_normalization"] = draft_normalization
             result["warnings"] = (result.get("warnings") or []) + (draft_normalization.get("warnings") or [])
@@ -3549,6 +3675,7 @@ async def _run_validation_job(job_id: str):
             "task_id": job.job_id,
             "error": f"Validation timed out after {job.timeout_seconds:.0f} seconds.",
             "origin": "validation-job",
+            "validation_profile": job.validation_profile,
             "file_path": session_meta["path"] if session_meta else None,
             "file_size_bytes": session_meta["size_bytes"] if session_meta else None,
         }
@@ -3564,6 +3691,7 @@ async def _run_validation_job(job_id: str):
             "task_id": job.job_id,
             "error": f"Validation job failed: {exc}",
             "origin": "validation-job",
+            "validation_profile": job.validation_profile,
             "file_path": session_meta["path"] if session_meta else None,
             "file_size_bytes": session_meta["size_bytes"] if session_meta else None,
         }
@@ -3575,9 +3703,18 @@ async def _run_validation_job(job_id: str):
         persist_validation_job(job_id)
 
 
-async def xcos_start_validation(session_id: str, timeout_seconds: float | None = None):
+async def xcos_start_validation(
+    session_id: str,
+    timeout_seconds: float | None = None,
+    validation_profile: str = VALIDATION_PROFILE_FULL_RUNTIME,
+):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
+
+    try:
+        validation_profile = normalize_validation_profile(validation_profile)
+    except ValueError as exc:
+        return make_text_response(f"Error: {exc}")
 
     if timeout_seconds is None:
         timeout_seconds = get_configured_validation_job_timeout_seconds()
@@ -3591,6 +3728,7 @@ async def xcos_start_validation(session_id: str, timeout_seconds: float | None =
         job_id=job_id,
         session_id=session_id,
         workflow_id=workflow_id,
+        validation_profile=validation_profile,
         status="queued",
         created_at=now_iso(),
         timeout_seconds=float(timeout_seconds),
@@ -4502,9 +4640,10 @@ async def _legacy_xcos_verify_draft(session_id: str):
         draft.last_verified_file_size = session_meta["size_bytes"]
     else:
         draft.last_verified_file_path = result.get("file_path")
-        draft.last_verified_file_size = result.get("file_size_bytes")
+    draft.last_verified_file_size = result.get("file_size_bytes")
     draft.last_verified_error = result.get("error")
     draft.last_verified_origin = result.get("origin", "scilab-validator")
+    draft.last_verified_profile = normalize_validation_profile(result.get("validation_profile"))
 
     workflow_id = state.draft_to_workflow.get(session_id)
     if workflow_id and workflow_id in state.workflows:
@@ -4521,6 +4660,7 @@ async def _legacy_xcos_verify_draft(session_id: str):
             "file_size_bytes": result.get("file_size_bytes"),
             "error": result.get("error"),
             "origin": result.get("origin", "scilab-validator"),
+            "validation_profile": draft.last_verified_profile,
         }
         workflow.updated_at = now_iso()
 
@@ -4529,11 +4669,18 @@ async def _legacy_xcos_verify_draft(session_id: str):
     result["workflow_id"] = workflow_id
     return make_json_response(result)
 
-async def xcos_verify_draft(session_id: str):
+async def xcos_verify_draft(
+    session_id: str,
+    validation_profile: str = VALIDATION_PROFILE_FULL_RUNTIME,
+):
     if session_id not in state.drafts:
         return make_text_response(f"Error: Session {session_id} not found")
     start_payload = parse_mcp_text_json_response(
-        await xcos_start_validation(session_id, get_configured_validation_job_timeout_seconds())
+        await xcos_start_validation(
+            session_id,
+            get_configured_validation_job_timeout_seconds(),
+            validation_profile,
+        )
     )
     job_id = start_payload["job_id"]
     task = state.validation_tasks.get(job_id)
@@ -4604,6 +4751,7 @@ async def xcos_commit_phase(session_id: str, phase_label: str, blocks_xml: str =
         "written_to": file_path,
         "file_size_bytes": file_size,
         "download_url": build_session_download_url(session_id),
+        "last_validation_profile": state.drafts[session_id].last_verified_profile,
         "MUST_PRESENT_TO_USER": (
             f"The verified .xcos file is ready at: {file_path} ({file_size} bytes). "
             "You MUST immediately: "
@@ -5378,11 +5526,18 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "Start asynchronous validation for a draft session. Use this when validation "
                 "may exceed stream limits, then poll xcos_get_validation_status until the "
                 "job reaches a terminal state. If timeout_seconds is omitted, the server "
-                "uses its configured validation-job timeout."
+                "uses its configured validation-job timeout. validation_profile defaults "
+                "to 'full_runtime'; use 'hosted_smoke' for structural plus Scilab import/load "
+                "checks without full simulation."
             ),
             inputSchema={"type": "object", "properties": {
                 "session_id": {"type": "string"},
-                "timeout_seconds": {"type": "number", "default": get_configured_validation_job_timeout_seconds()}
+                "timeout_seconds": {"type": "number", "default": get_configured_validation_job_timeout_seconds()},
+                "validation_profile": {
+                    "type": "string",
+                    "enum": sorted(VALIDATION_PROFILES),
+                    "default": VALIDATION_PROFILE_FULL_RUNTIME,
+                },
             }, "required": ["session_id"]},
         ),
         mcp_types.Tool(
@@ -5397,7 +5552,8 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "diagram. After calling this, always call xcos_get_validation_widget with "
                 "the current draft XML and display the result widget to the user. This tool "
                 "starts asynchronous validation and may return a running job_id instead of a "
-                "final verdict when validation takes too long.\n"
+                "final verdict when validation takes too long. validation_profile defaults "
+                "to 'full_runtime'; use 'hosted_smoke' for deploy-safe structural plus import validation.\n"
                 "  - If success=true: IMMEDIATELY call xcos_commit_phase with "
                 "    phase_label='phase3_implementation' and blocks_xml='', then call "
                 "    xcos_get_file_path, read the file with xcos_get_file_content, write "
@@ -5407,7 +5563,14 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "    go back to xcos_add_blocks and rebuild. NEVER stop after one failure â€” \n"
                 "    keep iterating until success=true is returned."
             ),
-            inputSchema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
+            inputSchema={"type": "object", "properties": {
+                "session_id": {"type": "string"},
+                "validation_profile": {
+                    "type": "string",
+                    "enum": sorted(VALIDATION_PROFILES),
+                    "default": VALIDATION_PROFILE_FULL_RUNTIME,
+                },
+            }, "required": ["session_id"]},
         ),
 
         mcp_types.Tool(
@@ -5590,6 +5753,7 @@ async def handle_call_tool(name: str, arguments: dict | None):
         payload = parse_mcp_text_json_response(await xcos_start_validation(
             arguments["session_id"],
             arguments.get("timeout_seconds"),
+            arguments.get("validation_profile", VALIDATION_PROFILE_FULL_RUNTIME),
         ))
         return make_structured_tool_result(
             f"Validation job {payload['job_id']} started for session {arguments['session_id']}.",
@@ -5602,7 +5766,10 @@ async def handle_call_tool(name: str, arguments: dict | None):
             payload,
         )
     elif name == "xcos_verify_draft":
-        payload = parse_mcp_text_json_response(await xcos_verify_draft(arguments["session_id"]))
+        payload = parse_mcp_text_json_response(await xcos_verify_draft(
+            arguments["session_id"],
+            arguments.get("validation_profile", VALIDATION_PROFILE_FULL_RUNTIME),
+        ))
         return make_structured_tool_result(
             (
                 f"Validation job {payload.get('job_id')} is {payload.get('status')} for draft session {arguments['session_id']}."

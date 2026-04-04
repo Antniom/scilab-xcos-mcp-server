@@ -62,7 +62,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fixture-path", default=DEFAULT_FIXTURE)
     parser.add_argument("--verify-timeout-seconds", type=float, default=900.0)
     parser.add_argument("--poll-interval-seconds", type=float, default=2.0)
-    parser.add_argument("--allow-degraded-runtime", action="store_true")
+    parser.add_argument(
+        "--validation-profile",
+        choices=("hosted_smoke", "full_runtime"),
+        default="hosted_smoke",
+    )
     return parser.parse_args()
 
 
@@ -160,8 +164,13 @@ async def wait_for_validation(
     session_id: str,
     verify_timeout_seconds: float,
     poll_interval_seconds: float,
+    validation_profile: str,
 ) -> dict[str, Any]:
-    payload = await call_tool_json(session, "xcos_verify_draft", {"session_id": session_id})
+    payload = await call_tool_json(
+        session,
+        "xcos_verify_draft",
+        {"session_id": session_id, "validation_profile": validation_profile},
+    )
     if payload.get("status") not in {"running", "queued"}:
         return payload
 
@@ -180,21 +189,9 @@ async def wait_for_validation(
         return status
 
 
-def is_degraded_runtime_timeout(validation: dict[str, Any], allow_degraded_runtime: bool) -> bool:
-    if not allow_degraded_runtime:
-        return False
-    if validation.get("code") != "SCILAB_RUNTIME_TIMEOUT":
-        return False
-    debug = validation.get("debug") or {}
-    structural = debug.get("structural_check") or {}
-    return bool(structural.get("success"))
-
-
-def ensure_validation_succeeded(validation: dict[str, Any], allow_degraded_runtime: bool) -> bool:
-    degraded_runtime_timeout = is_degraded_runtime_timeout(validation, allow_degraded_runtime)
-    if not validation.get("success") and not degraded_runtime_timeout:
+def ensure_validation_succeeded(validation: dict[str, Any]) -> None:
+    if not validation.get("success"):
         raise RuntimeError(json.dumps(validation, indent=2))
-    return degraded_runtime_timeout
 
 
 async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
@@ -286,8 +283,9 @@ async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
                 session_id,
                 args.verify_timeout_seconds,
                 args.poll_interval_seconds,
+                args.validation_profile,
             )
-            degraded_runtime_timeout = ensure_validation_succeeded(validation, args.allow_degraded_runtime)
+            ensure_validation_succeeded(validation)
 
             file_info = await call_tool_json(session, "xcos_get_file_path", {"session_id": session_id})
             file_content = await call_tool_json(
@@ -309,7 +307,7 @@ async def run_smoke_test(args: argparse.Namespace) -> dict[str, Any]:
                 "session_id": session_id,
                 "block_chunk_count": len(block_chunks),
                 "link_chunk_count": len(link_chunks),
-                "degraded_runtime_timeout": degraded_runtime_timeout,
+                "validation_profile": args.validation_profile,
                 "validation": validation,
                 "commit": commit,
                 "file_info": file_info,

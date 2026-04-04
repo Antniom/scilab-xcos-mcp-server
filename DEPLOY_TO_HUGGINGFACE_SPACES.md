@@ -24,6 +24,16 @@ Hosted validation defaults:
 - `XCOS_POLL_VALIDATION_TIMEOUT_SECONDS=420`
 - `XCOS_VALIDATION_JOB_TIMEOUT_SECONDS=720`
 
+Validation profiles:
+
+- `full_runtime`
+  - structural validation plus full Scilab simulation
+  - intended for manual or on-demand verification
+- `hosted_smoke`
+  - structural validation plus Scilab load/import checks only
+  - intended for Hugging Face `cpu-basic` deployment smoke tests
+  - does not run `scicos_simulate(...)`
+
 ## Local Notes
 
 Local Windows development can still use `.scilab_path` or `SCILAB_BIN`.
@@ -44,7 +54,7 @@ What it does:
 - removes tracked binary assets that Hugging Face Spaces rejects
 - force-pushes the clean snapshot to `huggingface/main`
 - waits 210 seconds for the Space rebuild
-- runs a remote MCP smoke test against the deployed Space using the pendulum fixture in `pendulo_simples_fiel_raw.xcos`
+- runs a remote MCP smoke test against the deployed Space using `--validation-profile hosted_smoke` and the pendulum fixture in `pendulo_simples_fiel_raw.xcos`
 
 This keeps GitHub history unchanged while letting the Space track a deployment-only branch state.
 
@@ -63,10 +73,9 @@ That smoke test:
 - creates and approves the 3-phase pendulum workflow
 - starts a draft session
 - loads the pendulum `.xcos` fixture in chunked block and link batches
-- runs `xcos_verify_draft`
-- commits the verified phase when runtime validation succeeds
-- fails by default if hosted runtime validation still ends in `SCILAB_RUNTIME_TIMEOUT`
-- only allows degraded structural-only success when you explicitly pass `--allow-degraded-runtime`
+- runs `xcos_verify_draft(validation_profile="hosted_smoke")`
+- commits the verified phase when hosted-smoke validation succeeds
+- fails if structural validation or Scilab import/load fails
 - checks that the session file is available when validation succeeds
 
 This avoids the large single-payload `verify_xcos_xml` transport failure seen on the Space by using chunked draft assembly instead.
@@ -78,5 +87,6 @@ Useful flags:
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestMcpUrl "https://<space>.hf.space/mcp"
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestFixturePath "C:\path\to\diagram.xcos"
 .\tools\deploy_huggingface_clean.ps1 -SmokeTestDelaySeconds 300
-.\.venv\Scripts\python.exe .\tools\remote_hf_smoke_test.py --allow-degraded-runtime
+.\.venv\Scripts\python.exe .\tools\remote_hf_smoke_test.py --validation-profile hosted_smoke
+.\.venv\Scripts\python.exe .\tools\remote_hf_smoke_test.py --validation-profile full_runtime
 ```

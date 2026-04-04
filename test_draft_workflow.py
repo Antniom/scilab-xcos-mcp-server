@@ -148,6 +148,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             "task_id": "mock-task",
             "file_path": os.path.abspath("mock-verified.xcos"),
             "file_size_bytes": 123,
+            "validation_profile": server.VALIDATION_PROFILE_HOSTED_SMOKE,
         }
 
         with patch.object(server, "run_verification", AsyncMock(return_value=mock_result)):
@@ -164,6 +165,10 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(session_meta["last_verified"]["success"])
         self.assertEqual(session_meta["last_verified"]["task_id"], "mock-task")
+        self.assertEqual(
+            session_meta["last_verified"]["validation_profile"],
+            server.VALIDATION_PROFILE_HOSTED_SMOKE,
+        )
 
     async def test_block_data_includes_compact_reference_and_extra_examples(self):
         split_response = await server.get_xcos_block_data("SPLIT_f")
@@ -509,13 +514,14 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         session_id = await self.start_session()
         await server.xcos_add_blocks(session_id, CONST_BLOCK_XML)
 
-        async def delayed_validation(_xml_content):
+        async def delayed_validation(_xml_content, validation_profile=server.VALIDATION_PROFILE_FULL_RUNTIME):
             await asyncio.sleep(1.2)
             return {
                 "success": True,
                 "task_id": "slow-task",
                 "file_path": os.path.join(self.tempdir.name, "validated.xcos"),
                 "file_size_bytes": 99,
+                "validation_profile": validation_profile,
             }
 
         with patch.object(server, "run_verification", side_effect=delayed_validation):
@@ -652,6 +658,61 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result["fallback_used"])
         self.assertEqual(server.infer_validation_code(result), "SCILAB_RUNTIME_TIMEOUT")
 
+    async def test_run_verification_hosted_smoke_uses_import_only_validation(self):
+        import_result = {
+            "success": True,
+            "origin": "scilab-import-check",
+            "warnings": ["import warning"],
+            "validation_profile": server.VALIDATION_PROFILE_HOSTED_SMOKE,
+        }
+        python_result = {"success": True, "warnings": ["structural warning"]}
+
+        with (
+            patch.object(server, "auto_fix_mux_to_scalar", return_value=False),
+            patch.object(server, "normalize_fanout_to_split_blocks", return_value={"normalized": False, "warnings": ["fanout warning"]}),
+            patch.object(server, "validate_port_sizes", return_value=[]),
+            patch.object(server, "validate_diagram_structure", return_value=python_result),
+            patch.object(server, "run_headless_scilab_import_validation", AsyncMock(return_value=import_result)) as import_mock,
+            patch.object(server, "run_headless_scilab_validation", AsyncMock()) as runtime_mock,
+            patch.object(server, "run_poll_validation", AsyncMock()) as poll_mock,
+        ):
+            result = await server.run_verification(
+                MINIMAL_DIAGRAM_XML,
+                validation_profile=server.VALIDATION_PROFILE_HOSTED_SMOKE,
+            )
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["validation_profile"], server.VALIDATION_PROFILE_HOSTED_SMOKE)
+        self.assertEqual(result["origin"], "hybrid (structural-python + scilab-import-check)")
+        import_mock.assert_awaited_once()
+        runtime_mock.assert_not_awaited()
+        poll_mock.assert_not_awaited()
+
+    async def test_run_verification_hosted_smoke_returns_import_failure_code(self):
+        import_result = {
+            "success": False,
+            "origin": "scilab-import-check",
+            "error": "Structural validation passed, but Scilab import validation failed: broken import",
+            "validation_profile": server.VALIDATION_PROFILE_HOSTED_SMOKE,
+        }
+        python_result = {"success": True, "warnings": []}
+
+        with (
+            patch.object(server, "auto_fix_mux_to_scalar", return_value=False),
+            patch.object(server, "normalize_fanout_to_split_blocks", return_value={"normalized": False, "warnings": []}),
+            patch.object(server, "validate_port_sizes", return_value=[]),
+            patch.object(server, "validate_diagram_structure", return_value=python_result),
+            patch.object(server, "run_headless_scilab_import_validation", AsyncMock(return_value=import_result)),
+        ):
+            result = await server.run_verification(
+                MINIMAL_DIAGRAM_XML,
+                validation_profile=server.VALIDATION_PROFILE_HOSTED_SMOKE,
+            )
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["validation_profile"], server.VALIDATION_PROFILE_HOSTED_SMOKE)
+        self.assertEqual(server.infer_validation_code(result), "SCILAB_IMPORT_FAILED")
+
     async def test_xcos_start_validation_uses_configured_timeout_by_default(self):
         session_id = await self.start_session()
         with (
@@ -662,7 +723,27 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         payload = json.loads(response[0].text)
         self.assertEqual(payload["timeout_seconds"], 321.0)
+        self.assertEqual(payload["validation_profile"], server.VALIDATION_PROFILE_FULL_RUNTIME)
         self.assertEqual(server.state.validation_jobs[payload["job_id"]].timeout_seconds, 321.0)
+        self.assertEqual(
+            server.state.validation_jobs[payload["job_id"]].validation_profile,
+            server.VALIDATION_PROFILE_FULL_RUNTIME,
+        )
+
+    async def test_xcos_start_validation_accepts_hosted_smoke_profile(self):
+        session_id = await self.start_session()
+        with patch.object(server, "_schedule_validation_job", return_value=None):
+            response = await server.xcos_start_validation(
+                session_id,
+                validation_profile=server.VALIDATION_PROFILE_HOSTED_SMOKE,
+            )
+
+        payload = json.loads(response[0].text)
+        self.assertEqual(payload["validation_profile"], server.VALIDATION_PROFILE_HOSTED_SMOKE)
+        self.assertEqual(
+            server.state.validation_jobs[payload["job_id"]].validation_profile,
+            server.VALIDATION_PROFILE_HOSTED_SMOKE,
+        )
 
     async def test_xcos_verify_draft_uses_configured_timeout_by_default(self):
         session_id = await self.start_session()
@@ -678,7 +759,34 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         payload = json.loads(response[0].text)
         self.assertEqual(payload["status"], "queued")
-        start_mock.assert_awaited_once_with(session_id, 654.0)
+        start_mock.assert_awaited_once_with(
+            session_id,
+            654.0,
+            server.VALIDATION_PROFILE_FULL_RUNTIME,
+        )
+
+    async def test_xcos_verify_draft_accepts_hosted_smoke_profile(self):
+        session_id = await self.start_session()
+        start_response = server.make_json_response({"job_id": "job-456", "status": "queued"})
+        status_response = server.make_json_response({"job_id": "job-456", "status": "queued"})
+
+        with (
+            patch.object(server, "get_configured_validation_job_timeout_seconds", return_value=654.0),
+            patch.object(server, "xcos_start_validation", AsyncMock(return_value=start_response)) as start_mock,
+            patch.object(server, "xcos_get_validation_status", AsyncMock(return_value=status_response)),
+        ):
+            response = await server.xcos_verify_draft(
+                session_id,
+                validation_profile=server.VALIDATION_PROFILE_HOSTED_SMOKE,
+            )
+
+        payload = json.loads(response[0].text)
+        self.assertEqual(payload["status"], "queued")
+        start_mock.assert_awaited_once_with(
+            session_id,
+            654.0,
+            server.VALIDATION_PROFILE_HOSTED_SMOKE,
+        )
 
     async def test_workflow_summary_view_omits_full_phase_content(self):
         workflow = server.create_workflow_session("compact workflow")
@@ -716,6 +824,8 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             "The host client can render the associated widget using the attached app resource.",
             by_name["xcos_get_block_catalogue_widget"].description,
         )
+        self.assertIn("validation_profile defaults to 'full_runtime'", by_name["xcos_start_validation"].description)
+        self.assertIn("use 'hosted_smoke' for deploy-safe", by_name["xcos_verify_draft"].description)
         self.assertIn(
             "The host client can render the associated widget using the attached app resource.",
             by_name["xcos_get_topology_widget"].description,

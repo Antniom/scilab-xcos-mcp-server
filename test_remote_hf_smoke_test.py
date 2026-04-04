@@ -1,28 +1,41 @@
+import sys
 import unittest
+from unittest.mock import patch
 
 from tools import remote_hf_smoke_test
 
 
 class RemoteHfSmokeTestTests(unittest.TestCase):
-    def test_runtime_timeout_is_strict_by_default(self):
+    def test_failed_validation_is_strict_by_default(self):
         validation = {
             "success": False,
-            "code": "SCILAB_RUNTIME_TIMEOUT",
-            "debug": {"structural_check": {"success": True}},
+            "code": "SCILAB_IMPORT_FAILED",
+            "message": "Scilab import failed.",
         }
 
         with self.assertRaises(RuntimeError):
-            remote_hf_smoke_test.ensure_validation_succeeded(validation, allow_degraded_runtime=False)
+            remote_hf_smoke_test.ensure_validation_succeeded(validation)
 
-    def test_runtime_timeout_can_be_allowed_explicitly(self):
+    def test_successful_validation_passes(self):
         validation = {
-            "success": False,
-            "code": "SCILAB_RUNTIME_TIMEOUT",
-            "debug": {"structural_check": {"success": True}},
+            "success": True,
+            "code": "OK",
+            "validation_profile": "hosted_smoke",
         }
 
-        degraded = remote_hf_smoke_test.ensure_validation_succeeded(validation, allow_degraded_runtime=True)
-        self.assertTrue(degraded)
+        remote_hf_smoke_test.ensure_validation_succeeded(validation)
+
+    def test_cli_defaults_to_hosted_smoke(self):
+        with patch.object(sys, "argv", ["remote_hf_smoke_test.py"]):
+            args = remote_hf_smoke_test.parse_args()
+
+        self.assertEqual(args.validation_profile, "hosted_smoke")
+
+    def test_cli_allows_full_runtime_profile(self):
+        with patch.object(sys, "argv", ["remote_hf_smoke_test.py", "--validation-profile", "full_runtime"]):
+            args = remote_hf_smoke_test.parse_args()
+
+        self.assertEqual(args.validation_profile, "full_runtime")
 
 
 if __name__ == "__main__":
