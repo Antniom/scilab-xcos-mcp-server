@@ -143,6 +143,20 @@ PHASE2_MANIFEST_FIELDS = {
     "omissions",
     "synthetic_blocks_planned",
 }
+PHASE2_BLOCK_NAME_FIELDS = (
+    "name",
+    "type",
+    "interfaceFunctionName",
+    "block_name",
+    "xcos_name",
+    "block",
+)
+PHASE2_CONTEXT_VAR_FIELDS = (
+    "name",
+    "var",
+    "variable",
+    "context_var",
+)
 BLOCK_TOKEN_STOPWORDS = {
     "AND",
     "FOR",
@@ -585,6 +599,10 @@ def _unique_strings(values: list[str]) -> list[str]:
     return list(dict.fromkeys(value for value in values if value))
 
 
+def is_ambiguous_block_name(block_name: str) -> bool:
+    return bool(block_name) and block_name.isalpha() and block_name.upper() == block_name
+
+
 def derive_generation_requirements(problem_statement: str) -> tuple[dict, list[str], list[str]]:
     text = problem_statement or ""
     requirements = normalize_generation_requirements(None)
@@ -593,7 +611,8 @@ def derive_generation_requirements(problem_statement: str) -> tuple[dict, list[s
     required_blocks: list[str] = []
     for upper_name, canonical_name in sorted(catalog_block_names.items(), key=lambda item: len(item[1]), reverse=True):
         pattern = rf"(?<![A-Za-z0-9_]){re.escape(canonical_name)}(?![A-Za-z0-9_])"
-        if re.search(pattern, text, flags=re.IGNORECASE):
+        flags = 0 if is_ambiguous_block_name(canonical_name) else re.IGNORECASE
+        if re.search(pattern, text, flags=flags):
             required_blocks.append(canonical_name)
 
     unsupported_blocks: list[str] = []
@@ -655,6 +674,59 @@ def parse_phase2_architecture_manifest(content: str) -> tuple[dict | None, str |
         return None, f"Phase 2 architecture manifest is missing required field(s): {', '.join(missing_fields)}"
 
     return manifest, None
+
+
+def normalize_catalog_block_name(value: str, catalog_block_names: dict[str, str]) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if not text:
+        return ""
+    return catalog_block_names.get(text.upper(), text)
+
+
+def extract_phase2_manifest_block_names(
+    blocks: list,
+    catalog_block_names: dict[str, str],
+) -> tuple[set[str], bool]:
+    names: set[str] = set()
+    recognized_dict_field = False
+    for entry in blocks or []:
+        if isinstance(entry, str):
+            normalized = normalize_catalog_block_name(entry, catalog_block_names)
+            if normalized:
+                names.add(normalized)
+            continue
+        if not isinstance(entry, dict):
+            continue
+        for field_name in PHASE2_BLOCK_NAME_FIELDS:
+            field_value = entry.get(field_name)
+            if not isinstance(field_value, str):
+                continue
+            normalized = normalize_catalog_block_name(field_value, catalog_block_names)
+            if normalized:
+                names.add(normalized)
+                recognized_dict_field = True
+                break
+    return names, recognized_dict_field
+
+
+def extract_phase2_manifest_context_vars(context_vars: list) -> set[str]:
+    names: set[str] = set()
+    for entry in context_vars or []:
+        if isinstance(entry, str):
+            text = entry.strip()
+            if text:
+                names.add(text)
+            continue
+        if not isinstance(entry, dict):
+            continue
+        for field_name in PHASE2_CONTEXT_VAR_FIELDS:
+            field_value = entry.get(field_name)
+            if isinstance(field_value, str) and field_value.strip():
+                names.add(field_value.strip())
+                break
+    return names
 
 
 def get_approved_manifest_omissions(manifest: dict, allowed_simplifications: list[str]) -> set[str]:
@@ -1046,16 +1118,13 @@ def submit_workflow_phase(
             requirements.get("allowed_simplifications") or [],
         )
         catalog_block_names = load_catalog_block_name_map()
-        manifest_blocks = {
-            catalog_block_names.get(str(item).upper(), str(item))
-            for item in (manifest.get("blocks") or [])
-            if str(item).strip()
-        }
-        manifest_context_vars = {
-            str(item).strip()
-            for item in (manifest.get("context_vars") or [])
-            if str(item).strip()
-        }
+        manifest_blocks, recognized_block_field = extract_phase2_manifest_block_names(
+            manifest.get("blocks") or [],
+            catalog_block_names,
+        )
+        manifest_context_vars = extract_phase2_manifest_context_vars(
+            manifest.get("context_vars") or [],
+        )
         missing_blocks = sorted(
             block_name
             for block_name in requirements["required_blocks"]
@@ -1072,7 +1141,17 @@ def submit_workflow_phase(
                 details.append(f"missing required blocks: {', '.join(missing_blocks)}")
             if missing_context_vars:
                 details.append(f"missing required context vars: {', '.join(missing_context_vars)}")
-            return None, "Phase 2 fidelity check failed: " + "; ".join(details)
+            guidance = (
+                "Accepted manifest schema: "
+                "blocks may be strings or objects with one of "
+                + ", ".join(f"'{field}'" for field in PHASE2_BLOCK_NAME_FIELDS)
+                + "; context_vars may be strings or objects with one of "
+                + ", ".join(f"'{field}'" for field in PHASE2_CONTEXT_VAR_FIELDS)
+                + "."
+            )
+            if manifest.get("blocks") and not manifest_blocks and not recognized_block_field:
+                guidance += " No recognized block-name field was found in the provided block objects."
+            return None, "Phase 2 fidelity check failed: " + "; ".join(details) + " " + guidance
 
     reset_workflow_downstream(workflow, phase_key)
 
@@ -5036,7 +5115,9 @@ async def handle_list_tools() -> list[mcp_types.Tool]:
                 "    Content should list every block name, Xcos function name, parameters, \n"
                 "    and every link with source/target port IDs. The submission MUST end with \n"
                 "    a fenced JSON manifest containing blocks, links, context_vars, omissions, \n"
-                "    and synthetic_blocks_planned.\n"
+                "    and synthetic_blocks_planned. blocks entries may be strings or objects \n"
+                "    with one of: name, type, interfaceFunctionName, block_name, xcos_name, \n"
+                "    or block.\n"
                 "  - phase3_implementation: after xcos_verify_draft returns success=true. \n"
                 "    Content should confirm the file path and validation result.\n"
                 "After calling this, always call xcos_get_workflow_widget to show the \n"

@@ -54,3 +54,10 @@
 - Draft sessions now persist top-level context through `xcos_set_context`, automatically inherit required context lines from the linked workflow, and write them into `<Array as="context" scilabClass="String[]">`.
 - Validation now rewrites explicit and event fan-out through synthetic `SPLIT_f` and `CLKSPLIT_f` blocks before final checks, then reports the normalization back in validation payloads.
 - **Files:** server.py, test_draft_workflow.py, test_workflow_ui.py
+
+### 2026-04-04 16:11:32 UTC - Fix
+- **Summary:** Phase 2 fidelity parsing now accepts documented block object fields and stops inferring lowercase prose `from` as block `FROM`
+- The Phase 2 manifest checker now extracts block names from string entries plus object fields `name`, `type`, `interfaceFunctionName`, `block_name`, `xcos_name`, and `block`, and it extracts context vars from both strings and common object field names.
+- Fidelity failures now append the accepted manifest schema and explicitly say when block objects contained no recognized block-name field, which makes the contract debuggable from the tool response.
+- Requirement derivation now treats all-uppercase ambiguous block names case-sensitively, so ordinary lowercase prose like `from the image` no longer injects a false required `FROM` block.
+- **Files:** server.py, test_draft_workflow.py

@@ -282,6 +282,65 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             "approved",
         )
 
+    async def test_phase2_manifest_accepts_block_objects_with_documented_fields(self):
+        create_response = await server.xcos_create_workflow(
+            "Build with MUX, BARXY, CMSCOPE and g=10, L=1.",
+            autopilot=True,
+        )
+        create_payload = json.loads(create_response[0].text)
+        workflow_id = create_payload["workflow"]["workflow_id"]
+        self.created_workflows.append(workflow_id)
+
+        await server.xcos_submit_phase(workflow_id, "phase1_math_model", "Math derivation")
+
+        manifest = {
+            "blocks": [
+                {"interfaceFunctionName": "MUX"},
+                {"type": "BARXY"},
+                {"block_name": "CMSCOPE"},
+            ],
+            "links": [],
+            "context_vars": [{"name": "g"}, {"variable": "L"}],
+            "omissions": [],
+            "synthetic_blocks_planned": [],
+        }
+        accepted = await server.xcos_submit_phase(
+            workflow_id,
+            "phase2_architecture",
+            "Architecture plan\n```json\n" + json.dumps(manifest) + "\n```",
+        )
+        accepted_payload = json.loads(accepted[0].text)
+        self.assertEqual(
+            accepted_payload["workflow"]["phases"]["phase2_architecture"]["status"],
+            "approved",
+        )
+
+    async def test_phase2_manifest_error_documents_expected_block_fields(self):
+        create_response = await server.xcos_create_workflow(
+            "Build with MUX, BARXY, CMSCOPE and g=10, L=1.",
+            autopilot=True,
+        )
+        create_payload = json.loads(create_response[0].text)
+        workflow_id = create_payload["workflow"]["workflow_id"]
+        self.created_workflows.append(workflow_id)
+
+        await server.xcos_submit_phase(workflow_id, "phase1_math_model", "Math derivation")
+
+        manifest = {
+            "blocks": [{"unexpected": "MUX"}],
+            "links": [],
+            "context_vars": ["g", "L"],
+            "omissions": [],
+            "synthetic_blocks_planned": [],
+        }
+        rejected = await server.xcos_submit_phase(
+            workflow_id,
+            "phase2_architecture",
+            "Architecture plan\n```json\n" + json.dumps(manifest) + "\n```",
+        )
+        self.assertIn("Accepted manifest schema:", rejected[0].text)
+        self.assertIn("interfaceFunctionName", rejected[0].text)
+
     async def test_xcos_set_context_injects_top_level_context(self):
         session_id = await self.start_session()
         set_response = await server.xcos_set_context(session_id, ["g=10", "L=1", "theta0=0"])
@@ -321,6 +380,21 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('value="g=10"', xml_text)
         self.assertIn('value="L=2"', xml_text)
         self.assertIn('value="omega0=0"', xml_text)
+
+    async def test_requirement_extraction_does_not_treat_lowercase_from_as_FROM_block(self):
+        response = await server.xcos_create_workflow(
+            "Build the same pendulum from the attached reference image with MUX and BARXY.",
+            autopilot=True,
+        )
+        payload = json.loads(response[0].text)
+        workflow = payload["workflow"]
+
+        self.created_workflows.append(workflow["workflow_id"])
+        self.assertEqual(
+            workflow["generation_requirements"]["required_blocks"],
+            ["BARXY", "MUX"],
+        )
+        self.assertNotIn("FROM", workflow["generation_requirements"]["required_blocks"])
 
     def test_normalize_fanout_to_split_blocks_inserts_explicit_split(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
