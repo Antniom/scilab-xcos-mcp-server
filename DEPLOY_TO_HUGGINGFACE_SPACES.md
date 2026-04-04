@@ -37,6 +37,12 @@ Hosted validation defaults:
 - `XCOS_VALIDATION_WORKER_REQUEST_RETRY_COUNT=3` transient HTTP retry budget for remote worker create/poll requests
 - `XCOS_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS=1.0` base exponential backoff for transient remote worker request failures
 
+Current repository default for MCP Space Docker image:
+
+- `XCOS_VALIDATION_WORKER_URL=https://notsn-headless-scilab.hf.space`
+
+If you need authenticated worker access, set `XCOS_VALIDATION_WORKER_TOKEN` in Hugging Face Space variables for both Spaces.
+
 Startup preflight notes:
 
 - On startup, the server now performs a Scilab preflight smoke check in subprocess mode.
