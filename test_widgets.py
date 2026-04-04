@@ -75,6 +75,7 @@ class WidgetTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(blocks_payload["payload"]["block_count"], 2)
         self.assertEqual(blocks_payload["payload"]["link_count"], 0)
         self.assertIn("<svg", blocks_payload["payload"]["svg"])
+        self.assertIn("data:image/", blocks_payload["payload"]["svg"])
         self.assertIn("/api/topology/widget-session/svg", blocks_response[1].text)
 
         add_links_response = await server.xcos_add_links("widget-session", LINKS_XML)

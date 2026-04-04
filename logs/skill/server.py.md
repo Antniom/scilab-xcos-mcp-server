@@ -40,3 +40,10 @@
 - Added a compact public validation payload for verify_xcos_xml and xcos_verify_draft, gated raw internals behind XCOS_DEBUG_TOOL_OUTPUT, cached validation results by XML hash so xcos_get_validation_widget does not re-run validation after a fresh verify, and made get_xcos_block_data load help/extra examples only on demand to reduce token-heavy responses.
 - **Files:** scilab-xcos-mcp-server/server.py
 
+### 2026-04-04 00:00:00 UTC â€” Fix
+- **Summary:** Embedded topology assets and suppressed false validation failures from GTK locale noise
+- Topology SVG generation now embeds block artwork as data URIs via `resolve_block_image()` instead of referencing `/block_images/...` URLs, which prevents broken image icons in app-rendered widgets.
+- Scilab subprocess validation now runs with `LC_ALL/LANG/LANGUAGE=C` and treats exit-code-0 runs that contain only informational `XCOSAI_VERIFY_*` lines plus harmless GTK locale warnings as success instead of `VALIDATION_FAILED`.
+- Session validation and commit/file-path payloads now include `/api/sessions/{session_id}/diagram.xcos` so clients can present a direct download link for the verified `.xcos` artifact.
+- **Files:** server.py, test_widgets.py, test_draft_workflow.py
+

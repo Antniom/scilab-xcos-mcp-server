@@ -1187,6 +1187,15 @@ def make_widget_tool_result(summary: str, payload: dict):
     ]
 
 
+def get_server_base_url() -> str:
+    port_override = os.environ.get("SPACE_HOST", f"127.0.0.1:{SERVER_PORT}")
+    return f"https://{port_override}" if "hf.space" in port_override else f"http://{port_override}"
+
+
+def build_session_download_url(session_id: str) -> str:
+    return f"{get_server_base_url()}/api/sessions/{session_id}/diagram.xcos"
+
+
 def parse_mcp_text_json_response(response):
     if isinstance(response, tuple):
         return response
@@ -1333,6 +1342,7 @@ def make_public_validation_payload(
         payload["workflow_id"] = workflow_id
     if session_id:
         payload["session_id"] = session_id
+        payload["download_url"] = build_session_download_url(session_id)
     if result.get("task_id"):
         payload["task_id"] = result["task_id"]
     if result.get("file_path"):
@@ -1486,6 +1496,7 @@ def make_validation_job_public_payload(job: ValidationJob) -> dict:
     if session_meta:
         payload["session_file_path"] = session_meta["path"]
         payload["session_file_size_bytes"] = session_meta["size_bytes"]
+        payload["download_url"] = build_session_download_url(job.session_id)
     return payload
 
 
@@ -1823,6 +1834,75 @@ def build_headless_verification_script(xcos_path: str) -> str:
     ).strip() + "\n"
 
 
+IGNORABLE_SCILAB_LOG_SNIPPETS = (
+    "Gtk-WARNING:",
+    "Locale not supported by C library. Using the fallback 'C' locale.",
+    "Using the fallback 'C' locale.",
+)
+
+SCILAB_VERIFICATION_INFO_PREFIXES = (
+    "XCOSAI_VERIFY_INPUT_PATH:",
+    "XCOSAI_VERIFY_FILEINFO:",
+    "XCOSAI_VERIFY_FILEINFO_ERROR:",
+    "XCOSAI_VERIFY_TEXT_LINE_COUNT:",
+    "XCOSAI_VERIFY_TEXT_LAST_LINE:",
+    "XCOSAI_VERIFY_TEXT_READ_ERROR:",
+)
+
+
+def is_ignorable_scilab_log_line(line: str) -> bool:
+    stripped = (line or "").strip()
+    if not stripped:
+        return True
+    return any(snippet in stripped for snippet in IGNORABLE_SCILAB_LOG_SNIPPETS)
+
+
+def analyze_scilab_verification_output(scilab_log: str, returncode: int) -> dict:
+    warnings: list[str] = []
+    info_lines: list[str] = []
+    unexpected_lines: list[str] = []
+    explicit_error: str | None = None
+    found_ok = False
+
+    for raw_line in (scilab_log or "").splitlines():
+        line = raw_line.strip()
+        if is_ignorable_scilab_log_line(line):
+            continue
+        if line == "XCOSAI_VERIFY_OK":
+            found_ok = True
+            continue
+        if line.startswith("XCOSAI_VERIFY_WARN:"):
+            warning = line[len("XCOSAI_VERIFY_WARN:"):].strip()
+            if warning and warning not in warnings:
+                warnings.append(warning)
+            continue
+        if line.startswith("XCOSAI_VERIFY_ERROR:"):
+            explicit_error = line[len("XCOSAI_VERIFY_ERROR:"):].strip()
+            continue
+        if line.startswith(SCILAB_VERIFICATION_INFO_PREFIXES):
+            info_lines.append(line)
+            continue
+        unexpected_lines.append(line)
+
+    if found_ok and returncode == 0:
+        return {"success": True, "warnings": warnings if warnings else None}
+
+    if returncode == 0 and explicit_error is None and not unexpected_lines:
+        return {"success": True, "warnings": warnings if warnings else None}
+
+    error = explicit_error or f"Scilab exited with code {returncode}."
+    tail_source = unexpected_lines or info_lines
+    if tail_source and explicit_error is None:
+        tail_err = "\n".join(tail_source[-15:])
+        error += f"\n\n--- Last 15 lines of Scilab output ---\n{tail_err}\n---------------------------------------"
+
+    return {
+        "success": False,
+        "error": error,
+        "warnings": warnings if warnings else None,
+    }
+
+
 async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> dict:
     """Runs a real Scilab compilation headlessly (subprocess mode).
 
@@ -1890,7 +1970,13 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            env={**os.environ, "HOME": os.environ.get("HOME", "/tmp")},
+            env={
+                **os.environ,
+                "HOME": os.environ.get("HOME", "/tmp"),
+                "LC_ALL": "C",
+                "LANG": "C",
+                "LANGUAGE": "C",
+            },
         )
         try:
             stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=90.0)
@@ -1912,18 +1998,13 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
 
         scilab_log = stdout_bytes.decode("utf-8", errors="replace").strip()
         returncode = proc.returncode
+        log_analysis = analyze_scilab_verification_output(scilab_log, returncode)
 
-        # Check sentinel markers written by the embedded Scilab script
-        if "XCOSAI_VERIFY_OK" in scilab_log and returncode == 0:
-            warnings = []
-            if "XCOSAI_VERIFY_WARN:" in scilab_log:
-                for line in scilab_log.splitlines():
-                    if line.startswith("XCOSAI_VERIFY_WARN:"):
-                        warnings.append(line[len("XCOSAI_VERIFY_WARN:"):])
+        if log_analysis["success"]:
             return {
                 "success": True,
                 "origin": "scilab-subprocess",
-                "warnings": warnings if warnings else None,
+                "warnings": log_analysis.get("warnings"),
                 "auto_fixed_mux_to_scalar": auto_fixed,
                 "scilab_log": scilab_log,
                 "file_path": temp_meta["path"],
@@ -1931,25 +2012,12 @@ async def run_headless_scilab_validation(xml_content: str, auto_fixed: bool) -> 
                 "xml_diagnostics": xml_diagnostics,
             }
 
-        # Failure: extract the error sentinel if present
-        scilab_error = f"Scilab exited with code {returncode}."
-        found_sentinel = False
-        for line in scilab_log.splitlines():
-            if line.startswith("XCOSAI_VERIFY_ERROR:"):
-                scilab_error = line[len("XCOSAI_VERIFY_ERROR:"):]
-                found_sentinel = True
-                break
-        
-        if not found_sentinel and scilab_log:
-            lines = scilab_log.strip().splitlines()
-            tail_err = "\n".join(lines[-15:])
-            scilab_error += f"\n\n--- Last 15 lines of Scilab output ---\n{tail_err}\n---------------------------------------" 
-
         return {
             "success": False,
             "origin": "scilab-subprocess",
-            "error": scilab_error,
+            "error": log_analysis["error"],
             "auto_fixed_mux_to_scalar": auto_fixed,
+            "warnings": log_analysis.get("warnings"),
             "scilab_log": scilab_log,
             "file_path": temp_meta["path"],
             "file_size_bytes": temp_meta["size_bytes"],
@@ -2985,24 +3053,18 @@ def _generate_topology_svg(session_id: str) -> tuple[str, int, int]:
     curr_x = 20
 
     b_coords = {}
-    block_images_dir = os.path.join(BASE_DIR, "block_images")
-
-    port_override = os.environ.get("SPACE_HOST", f"127.0.0.1:{SERVER_PORT}")
-    base_url = f"https://{port_override}" if "hf.space" in port_override else f"http://{port_override}"
 
     for idx, (bid, bdata) in enumerate(block_map.items()):
         b_coords[bid] = (curr_x, curr_y)
         
         name = bdata["name"]
-        svg_path = os.path.join(block_images_dir, f"{name}.svg")
-        png_path = os.path.join(block_images_dir, f"{name}.png")
-        
-        if os.path.exists(svg_path):
-            img_url = f"{base_url}/block_images/{name}.svg"
-            svg_nodes.append(f'<image href="{img_url}" x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" />')
-        elif os.path.exists(png_path):
-            img_url = f"{base_url}/block_images/{name}.png"
-            svg_nodes.append(f'<image href="{img_url}" x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" />')
+        image = resolve_block_image(name)
+
+        if image and image.get("src"):
+            img_src = html.escape(image["src"], quote=True)
+            svg_nodes.append(
+                f'<image href="{img_src}" x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" preserveAspectRatio="xMidYMid meet" />'
+            )
         else:
             svg_nodes.append(f'<rect x="{curr_x}" y="{curr_y}" width="{node_w}" height="{node_h}" fill="#f8f9fa" stroke="#343a40" rx="4" />')
             svg_nodes.append(f'<text x="{curr_x + 6}" y="{curr_y + 24}" font-family="sans-serif" font-size="12" fill="#000">{name}</text>')
@@ -3067,8 +3129,7 @@ def _generate_topology_svg(session_id: str) -> tuple[str, int, int]:
     return svg_out, len(block_map), len(links)
 
 async def xcos_get_topology_widget(session_id: str):
-    port_override = os.environ.get("SPACE_HOST", f"127.0.0.1:{SERVER_PORT}")
-    base_url = f"https://{port_override}" if "hf.space" in port_override else f"http://{port_override}"
+    base_url = get_server_base_url()
 
     try:
         svg_out, block_count, link_count = _generate_topology_svg(session_id)
@@ -3436,6 +3497,7 @@ async def xcos_commit_phase(session_id: str, phase_label: str, blocks_xml: str =
         "remaining_phases": remaining,
         "written_to": file_path,
         "file_size_bytes": file_size,
+        "download_url": build_session_download_url(session_id),
         "MUST_PRESENT_TO_USER": (
             f"The verified .xcos file is ready at: {file_path} ({file_size} bytes). "
             "You MUST immediately: "
@@ -3460,6 +3522,7 @@ async def xcos_get_file_path(session_id: str):
         "session_id": session_id,
         "session_file_path": session_meta["path"],
         "session_file_size_bytes": session_meta["size_bytes"],
+        "download_url": build_session_download_url(session_id),
         "last_verified": build_session_last_verified(draft),
     }
     return make_json_response(payload)
@@ -3694,6 +3757,18 @@ async def http_api_topology_svg(request: Request) -> Response:
     except Exception as e:
         return http_json({"error": str(e)}, status_code=400)
 
+async def http_api_session_file(request: Request) -> Response:
+    session_id = request.path_params.get("session_id")
+    file_path = get_session_file_path(session_id)
+    if not os.path.exists(file_path):
+        return http_json({"error": f"Session snapshot for {session_id} doesn't exist yet."}, status_code=404)
+    with open(file_path, "rb") as f:
+        return Response(
+            f.read(),
+            media_type="application/xml",
+            headers={"Content-Disposition": f'attachment; filename="{session_id}.xcos"'},
+        )
+
 async def http_block_image(request: Request) -> Response:
     image_name = request.path_params.get("image_name")
     if not image_name:
@@ -3773,6 +3848,7 @@ def build_starlette_app() -> Starlette:
         Route("/workflow-ui/ext-apps.js", http_ext_apps_js, methods=["GET"]),
         Route("/workflow-ui/{asset_name:str}", http_ui_asset, methods=["GET"]),
         Route("/api/topology/{session_id:str}/svg", http_api_topology_svg, methods=["GET"]),
+        Route("/api/sessions/{session_id:str}/diagram.xcos", http_api_session_file, methods=["GET"]),
         Route("/block_images/{asset_name:str}", http_block_image, methods=["GET"]),
         Route("/task", http_handle_get_task, methods=["GET"]),
         Route("/result", http_handle_post_result, methods=["POST"]),
@@ -4399,7 +4475,11 @@ async def handle_call_tool(name: str, arguments: dict | None):
         )
 
     elif name == "xcos_commit_phase":
-        return await xcos_commit_phase(arguments["session_id"], arguments["phase_label"], arguments["blocks_xml"])
+        payload = parse_mcp_text_json_response(await xcos_commit_phase(arguments["session_id"], arguments["phase_label"], arguments["blocks_xml"]))
+        return make_structured_tool_result(
+            f"Committed phase {arguments['phase_label']} for session {arguments['session_id']}. File ready at {payload.get('written_to')}.",
+            payload,
+        )
     elif name == "xcos_get_draft_xml":
         return await xcos_get_draft_xml(
             arguments["session_id"],
@@ -4408,7 +4488,11 @@ async def handle_call_tool(name: str, arguments: dict | None):
             arguments.get("validate", False),
         )
     elif name == "xcos_get_file_path":
-        return await xcos_get_file_path(arguments["session_id"])
+        payload = parse_mcp_text_json_response(await xcos_get_file_path(arguments["session_id"]))
+        return make_structured_tool_result(
+            f"Session file for {arguments['session_id']} is ready at {payload.get('session_file_path')}.",
+            payload,
+        )
     elif name == "xcos_get_file_content":
         return await xcos_get_file_content(
             arguments["session_id"],

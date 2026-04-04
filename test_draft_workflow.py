@@ -114,6 +114,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(os.path.exists(session_file_path))
         self.assertGreater(path_payload["session_file_size_bytes"], 0)
+        self.assertTrue(path_payload["download_url"].endswith(f"/api/sessions/{session_id}/diagram.xcos"))
 
         content_response = await server.xcos_get_file_content(
             session_id,
@@ -142,6 +143,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         verify_payload = json.loads(verify_response[0].text)
         self.assertEqual(verify_payload["task_id"], "mock-task")
         self.assertTrue(os.path.exists(verify_payload["session_file_path"]))
+        self.assertTrue(verify_payload["download_url"].endswith(f"/api/sessions/{session_id}/diagram.xcos"))
 
         list_response = await server.xcos_list_sessions()
         sessions = json.loads(list_response[0].text)["sessions"]
@@ -331,6 +333,19 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             "phase_label='phase3_implementation'",
             by_name["xcos_commit_phase"].description,
         )
+
+    def test_scilab_log_parser_ignores_gtk_locale_warning_when_exit_code_is_zero(self):
+        parsed = server.analyze_scilab_verification_output(
+            "\n".join([
+                "Gtk-WARNING: Locale not supported by C library.",
+                "Using the fallback 'C' locale.",
+                "XCOSAI_VERIFY_INPUT_PATH:/tmp/example.xcos",
+                "XCOSAI_VERIFY_TEXT_LINE_COUNT:42",
+            ]),
+            0,
+        )
+        self.assertTrue(parsed["success"])
+        self.assertIsNone(parsed["warnings"])
 
     async def test_widget_tool_call_wrapper_includes_visualizer_instruction(self):
         response = await server.handle_call_tool("xcos_get_status_widget", {})
