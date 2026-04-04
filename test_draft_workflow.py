@@ -544,11 +544,13 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(server.get_configured_subprocess_timeout_seconds(), 90.0)
             self.assertEqual(server.get_configured_poll_timeout_seconds(), 120.0)
             self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 120.0)
+            self.assertEqual(server.get_configured_poll_worker_startup_timeout_seconds(), 20.0)
 
         with patch.object(server, "detect_validation_mode", return_value="subprocess"), patch.object(server.os, "name", "posix"):
             self.assertEqual(server.get_configured_subprocess_timeout_seconds(), 180.0)
             self.assertEqual(server.get_configured_poll_timeout_seconds(), 180.0)
             self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 420.0)
+            self.assertEqual(server.get_configured_poll_worker_startup_timeout_seconds(), 60.0)
 
         with (
             patch.dict(
@@ -557,6 +559,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
                     "XCOS_SCILAB_SUBPROCESS_TIMEOUT_SECONDS": "222",
                     "XCOS_POLL_VALIDATION_TIMEOUT_SECONDS": "333",
                     "XCOS_VALIDATION_JOB_TIMEOUT_SECONDS": "444",
+                    "XCOS_POLL_WORKER_STARTUP_TIMEOUT_SECONDS": "77",
                 },
                 clear=False,
             ),
@@ -566,6 +569,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(server.get_configured_subprocess_timeout_seconds(), 222.0)
             self.assertEqual(server.get_configured_poll_timeout_seconds(), 333.0)
             self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 444.0)
+            self.assertEqual(server.get_configured_poll_worker_startup_timeout_seconds(), 77.0)
 
     def test_should_retry_with_poll_fallback_on_runtime_timeout(self):
         self.assertTrue(

@@ -32,7 +32,8 @@ init(autoreset=True)
 
 SERVER_VERSION = "1.0.3"
 POLL_WORKER_IDLE_SECONDS = 5.0
-POLL_WORKER_STARTUP_TIMEOUT_SECONDS = 20.0
+LOCAL_POLL_WORKER_STARTUP_TIMEOUT_SECONDS = 20.0
+HOSTED_POLL_WORKER_STARTUP_TIMEOUT_SECONDS = 60.0
 VALIDATION_CACHE_LIMIT = 64
 ASYNC_VALIDATION_BRIEF_WAIT_SECONDS = 1.0
 LOCAL_DEFAULT_SCILAB_SUBPROCESS_TIMEOUT_SECONDS = 90.0
@@ -2481,6 +2482,15 @@ def get_configured_validation_job_timeout_seconds() -> float:
     return get_positive_timeout_env("XCOS_VALIDATION_JOB_TIMEOUT_SECONDS", default)
 
 
+def get_configured_poll_worker_startup_timeout_seconds() -> float:
+    default = (
+        HOSTED_POLL_WORKER_STARTUP_TIMEOUT_SECONDS
+        if is_hosted_validation_runtime()
+        else LOCAL_POLL_WORKER_STARTUP_TIMEOUT_SECONDS
+    )
+    return get_positive_timeout_env("XCOS_POLL_WORKER_STARTUP_TIMEOUT_SECONDS", default)
+
+
 def resolve_windows_scilab_from_registry_file() -> str | None:
     path_file = os.path.join(BASE_DIR, ".scilab_path")
     if not os.path.exists(path_file):
@@ -2629,15 +2639,40 @@ async def stop_poll_worker():
 async def ensure_poll_worker_running() -> dict:
     async with state.poll_worker_lock:
         proc = state.poll_worker_process
+        existing_worker = None
         if proc and proc.returncode is None:
             existing_worker = {
                 "pid": proc.pid,
                 "log_path": state.poll_worker_log_path,
                 "script_path": state.poll_worker_script_path,
             }
-        else:
-            existing_worker = None
+            if poll_worker_is_active():
+                return {
+                    "active": True,
+                    "pid": state.poll_worker_process.pid if state.poll_worker_process else None,
+                    "log_path": state.poll_worker_log_path,
+                    "script_path": state.poll_worker_script_path,
+                }
 
+            try:
+                proc.kill()
+            except ProcessLookupError:
+                pass
+            except Exception:
+                pass
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=5.0)
+            except Exception:
+                pass
+            state.poll_worker_process = None
+            if state.poll_worker_log_handle:
+                try:
+                    state.poll_worker_log_handle.close()
+                except Exception:
+                    pass
+            state.poll_worker_log_handle = None
+
+        if not (state.poll_worker_process and state.poll_worker_process.returncode is None):
             if state.poll_worker_log_handle:
                 try:
                     state.poll_worker_log_handle.close()
@@ -2682,13 +2717,15 @@ async def ensure_poll_worker_running() -> dict:
             state.poll_worker_log_handle = log_handle
             state.poll_worker_log_path = os.path.abspath(log_path)
             state.poll_worker_script_path = launcher_script_path
-            existing_worker = {
-                "pid": proc.pid,
-                "log_path": log_path,
-                "script_path": launcher_script_path,
-            }
+            if existing_worker is None:
+                existing_worker = {
+                    "pid": proc.pid,
+                    "log_path": log_path,
+                    "script_path": launcher_script_path,
+                }
 
-    deadline = asyncio.get_running_loop().time() + POLL_WORKER_STARTUP_TIMEOUT_SECONDS
+    startup_timeout_seconds = get_configured_poll_worker_startup_timeout_seconds()
+    deadline = asyncio.get_running_loop().time() + startup_timeout_seconds
     while asyncio.get_running_loop().time() < deadline:
         if poll_worker_is_active():
             return {
@@ -2711,7 +2748,7 @@ async def ensure_poll_worker_running() -> dict:
         "log_path": state.poll_worker_log_path,
         "script_path": state.poll_worker_script_path,
         "log_tail": read_text_tail(state.poll_worker_log_path),
-        "error": "Scilab poll worker did not become active within the startup timeout.",
+        "error": f"Scilab poll worker did not become active within the startup timeout ({startup_timeout_seconds:.0f} seconds).",
         "existing_worker": existing_worker,
     }
 
