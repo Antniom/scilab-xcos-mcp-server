@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import tempfile
+import urllib.error
 import unittest
 from unittest.mock import AsyncMock, patch
 
@@ -661,6 +662,7 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["poll_fallback_result"], poll_result)
         self.assertTrue(result["fallback_used"])
         self.assertEqual(server.infer_validation_code(result), "SCILAB_RUNTIME_TIMEOUT")
+        self.assertEqual(server.infer_validation_bucket(result), "runtime_timeout")
 
     async def test_run_verification_hosted_smoke_uses_import_only_validation(self):
         import_result = {
@@ -716,6 +718,48 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["validation_profile"], server.VALIDATION_PROFILE_HOSTED_SMOKE)
         self.assertEqual(server.infer_validation_code(result), "SCILAB_IMPORT_FAILED")
+        self.assertEqual(server.infer_validation_bucket(result), "import")
+
+    async def test_run_verification_validation_worker_prefers_long_lived_poll_runtime(self):
+        poll_result = {
+            "success": True,
+            "origin": "scilab-poll-runtime",
+            "warnings": ["poll worker warning"],
+            "validator_mode": "poll",
+        }
+        python_result = {"success": True, "warnings": ["structural warning"]}
+
+        with (
+            patch.dict(server.os.environ, {"XCOS_SERVER_ROLE": "validation_worker"}, clear=False),
+            patch.object(server.os, "name", "posix"),
+            patch.object(server, "detect_validation_mode", return_value="subprocess"),
+            patch.object(server, "auto_fix_mux_to_scalar", return_value=False),
+            patch.object(server, "normalize_fanout_to_split_blocks", return_value={"normalized": False, "warnings": ["fanout warning"]}),
+            patch.object(server, "validate_port_sizes", return_value=[]),
+            patch.object(server, "validate_diagram_structure", return_value=python_result),
+            patch.object(server, "run_headless_scilab_validation", AsyncMock()) as runtime_mock,
+            patch.object(server, "run_poll_validation", AsyncMock(return_value=poll_result)) as poll_mock,
+        ):
+            result = await server.run_verification(
+                MINIMAL_DIAGRAM_XML,
+                validation_profile=server.VALIDATION_PROFILE_FULL_RUNTIME,
+            )
+
+        self.assertTrue(result["success"])
+        self.assertTrue(result["poll_runtime_preferred"])
+        self.assertEqual(result["origin"], "scilab-poll-runtime")
+        self.assertEqual(
+            result["warnings"],
+            ["fanout warning", "structural warning", "poll worker warning"],
+        )
+        runtime_mock.assert_not_awaited()
+        poll_mock.assert_awaited_once_with(
+            MINIMAL_DIAGRAM_XML,
+            False,
+            progress_tracker=None,
+            origin="scilab-poll-runtime",
+            progress_phase="scilab-poll-runtime",
+        )
 
     async def test_run_verification_offloads_full_runtime_to_remote_worker_when_configured(self):
         worker_result = {
@@ -762,6 +806,52 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         remote_mock.assert_not_awaited()
         local_mock.assert_awaited_once()
 
+    async def test_run_verification_remote_worker_timeout_includes_failure_metadata(self):
+        with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": "https://worker.example"}, clear=False),
+            patch.object(
+                server,
+                "run_remote_validation_worker",
+                AsyncMock(side_effect=TimeoutError("worker timed out")),
+            ),
+            patch.object(server, "get_configured_validation_job_timeout_seconds", return_value=321.0),
+        ):
+            result = await server.run_verification(
+                MINIMAL_DIAGRAM_XML,
+                validation_profile=server.VALIDATION_PROFILE_FULL_RUNTIME,
+            )
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["origin"], "validation-worker-remote")
+        self.assertEqual(result["validation_profile"], server.VALIDATION_PROFILE_FULL_RUNTIME)
+        self.assertEqual(result["remote_worker"]["url"], "https://worker.example")
+        self.assertEqual(result["remote_worker"]["timeout_seconds"], 321.0)
+        self.assertEqual(result["remote_worker"]["error_type"], "timeout")
+        self.assertTrue(result["remote_worker"]["retryable"])
+        self.assertEqual(server.infer_validation_bucket(result), "worker")
+
+    async def test_run_verification_remote_worker_non_retryable_failure_metadata(self):
+        with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": "https://worker.example"}, clear=False),
+            patch.object(
+                server,
+                "run_remote_validation_worker",
+                AsyncMock(side_effect=ValueError("worker payload parsing failed")),
+            ),
+        ):
+            result = await server.run_verification(
+                MINIMAL_DIAGRAM_XML,
+                validation_profile=server.VALIDATION_PROFILE_FULL_RUNTIME,
+                worker_timeout_seconds=222.0,
+            )
+
+        self.assertFalse(result["success"])
+        self.assertEqual(result["origin"], "validation-worker-remote")
+        self.assertEqual(result["remote_worker"]["error_type"], "runtime")
+        self.assertFalse(result["remote_worker"]["retryable"])
+        self.assertEqual(result["remote_worker"]["timeout_seconds"], 222.0)
+        self.assertEqual(result["remote_worker"]["error_class"], "ValueError")
+
     def test_get_remote_validation_worker_timeout_seconds_reserves_margin(self):
         self.assertEqual(
             server.get_remote_validation_worker_timeout_seconds(720.0),
@@ -774,6 +864,60 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             server.get_remote_validation_worker_timeout_seconds(1.0),
             1.0,
+        )
+
+    def test_validation_worker_retry_config_defaults_and_env_overrides(self):
+        with patch.dict(server.os.environ, {}, clear=True):
+            self.assertEqual(
+                server.get_validation_worker_request_retry_count(),
+                server.DEFAULT_VALIDATION_WORKER_REQUEST_RETRY_COUNT,
+            )
+            self.assertEqual(
+                server.get_validation_worker_retry_backoff_seconds(),
+                server.DEFAULT_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS,
+            )
+
+        with patch.dict(
+            server.os.environ,
+            {
+                "XCOS_VALIDATION_WORKER_REQUEST_RETRY_COUNT": "6",
+                "XCOS_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS": "2.5",
+            },
+            clear=True,
+        ):
+            self.assertEqual(server.get_validation_worker_request_retry_count(), 6)
+            self.assertEqual(server.get_validation_worker_retry_backoff_seconds(), 2.5)
+
+        with patch.dict(
+            server.os.environ,
+            {
+                "XCOS_VALIDATION_WORKER_REQUEST_RETRY_COUNT": "invalid",
+                "XCOS_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS": "invalid",
+            },
+            clear=True,
+        ):
+            self.assertEqual(
+                server.get_validation_worker_request_retry_count(),
+                server.DEFAULT_VALIDATION_WORKER_REQUEST_RETRY_COUNT,
+            )
+            self.assertEqual(
+                server.get_validation_worker_retry_backoff_seconds(),
+                server.DEFAULT_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS,
+            )
+
+    def test_is_retryable_worker_request_error(self):
+        self.assertTrue(server.is_retryable_worker_request_error(urllib.error.URLError("network")))
+        self.assertTrue(server.is_retryable_worker_request_error(TimeoutError("timeout")))
+        self.assertTrue(server.is_retryable_worker_request_error(OSError("socket")))
+        self.assertTrue(
+            server.is_retryable_worker_request_error(
+                urllib.error.HTTPError("https://worker.example", 503, "busy", {}, None)
+            )
+        )
+        self.assertFalse(
+            server.is_retryable_worker_request_error(
+                urllib.error.HTTPError("https://worker.example", 400, "bad request", {}, None)
+            )
         )
 
     async def test_run_remote_validation_worker_uses_shorter_inner_timeout(self):
@@ -828,6 +972,75 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["validator_phase"], "scilab-poll-fallback")
         self.assertEqual(result["scilab_active_stage"], "SCICOS_SIMULATE")
         self.assertEqual(result["remote_worker"]["timeout_seconds"], 705.0)
+
+    async def test_run_remote_validation_worker_retries_create_on_transient_error(self):
+        post_calls = []
+
+        def fake_post(url, payload, timeout_seconds, token):
+            post_calls.append((url, payload, timeout_seconds, token))
+            if len(post_calls) == 1:
+                raise urllib.error.URLError("temporary create failure")
+            return {"job_id": "worker-job"}
+
+        def fake_get(_url, _timeout_seconds, _token):
+            return {
+                "status": "succeeded",
+                "result": {
+                    "success": True,
+                    "origin": "validation-worker",
+                    "validation_profile": server.VALIDATION_PROFILE_FULL_RUNTIME,
+                },
+            }
+
+        with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": "https://worker.example"}, clear=False),
+            patch.object(server, "http_post_json", side_effect=fake_post),
+            patch.object(server, "http_get_json", side_effect=fake_get),
+            patch.object(server.asyncio, "sleep", AsyncMock()),
+        ):
+            result = await server.run_remote_validation_worker(
+                MINIMAL_DIAGRAM_XML,
+                server.VALIDATION_PROFILE_FULL_RUNTIME,
+                120.0,
+            )
+
+        self.assertTrue(result["success"])
+        self.assertEqual(len(post_calls), 2)
+        self.assertEqual(result["remote_worker"]["create_retry_count"], 1)
+
+    async def test_run_remote_validation_worker_retries_poll_on_transient_error(self):
+        poll_calls = []
+
+        def fake_post(_url, _payload, _timeout_seconds, _token):
+            return {"job_id": "worker-job"}
+
+        def fake_get(_url, _timeout_seconds, _token):
+            poll_calls.append(1)
+            if len(poll_calls) == 1:
+                raise urllib.error.URLError("temporary poll failure")
+            return {
+                "status": "succeeded",
+                "result": {
+                    "success": True,
+                    "origin": "validation-worker",
+                    "validation_profile": server.VALIDATION_PROFILE_FULL_RUNTIME,
+                },
+            }
+
+        with (
+            patch.dict(server.os.environ, {"XCOS_VALIDATION_WORKER_URL": "https://worker.example"}, clear=False),
+            patch.object(server, "http_post_json", side_effect=fake_post),
+            patch.object(server, "http_get_json", side_effect=fake_get),
+            patch.object(server.asyncio, "sleep", AsyncMock()),
+        ):
+            result = await server.run_remote_validation_worker(
+                MINIMAL_DIAGRAM_XML,
+                server.VALIDATION_PROFILE_FULL_RUNTIME,
+                120.0,
+            )
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["remote_worker"]["poll_transient_errors"], 1)
 
     async def test_xcos_start_validation_uses_configured_timeout_by_default(self):
         session_id = await self.start_session()

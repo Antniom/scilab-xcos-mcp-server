@@ -44,10 +44,13 @@ LOCAL_DEFAULT_POLL_VALIDATION_TIMEOUT_SECONDS = 120.0
 HOSTED_DEFAULT_POLL_VALIDATION_TIMEOUT_SECONDS = 420.0
 LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 120.0
 HOSTED_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS = 720.0
+DEFAULT_STARTUP_PREFLIGHT_TIMEOUT_SECONDS = 45.0
 DEFAULT_VALIDATION_TIMEOUT_SECONDS = LOCAL_DEFAULT_VALIDATION_JOB_TIMEOUT_SECONDS
 EXPOSE_INTERNAL_VALIDATION_DETAILS = os.environ.get("XCOS_DEBUG_TOOL_OUTPUT", "").strip().lower() in {"1", "true", "yes", "on"}
 DEFAULT_VALIDATION_WORKER_POLL_INTERVAL_SECONDS = 2.0
 DEFAULT_VALIDATION_WORKER_MAX_POLL_INTERVAL_SECONDS = 10.0
+DEFAULT_VALIDATION_WORKER_REQUEST_RETRY_COUNT = 3
+DEFAULT_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS = 1.0
 REMOTE_VALIDATION_WORKER_RESULT_MARGIN_SECONDS = 15.0
 VALIDATION_PROGRESS_UNSET = object()
 VALIDATION_PROFILE_FULL_RUNTIME = "full_runtime"
@@ -76,6 +79,11 @@ class SharedState:
         self.poll_worker_log_path = None
         self.poll_worker_script_path = None
         self.poll_worker_lock = asyncio.Lock()
+        self.startup_preflight = {
+            "status": "not_run",
+            "checked_at": None,
+            "details": None,
+        }
 
 state = SharedState()
 
@@ -1903,6 +1911,18 @@ def parse_csv_env(name: str, default: list[str] | None = None) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+def parse_bool_env(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    normalized = raw.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
 def deep_merge_dicts(base: dict | None, extra: dict | None) -> dict | None:
     if not base and not extra:
         return None
@@ -2278,11 +2298,32 @@ def infer_validation_code(result: dict) -> str:
         return "SCILAB_IMPORT_FAILED"
     if "timed out" in str(result.get("error", "")).lower():
         return "SCILAB_RUNTIME_TIMEOUT"
-    if result.get("origin") == "scilab-poll-fallback":
+    if result.get("origin") in {"scilab-poll-fallback", "scilab-poll-runtime"}:
         return "SCILAB_POLL_FAILED"
     if result.get("origin") == "scilab-subprocess":
         return "SCILAB_SUBPROCESS_FAILED"
     return "VALIDATION_FAILED"
+
+
+def infer_validation_bucket(result: dict) -> str:
+    if result.get("success"):
+        return "ok"
+
+    validation_profile = normalize_validation_profile(result.get("validation_profile"))
+    origin = str(result.get("origin") or "")
+    error_text = str(result.get("error") or "").lower()
+
+    if result.get("origin") in {"pre-sim-validator", "structural-validator"} or (result.get("errors") or []):
+        return "structural"
+    if origin == "validation-worker-remote":
+        return "worker"
+    if validation_profile == VALIDATION_PROFILE_HOSTED_SMOKE or origin == "scilab-import-check":
+        return "import"
+    if "timed out" in error_text:
+        return "runtime_timeout"
+    if origin in {"scilab-subprocess", "scilab-poll-fallback", "scilab-poll-runtime"}:
+        return "runtime"
+    return "unknown"
 
 
 def make_public_validation_payload(
@@ -2296,6 +2337,7 @@ def make_public_validation_payload(
     payload = {
         "success": success,
         "code": infer_validation_code(result),
+        "bucket": infer_validation_bucket(result),
         "message": "Diagram validation passed." if success else (messages[0] if messages else "Diagram validation failed."),
         "validation_profile": normalize_validation_profile(result.get("validation_profile")),
     }
@@ -2535,6 +2577,36 @@ def get_validation_worker_max_poll_interval_seconds() -> float:
     return max(get_validation_worker_poll_interval_seconds(), configured)
 
 
+def get_validation_worker_request_retry_count() -> int:
+    raw_value = os.environ.get("XCOS_VALIDATION_WORKER_REQUEST_RETRY_COUNT", "").strip()
+    if not raw_value:
+        return DEFAULT_VALIDATION_WORKER_REQUEST_RETRY_COUNT
+    try:
+        parsed = int(raw_value)
+    except ValueError:
+        return DEFAULT_VALIDATION_WORKER_REQUEST_RETRY_COUNT
+    return max(0, parsed)
+
+
+def get_validation_worker_retry_backoff_seconds() -> float:
+    return get_positive_timeout_env(
+        "XCOS_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS",
+        DEFAULT_VALIDATION_WORKER_RETRY_BACKOFF_SECONDS,
+    )
+
+
+def is_retryable_worker_request_error(exc: Exception) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in {408, 409, 423, 425, 429, 500, 502, 503, 504}
+    if isinstance(exc, urllib.error.URLError):
+        return True
+    if isinstance(exc, TimeoutError):
+        return True
+    if isinstance(exc, OSError):
+        return True
+    return False
+
+
 def get_remote_validation_worker_timeout_seconds(timeout_seconds: float) -> float:
     requested_timeout = float(timeout_seconds)
     if requested_timeout <= 1.0:
@@ -2658,6 +2730,14 @@ def is_hosted_validation_runtime() -> bool:
     return os.name != "nt" and detect_validation_mode() == "subprocess"
 
 
+def should_prefer_poll_runtime(validation_profile: str) -> bool:
+    return (
+        normalize_validation_profile(validation_profile) == VALIDATION_PROFILE_FULL_RUNTIME
+        and is_validation_worker_process()
+        and os.name != "nt"
+    )
+
+
 def get_positive_timeout_env(name: str, default: float) -> float:
     raw_value = os.environ.get(name)
     if raw_value is None or not raw_value.strip():
@@ -2703,6 +2783,30 @@ def get_configured_poll_worker_startup_timeout_seconds() -> float:
         else LOCAL_POLL_WORKER_STARTUP_TIMEOUT_SECONDS
     )
     return get_positive_timeout_env("XCOS_POLL_WORKER_STARTUP_TIMEOUT_SECONDS", default)
+
+
+def get_startup_preflight_timeout_seconds() -> float:
+    return get_positive_timeout_env(
+        "XCOS_PREFLIGHT_TIMEOUT_SECONDS",
+        DEFAULT_STARTUP_PREFLIGHT_TIMEOUT_SECONDS,
+    )
+
+
+def get_runtime_timeout_snapshot() -> dict:
+    return {
+        "scilab_subprocess_timeout_seconds": get_configured_subprocess_timeout_seconds(),
+        "poll_validation_timeout_seconds": get_configured_poll_timeout_seconds(),
+        "validation_job_timeout_seconds": get_configured_validation_job_timeout_seconds(),
+        "poll_worker_startup_timeout_seconds": get_configured_poll_worker_startup_timeout_seconds(),
+    }
+
+
+def is_startup_preflight_enabled() -> bool:
+    return parse_bool_env("XCOS_PREFLIGHT_ENABLED", True)
+
+
+def is_startup_preflight_strict() -> bool:
+    return parse_bool_env("XCOS_PREFLIGHT_STRICT", False)
 
 
 def resolve_windows_scilab_from_registry_file() -> str | None:
@@ -2787,6 +2891,148 @@ def resolve_scilab_gui_binary() -> str | None:
     return None
 
 
+def build_scilab_startup_preflight_script() -> str:
+    return textwrap.dedent(
+        """
+        mode(-1);
+        lines(0);
+        try
+            loadXcosLibs();
+            mprintf("XCOS_PREFLIGHT_OK\\n");
+            exit(0);
+        catch
+            [pref_msg, pref_id] = lasterror();
+            mprintf("XCOS_PREFLIGHT_ERROR:%s\\n", string(pref_msg));
+            exit(1);
+        end
+        """
+    ).strip() + "\n"
+
+
+async def run_startup_preflight() -> dict:
+    mode = detect_validation_mode()
+    checks = []
+    warnings = []
+    errors = []
+
+    scilab_bin = resolve_scilab_binary()
+    scilab_gui_bin = resolve_scilab_gui_binary()
+
+    checks.append({
+        "name": "scilab_binary_resolved",
+        "ok": bool(scilab_bin),
+        "value": scilab_bin,
+    })
+    if not scilab_bin:
+        errors.append("Scilab binary not found. Set SCILAB_BIN or install Scilab in the container image.")
+
+    if mode == "subprocess":
+        checks.append({
+            "name": "scilab_gui_binary_resolved",
+            "ok": bool(scilab_gui_bin),
+            "value": scilab_gui_bin,
+        })
+        if not scilab_gui_bin:
+            errors.append(
+                "Scilab GUI binary not found. Subprocess validation requires the full Scilab binary for Xcos import."
+            )
+
+    if os.name != "nt" and mode == "subprocess":
+        has_xvfb = bool(shutil.which("xvfb-run"))
+        has_xauth = bool(shutil.which("xauth"))
+        checks.append({"name": "xvfb_run_available", "ok": has_xvfb, "value": shutil.which("xvfb-run")})
+        checks.append({"name": "xauth_available", "ok": has_xauth, "value": shutil.which("xauth")})
+        if not has_xvfb:
+            errors.append("xvfb-run is required for headless Scilab GUI startup on Linux.")
+        if not has_xauth:
+            warnings.append("xauth is not available; xvfb-run may fail in some environments.")
+
+    preflight_timeout_seconds = get_startup_preflight_timeout_seconds()
+    preflight_cmd = None
+    preflight_output_tail = None
+    preflight_script_path = None
+
+    if scilab_bin and mode == "subprocess":
+        selected_bin = scilab_gui_bin or scilab_bin
+        preflight_id = uuid.uuid4().hex[:10]
+        preflight_script_path = os.path.join(TEMP_OUTPUT_DIR, f"startup_preflight_{preflight_id}.sce")
+        with open(preflight_script_path, "w", encoding="utf-8") as handle:
+            handle.write(build_scilab_startup_preflight_script())
+
+        bin_name = os.path.basename(selected_bin).lower()
+        is_cli_binary = any(key in bin_name for key in ("adv-cli", "scilab-cli", "-cli"))
+        scilab_args = ["-f", preflight_script_path] if is_cli_binary else ["-nb", "-f", preflight_script_path]
+        if os.name != "nt" and shutil.which("xvfb-run"):
+            preflight_cmd = ["xvfb-run", "-a", selected_bin] + scilab_args
+        else:
+            preflight_cmd = [selected_bin] + scilab_args
+
+        process = None
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *preflight_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                env={
+                    **os.environ,
+                    "HOME": os.environ.get("HOME", "/tmp"),
+                    "LC_ALL": "C",
+                    "LANG": "C",
+                    "LANGUAGE": "C",
+                },
+            )
+            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=preflight_timeout_seconds)
+            output = stdout.decode("utf-8", errors="replace")
+            preflight_output_tail = "\n".join(output.splitlines()[-30:])
+            preflight_ok = process.returncode == 0 and "XCOS_PREFLIGHT_OK" in output
+            checks.append({
+                "name": "scilab_startup_smoke",
+                "ok": preflight_ok,
+                "returncode": process.returncode,
+            })
+            if not preflight_ok:
+                errors.append("Scilab startup preflight smoke test failed (loadXcosLibs did not complete successfully).")
+        except asyncio.TimeoutError:
+            errors.append(
+                f"Scilab startup preflight timed out after {preflight_timeout_seconds:.0f} seconds."
+            )
+            shutdown_details = await shutdown_process_with_escalation(
+                process,
+                label="startup_preflight",
+                graceful_timeout_seconds=1.5,
+                force_timeout_seconds=3.0,
+            )
+            checks.append({
+                "name": "scilab_startup_smoke",
+                "ok": False,
+                "timed_out": True,
+                "shutdown": shutdown_details,
+            })
+        except Exception as exc:
+            errors.append(f"Scilab startup preflight failed to launch: {exc}")
+        finally:
+            if preflight_script_path and os.path.exists(preflight_script_path):
+                try:
+                    os.remove(preflight_script_path)
+                except Exception:
+                    pass
+
+    status = "ok" if not errors else "failed"
+    return {
+        "status": status,
+        "checked_at": now_iso(),
+        "validation_mode": mode,
+        "checks": checks,
+        "warnings": warnings,
+        "errors": errors,
+        "timeout_seconds": preflight_timeout_seconds,
+        "runtime_timeouts": get_runtime_timeout_snapshot(),
+        "startup_command": preflight_cmd,
+        "startup_output_tail": preflight_output_tail,
+        "startup_script_path": preflight_script_path,
+    }
+
+
 def scilab_string_literal(path: str) -> str:
     return path.replace("\\", "/").replace('"', '""')
 
@@ -2806,6 +3052,109 @@ def read_text_tail(path: str | None, max_chars: int = 4000) -> str | None:
         return text[-max_chars:]
     except Exception:
         return None
+
+
+async def shutdown_process_with_escalation(
+    proc: asyncio.subprocess.Process | None,
+    *,
+    label: str,
+    graceful_timeout_seconds: float = 3.0,
+    force_timeout_seconds: float = 5.0,
+) -> dict:
+    if proc is None:
+        return {
+            "label": label,
+            "status": "missing",
+            "pid": None,
+            "returncode": None,
+        }
+
+    pid = proc.pid
+    if proc.returncode is not None:
+        return {
+            "label": label,
+            "status": "already_exited",
+            "pid": pid,
+            "returncode": proc.returncode,
+        }
+
+    attempts: list[str] = []
+
+    try:
+        proc.terminate()
+        attempts.append("terminate")
+    except ProcessLookupError:
+        return {
+            "label": label,
+            "status": "already_exited",
+            "pid": pid,
+            "returncode": proc.returncode,
+            "attempts": attempts,
+        }
+    except Exception as exc:
+        attempts.append(f"terminate_error:{exc}")
+
+    try:
+        await asyncio.wait_for(proc.wait(), timeout=max(0.1, graceful_timeout_seconds))
+        return {
+            "label": label,
+            "status": "terminated",
+            "pid": pid,
+            "returncode": proc.returncode,
+            "attempts": attempts,
+        }
+    except asyncio.TimeoutError:
+        pass
+    except Exception as exc:
+        attempts.append(f"wait_after_terminate_error:{exc}")
+
+    if os.name == "nt" and pid:
+        attempts.append("taskkill")
+        try:
+            await asyncio.to_thread(
+                subprocess.run,
+                ["taskkill", "/PID", str(pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        except Exception as exc:
+            attempts.append(f"taskkill_error:{exc}")
+    else:
+        attempts.append("kill")
+        try:
+            proc.kill()
+        except ProcessLookupError:
+            pass
+        except Exception as exc:
+            attempts.append(f"kill_error:{exc}")
+
+    try:
+        await asyncio.wait_for(proc.wait(), timeout=max(0.1, force_timeout_seconds))
+        return {
+            "label": label,
+            "status": "killed",
+            "pid": pid,
+            "returncode": proc.returncode,
+            "attempts": attempts,
+        }
+    except asyncio.TimeoutError:
+        return {
+            "label": label,
+            "status": "force_timeout",
+            "pid": pid,
+            "returncode": proc.returncode,
+            "attempts": attempts,
+        }
+    except Exception as exc:
+        attempts.append(f"wait_after_kill_error:{exc}")
+        return {
+            "label": label,
+            "status": "kill_error",
+            "pid": pid,
+            "returncode": proc.returncode,
+            "attempts": attempts,
+        }
 
 
 def build_poll_worker_launcher_script() -> str:
@@ -2830,16 +3179,12 @@ async def stop_poll_worker():
     async with state.poll_worker_lock:
         proc = state.poll_worker_process
         if proc and proc.returncode is None:
-            try:
-                proc.kill()
-            except ProcessLookupError:
-                pass
-            except Exception:
-                pass
-            try:
-                await asyncio.wait_for(proc.wait(), timeout=10.0)
-            except Exception:
-                pass
+            await shutdown_process_with_escalation(
+                proc,
+                label="poll_worker_stop",
+                graceful_timeout_seconds=2.0,
+                force_timeout_seconds=8.0,
+            )
         state.poll_worker_process = None
 
         if state.poll_worker_log_handle:
@@ -2869,15 +3214,20 @@ async def ensure_poll_worker_running() -> dict:
                 }
 
             try:
-                proc.kill()
-            except ProcessLookupError:
-                pass
-            except Exception:
-                pass
-            try:
-                await asyncio.wait_for(proc.wait(), timeout=5.0)
-            except Exception:
-                pass
+                existing_worker["shutdown"] = await shutdown_process_with_escalation(
+                    proc,
+                    label="poll_worker_restart",
+                    graceful_timeout_seconds=2.0,
+                    force_timeout_seconds=4.0,
+                )
+            except Exception as exc:
+                existing_worker["shutdown"] = {
+                    "label": "poll_worker_restart",
+                    "status": "error",
+                    "pid": proc.pid,
+                    "returncode": proc.returncode,
+                    "error": str(exc),
+                }
             state.poll_worker_process = None
             if state.poll_worker_log_handle:
                 try:
@@ -3331,14 +3681,12 @@ async def run_headless_scilab_check(
             await asyncio.wait_for(proc.wait(), timeout=subprocess_timeout_seconds)
             stdout_bytes = await stdout_task
         except asyncio.TimeoutError:
-            try:
-                proc.kill()
-            except Exception:
-                pass
-            try:
-                await proc.wait()
-            except Exception:
-                pass
+            shutdown_details = await shutdown_process_with_escalation(
+                proc,
+                label="scilab_subprocess_timeout",
+                graceful_timeout_seconds=2.0,
+                force_timeout_seconds=5.0,
+            )
             try:
                 stdout_bytes = await asyncio.wait_for(stdout_task, timeout=5.0)
             except Exception:
@@ -3364,6 +3712,7 @@ async def run_headless_scilab_check(
                 "scilab_stage_trace": log_analysis.get("stage_events"),
                 "scilab_active_stage": log_analysis.get("active_stage"),
                 "scilab_last_completed_stage": log_analysis.get("last_completed_stage"),
+                "subprocess_shutdown": shutdown_details,
                 "file_path": temp_meta["path"],
                 "file_size_bytes": temp_meta["size_bytes"],
                 "xml_diagnostics": xml_diagnostics,
@@ -3466,12 +3815,15 @@ async def run_poll_validation(
     xml_content: str,
     auto_fixed: bool,
     progress_tracker: dict | None = None,
+    *,
+    origin: str = "scilab-poll-fallback",
+    progress_phase: str = "scilab-poll-fallback",
 ) -> dict:
     worker_state = await ensure_poll_worker_running()
     if not worker_state.get("active"):
         return {
             "success": False,
-            "origin": "scilab-poll-fallback",
+            "origin": origin,
             "error": worker_state.get("error", "Scilab poll worker is unavailable."),
             "auto_fixed_mux_to_scalar": auto_fixed,
             "poll_worker": worker_state,
@@ -3487,7 +3839,7 @@ async def run_poll_validation(
     event = asyncio.Event()
     update_validation_progress_tracker(
         progress_tracker,
-        validator_phase="scilab-poll-fallback",
+        validator_phase=progress_phase,
         poll_task_id=task_id,
     )
     state.results[task_id] = {
@@ -3512,7 +3864,7 @@ async def run_poll_validation(
             "file_size_bytes": temp_meta["size_bytes"],
             "auto_fixed_mux_to_scalar": auto_fixed,
             "validator_mode": "poll",
-            "origin": "scilab-poll-fallback",
+            "origin": origin,
             "poll_worker": worker_state,
         }
         details = res.get("details") or {}
@@ -3541,7 +3893,7 @@ async def run_poll_validation(
             "file_path": temp_meta["path"],
             "file_size_bytes": temp_meta["size_bytes"],
             "error": f"Scilab verification timed out for {task_id} after {poll_timeout_seconds:.0f} seconds",
-            "origin": "scilab-poll-fallback",
+            "origin": origin,
             "poll_worker": worker_state,
             **snapshot_validation_progress_tracker(progress_tracker),
         }
@@ -3585,17 +3937,35 @@ async def run_remote_validation_worker(
     token = get_validation_worker_token()
     request_timeout_seconds = max(10.0, timeout_seconds)
     worker_timeout_seconds = get_remote_validation_worker_timeout_seconds(timeout_seconds)
-    create_payload = await asyncio.to_thread(
-        http_post_json,
-        f"{worker_url}/validate",
-        {
-            "xml_content": xml_content,
-            "validation_profile": normalize_validation_profile(validation_profile),
-            "timeout_seconds": worker_timeout_seconds,
-        },
-        request_timeout_seconds,
-        token,
-    )
+    retry_limit = get_validation_worker_request_retry_count()
+    retry_backoff_seconds = get_validation_worker_retry_backoff_seconds()
+    create_retry_count = 0
+
+    while True:
+        try:
+            create_payload = await asyncio.to_thread(
+                http_post_json,
+                f"{worker_url}/validate",
+                {
+                    "xml_content": xml_content,
+                    "validation_profile": normalize_validation_profile(validation_profile),
+                    "timeout_seconds": worker_timeout_seconds,
+                },
+                request_timeout_seconds,
+                token,
+            )
+            break
+        except Exception as exc:
+            if create_retry_count >= retry_limit or not is_retryable_worker_request_error(exc):
+                raise RuntimeError(
+                    f"Failed to create remote validation job after {create_retry_count + 1} attempt(s): {exc}"
+                ) from exc
+            create_retry_count += 1
+            backoff = min(
+                get_validation_worker_max_poll_interval_seconds(),
+                retry_backoff_seconds * (2 ** (create_retry_count - 1)),
+            )
+            await asyncio.sleep(backoff)
 
     job_id = create_payload.get("job_id")
     if not job_id:
@@ -3606,18 +3976,39 @@ async def run_remote_validation_worker(
     poll_interval_seconds = base_poll_interval_seconds
     deadline = asyncio.get_running_loop().time() + timeout_seconds
     latest_progress = None
+    poll_transient_errors = 0
+    consecutive_poll_errors = 0
     while True:
         if asyncio.get_running_loop().time() > deadline:
             raise TimeoutError(
                 f"Remote validation worker job {job_id} timed out after {timeout_seconds:.0f} seconds."
             )
         await asyncio.sleep(poll_interval_seconds)
-        status_payload = await asyncio.to_thread(
-            http_get_json,
-            f"{worker_url}/jobs/{job_id}",
-            request_timeout_seconds,
-            token,
-        )
+        try:
+            status_payload = await asyncio.to_thread(
+                http_get_json,
+                f"{worker_url}/jobs/{job_id}",
+                request_timeout_seconds,
+                token,
+            )
+            consecutive_poll_errors = 0
+        except Exception as exc:
+            if not is_retryable_worker_request_error(exc):
+                raise RuntimeError(f"Remote validation status polling failed for job {job_id}: {exc}") from exc
+            if consecutive_poll_errors >= retry_limit:
+                raise RuntimeError(
+                    f"Remote validation status polling exceeded retry limit ({retry_limit}) for job {job_id}: {exc}"
+                ) from exc
+            consecutive_poll_errors += 1
+            poll_transient_errors += 1
+            poll_interval_seconds = min(
+                max_poll_interval_seconds,
+                max(
+                    poll_interval_seconds,
+                    retry_backoff_seconds * (2 ** (consecutive_poll_errors - 1)),
+                ),
+            )
+            continue
         if isinstance(status_payload.get("progress"), dict):
             latest_progress = status_payload.get("progress")
         if status_payload.get("status") in {"queued", "running"}:
@@ -3648,6 +4039,9 @@ async def run_remote_validation_worker(
             "job_id": job_id,
             "status": status_payload.get("status"),
             "timeout_seconds": worker_timeout_seconds,
+            "request_retry_limit": retry_limit,
+            "create_retry_count": create_retry_count,
+            "poll_transient_errors": poll_transient_errors,
             "created_at": status_payload.get("created_at"),
             "started_at": status_payload.get("started_at"),
             "finished_at": status_payload.get("finished_at"),
@@ -3966,6 +4360,31 @@ async def _run_verification_local(
             "fanout_normalization": fanout_normalization,
         }
 
+    if should_prefer_poll_runtime(normalized_profile):
+        poll_result = await run_poll_validation(
+            xml_content,
+            auto_fixed,
+            progress_tracker=progress_tracker,
+            origin="scilab-poll-runtime",
+            progress_phase="scilab-poll-runtime",
+        )
+        merged_warnings = (
+            (fanout_normalization.get("warnings") or [])
+            + (python_result.get("warnings") or [])
+            + (poll_result.get("warnings") or [])
+        )
+        return {
+            **poll_result,
+            "validation_profile": normalized_profile,
+            "poll_runtime_preferred": True,
+            "structural_check": {
+                "success": python_result["success"],
+                "warnings": python_result.get("warnings"),
+            },
+            "warnings": merged_warnings if merged_warnings else None,
+            "fanout_normalization": fanout_normalization,
+        }
+
     if validation_mode == "subprocess":
         scilab_result = await run_headless_scilab_validation(
             xml_content,
@@ -4051,11 +4470,26 @@ async def run_verification(
                 timeout_seconds,
             )
         except Exception as exc:
+            if isinstance(exc, TimeoutError):
+                error_type = "timeout"
+            elif is_retryable_worker_request_error(exc):
+                error_type = "request"
+            else:
+                error_type = "runtime"
             return {
                 "success": False,
                 "origin": "validation-worker-remote",
                 "validation_profile": normalized_profile,
                 "error": f"Remote validation worker failed: {exc}",
+                "remote_worker": {
+                    "url": get_validation_worker_url(),
+                    "timeout_seconds": timeout_seconds,
+                    "request_retry_limit": get_validation_worker_request_retry_count(),
+                    "retry_backoff_seconds": get_validation_worker_retry_backoff_seconds(),
+                    "error_type": error_type,
+                    "error_class": type(exc).__name__,
+                    "retryable": is_retryable_worker_request_error(exc),
+                },
             }
         return result
     return await _run_verification_local(xml_content, normalized_profile, worker_timeout_seconds)
@@ -5378,6 +5812,8 @@ async def http_healthz(_: Request) -> Response:
             "status": "ok",
             "version": SERVER_VERSION,
             "validator_mode": detect_validation_mode(),
+            "runtime_timeouts": get_runtime_timeout_snapshot(),
+            "startup_preflight": state.startup_preflight,
             "workflow_count": len(state.workflows),
             "draft_count": len(state.drafts),
             "poll_worker_active": poll_worker_is_active(),
@@ -6310,6 +6746,41 @@ async def handle_call_tool(name: str, arguments: dict | None):
 async def main():
     ensure_state_dirs()
     hydrate_persistent_state()
+    if is_startup_preflight_enabled():
+        preflight = await run_startup_preflight()
+        state.startup_preflight = preflight
+        if preflight.get("status") != "ok":
+            print(
+                f"[{Fore.YELLOW}PREFLIGHT{Style.RESET_ALL}] Startup preflight reported issues: {preflight.get('errors')}",
+                file=sys.stderr,
+            )
+            tail = preflight.get("startup_output_tail")
+            if tail:
+                print(
+                    f"[{Fore.YELLOW}PREFLIGHT{Style.RESET_ALL}] Scilab output tail:\n{tail}",
+                    file=sys.stderr,
+                )
+            if is_startup_preflight_strict():
+                raise RuntimeError("Startup preflight failed and XCOS_PREFLIGHT_STRICT is enabled.")
+        else:
+            print(
+                f"[{Fore.GREEN}PREFLIGHT{Style.RESET_ALL}] Startup preflight passed.",
+                file=sys.stderr,
+            )
+    else:
+        state.startup_preflight = {
+            "status": "skipped",
+            "checked_at": now_iso(),
+            "details": "Disabled via XCOS_PREFLIGHT_ENABLED",
+        }
+
+    timeouts = get_runtime_timeout_snapshot()
+    print(
+        f"[{Fore.CYAN}CONFIG{Style.RESET_ALL}] Timeouts: subprocess={timeouts['scilab_subprocess_timeout_seconds']:.0f}s, "
+        f"poll={timeouts['poll_validation_timeout_seconds']:.0f}s, jobs={timeouts['validation_job_timeout_seconds']:.0f}s, "
+        f"poll_startup={timeouts['poll_worker_startup_timeout_seconds']:.0f}s",
+        file=sys.stderr,
+    )
     mode = os.environ.get("XCOS_SERVER_MODE", "stdio").strip().lower()
     if mode not in {"both", "http", "stdio"}:
         raise RuntimeError("XCOS_SERVER_MODE must be one of: both, http, stdio")

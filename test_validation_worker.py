@@ -11,6 +11,14 @@ class ValidationWorkerTests(unittest.IsolatedAsyncioTestCase):
         validation_worker.jobs.clear()
         validation_worker.tasks.clear()
 
+    def test_build_app_exposes_poll_bridge_routes(self):
+        app = validation_worker.build_app()
+        route_paths = {route.path for route in app.routes}
+
+        self.assertIn("/task", route_paths)
+        self.assertIn("/progress", route_paths)
+        self.assertIn("/result", route_paths)
+
     async def test_run_worker_job_timeout_includes_progress_snapshot(self):
         job_id = "worker-timeout-job"
         validation_worker.jobs[job_id] = validation_worker.WorkerJob(

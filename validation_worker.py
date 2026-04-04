@@ -178,11 +178,17 @@ async def http_get_validation_job(request: Request):
 async def lifespan(_: Starlette):
     os.environ["XCOS_SERVER_ROLE"] = "validation_worker"
     server.ensure_state_dirs()
+    startup_task = None
+    if server.should_prefer_poll_runtime(server.VALIDATION_PROFILE_FULL_RUNTIME):
+        startup_task = asyncio.create_task(server.ensure_poll_worker_running())
     try:
         yield
     finally:
+        if startup_task:
+            startup_task.cancel()
         for task in list(tasks.values()):
             task.cancel()
+        await server.stop_poll_worker()
 
 
 def build_app() -> Starlette:
@@ -193,6 +199,9 @@ def build_app() -> Starlette:
             Route("/healthz", http_healthz, methods=["GET"]),
             Route("/validate", http_create_validation_job, methods=["POST"]),
             Route("/jobs/{job_id:str}", http_get_validation_job, methods=["GET"]),
+            Route("/task", server.http_handle_get_task, methods=["GET"]),
+            Route("/progress", server.http_handle_post_progress, methods=["POST"]),
+            Route("/result", server.http_handle_post_result, methods=["POST"]),
         ],
         lifespan=lifespan,
     )
