@@ -64,7 +64,7 @@
 
 ### 2026-04-04 16:45:00 UTC - Fix
 - **Summary:** Hosted validation now uses larger timeouts, retries runtime timeouts through the poll worker, and treats remote smoke timeouts as real failures by default
-- Linux/Space subprocess validation now uses configurable hosted defaults of `180s` for the subprocess and poll fallback plus `420s` for async validation jobs, with env overrides for all three timeout budgets.
+- Linux/Space subprocess validation now uses configurable hosted defaults of `180s` for the subprocess, `420s` for poll fallback, and `720s` for async validation jobs, with env overrides for all three timeout budgets.
 - Poll fallback is no longer limited to premature EOF; subprocess runtime timeouts now trigger a single retry through the long-lived Scilab poll worker, and the returned payload keeps both `subprocess_result` and `poll_fallback_result`.
 - Poll-worker startup now uses a larger hosted startup budget (`60s`) and restarts stale inactive worker processes instead of reusing a hung startup worker forever.
 - `tools/remote_hf_smoke_test.py` is now strict by default and only accepts degraded structural-only success when `--allow-degraded-runtime` is passed explicitly.

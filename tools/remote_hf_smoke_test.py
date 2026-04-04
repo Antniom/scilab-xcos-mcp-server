@@ -60,7 +60,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a remote Hugging Face MCP smoke test.")
     parser.add_argument("--mcp-url", default=DEFAULT_MCP_URL)
     parser.add_argument("--fixture-path", default=DEFAULT_FIXTURE)
-    parser.add_argument("--verify-timeout-seconds", type=float, default=600.0)
+    parser.add_argument("--verify-timeout-seconds", type=float, default=900.0)
     parser.add_argument("--poll-interval-seconds", type=float, default=2.0)
     parser.add_argument("--allow-degraded-runtime", action="store_true")
     return parser.parse_args()

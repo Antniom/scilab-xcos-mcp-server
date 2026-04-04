@@ -548,8 +548,8 @@ class DraftWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         with patch.object(server, "detect_validation_mode", return_value="subprocess"), patch.object(server.os, "name", "posix"):
             self.assertEqual(server.get_configured_subprocess_timeout_seconds(), 180.0)
-            self.assertEqual(server.get_configured_poll_timeout_seconds(), 180.0)
-            self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 420.0)
+            self.assertEqual(server.get_configured_poll_timeout_seconds(), 420.0)
+            self.assertEqual(server.get_configured_validation_job_timeout_seconds(), 720.0)
             self.assertEqual(server.get_configured_poll_worker_startup_timeout_seconds(), 60.0)
 
         with (
